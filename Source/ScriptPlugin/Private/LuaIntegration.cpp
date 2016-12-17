@@ -11,31 +11,31 @@ void LuaRegisterExportedClasses(lua_State* InScriptContext);
 
 void FLuaUtils::RegisterLibrary(lua_State* LuaState, const luaL_Reg Lib[], const ANSICHAR* LibName)
 {
-	lua_getglobal(LuaState, LibName);
-	if (lua_isnil(LuaState, -1))
-	{
-		lua_pop(LuaState, 1);
-		lua_newtable(LuaState);
-	}
-	luaL_setfuncs(LuaState, Lib, 0);
-	lua_setglobal(LuaState, LibName);
+	//lua_getglobal(LuaState, LibName);
+	//if (lua_isnil(LuaState, -1))
+	//{
+	//	lua_pop(LuaState, 1);
+	//	lua_newtable(LuaState);
+	//}
+	//luaL_setfuncs(LuaState, Lib, 0);
+	//lua_setglobal(LuaState, LibName);
 }
 
 bool FLuaUtils::CallFunction(lua_State* LuaState, const ANSICHAR* FunctionName)
 {
-	if (FunctionName != NULL)
-	{
-		lua_getglobal(LuaState, FunctionName);
-	}
+	// if (FunctionName != NULL)
+	// {
+	// 	lua_getglobal(LuaState, FunctionName);
+	// }
 
 	bool bResult = true;
-	const int NumArgs = 0;
-	const int NumResults = 0;
-	if (lua_pcall(LuaState, NumArgs, NumResults, 0) != 0)
-	{
-		UE_LOG(LogScriptPlugin, Warning, TEXT("Cannot call Lua function %s: %s"), ANSI_TO_TCHAR(FunctionName), ANSI_TO_TCHAR(lua_tostring(LuaState, -1)));
-		bResult = false;
-	}
+	// const int NumArgs = 0;
+	// const int NumResults = 0;
+	// if (lua_pcall(LuaState, NumArgs, NumResults, 0) != 0)
+	// {
+	// 	UE_LOG(LogScriptPlugin, Warning, TEXT("Cannot call Lua function %s: %s"), ANSI_TO_TCHAR(FunctionName), ANSI_TO_TCHAR(lua_tostring(LuaState, -1)));
+	// 	bResult = false;
+	// }
 	return bResult;
 }
 
@@ -542,7 +542,7 @@ static void LuaOverridePrint(lua_State* LuaState)
 	};
 
 	lua_getglobal(LuaState, "_G");
-	luaL_setfuncs(LuaState, PrintOverride, 0);
+//	luaL_setfuncs(LuaState, PrintOverride, 0);
 	lua_pop(LuaState, 1);
 }
 
@@ -898,7 +898,7 @@ void FLuaContext::GetScriptDefinedFields(TArray<FScriptField>& OutFields)
 {
 	check(LuaState);
 
-	lua_pushglobaltable(LuaState);
+//	lua_pushglobaltable(LuaState);
 	lua_pushnil(LuaState);
 
 	while (lua_next(LuaState, -2) != 0)

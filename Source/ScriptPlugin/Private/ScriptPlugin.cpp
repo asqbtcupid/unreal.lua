@@ -4,6 +4,7 @@
 #include "ScriptObjectReferencer.h"
 
 void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
+
 UProperty* FindScriptPropertyHelper(UClass* Class, FName PropertyName)
 {
 	for (TFieldIterator<UProperty> PropertyIt(Class, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt)

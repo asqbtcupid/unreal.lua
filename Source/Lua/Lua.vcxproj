@@ -143,7 +143,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -160,7 +160,6 @@
     <ClCompile Include="lua-5.1.5\src\lapi.c" />
     <ClCompile Include="lua-5.1.5\src\lauxlib.c" />
     <ClCompile Include="lua-5.1.5\src\lbaselib.c" />
-    <ClCompile Include="lua-5.1.5\src\lbitlib.c" />
     <ClCompile Include="lua-5.1.5\src\lcode.c" />
     <ClCompile Include="lua-5.1.5\src\ldblib.c" />
     <ClCompile Include="lua-5.1.5\src\ldebug.c" />
