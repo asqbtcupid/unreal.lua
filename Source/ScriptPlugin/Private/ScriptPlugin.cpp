@@ -33,7 +33,6 @@ IMPLEMENT_MODULE(FScriptPlugin, ScriptPlugin)
 void FScriptPlugin::StartupModule()
 {
 	FScriptObjectReferencer::Init();
-
 }
 
 void FScriptPlugin::ShutdownModule()
