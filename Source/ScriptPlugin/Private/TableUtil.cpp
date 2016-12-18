@@ -26,6 +26,12 @@ void UTableUtil::initmeta()
 
 void UTableUtil::addmodule(const char* name)
 {
+	lua_getglobal(L, name);
+	if (lua_istable(L, -1))
+	{
+		lua_pop(L, 1);
+		return;
+	}
 	lua_pushvalue(L, LUA_GLOBALSINDEX);
 	lua_pushstring(L, name);
 	luaL_newmetatable(L, name);
@@ -55,6 +61,8 @@ void UTableUtil::closemodule()
 
 void* UTableUtil::tousertype(const char* classname, int i)
 {
+	if (lua_isnil(L, i))
+		return nullptr;
 	auto u = static_cast<void**>(lua_touserdata(L, i));
 	return *u;
 }
@@ -69,7 +77,14 @@ void UTableUtil::push(const char* classname, void* p)
 {
 	*(void**)lua_newuserdata(L, sizeof(void *)) = p;
 	luaL_getmetatable(L, classname);
-	lua_setmetatable(L, -2);
+	if (lua_istable(L, -1))
+		lua_setmetatable(L, -2);
+	else
+	{
+		UTableUtil::addmodule(classname);
+		luaL_getmetatable(L, classname);
+		lua_setmetatable(L, -2);
+	}
 }
 
 UTableUtil::UTableUtil()

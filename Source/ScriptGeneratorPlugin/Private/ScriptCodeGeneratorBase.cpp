@@ -96,35 +96,42 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function)
 {
 	FString Params;
-	
+	FString paramList;
+	FString returnType;
+	//auto xx = Function->GetName() == "ReceivePossessed";
 	const bool bHasParamsOrReturnValue = (Function->Children != NULL);
 	if (bHasParamsOrReturnValue)
 	{
-		Params += TEXT("\tstruct FDispatchParams\r\n\t{\r\n");
-
-		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
-		{
-			UProperty* Param = *ParamIt;
-			Params += FString::Printf(TEXT("\t\t%s %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName());
-		}
-		Params += TEXT("\t} Params;\r\n");
 		int32 ParamIndex = 0;
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
 			UProperty* Param = *ParamIt;
-			Params += FString::Printf(TEXT("\tParams.%s = %s;\r\n"), *Param->GetName(), *InitializeFunctionDispatchParam(Function, Param, ParamIndex));
+			if ( Param->GetName() != "ReturnValue" )
+			{
+				FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
+				Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName(), *initParam);
+				paramList += Param->GetName() + ",";
+			}
+			else
+			{
+				returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+			}
 		}
+		
 	}
-	Params += FString::Printf(TEXT("\tstatic UFunction* Function = Obj->FindFunctionChecked(TEXT(\"%s\"));\r\n"), *Function->GetName());
-	if (bHasParamsOrReturnValue)
+	if (!returnType.IsEmpty())
+		Params += FString::Printf(TEXT("\t%s result = "), *returnType);
+	else
+		Params += "\t";
+	if (paramList.IsEmpty())
 	{
-		Params += TEXT("\tcheck(Function->ParmsSize == sizeof(FDispatchParams));\r\n");
-		Params += TEXT("\tObj->ProcessEvent(Function, &Params);\r\n");
+		Params += FString::Printf(TEXT("Obj->%s();\r\n"), *Function->GetName());
 	}
 	else
 	{
-		Params += TEXT("\tObj->ProcessEvent(Function, NULL);\r\n");
-	}	
+		paramList.RemoveAt(paramList.Len()-1);
+		Params += FString::Printf(TEXT("Obj->%s(%s);\r\n"), *Function->GetName(), *paramList);
+	}
 
 	return Params;
 }

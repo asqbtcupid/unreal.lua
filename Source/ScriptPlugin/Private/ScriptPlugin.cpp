@@ -3,7 +3,7 @@
 #include "ScriptPluginPrivatePCH.h"
 #include "ScriptObjectReferencer.h"
 
-void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
+// void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
 
 UProperty* FindScriptPropertyHelper(UClass* Class, FName PropertyName)
 {
@@ -39,3 +39,4 @@ void FScriptPlugin::ShutdownModule()
 {
 	FScriptObjectReferencer::Shutdown();
 }
+#include "GeneratedScriptLibraries.inl"
