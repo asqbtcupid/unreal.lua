@@ -189,6 +189,7 @@
     <ClCompile Include="lua-5.1.5\src\lvm.c" />
     <ClCompile Include="lua-5.1.5\src\lzio.c" />
     <ClCompile Include="lua-5.1.5\src\print.c" />
+    <ClCompile Include="lua-5.1.5\src\lua_tinker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lua-5.1.5\src\lapi.h" />
@@ -214,6 +215,7 @@
     <ClInclude Include="lua-5.1.5\src\lundump.h" />
     <ClInclude Include="lua-5.1.5\src\lvm.h" />
     <ClInclude Include="lua-5.1.5\src\lzio.h" />
+    <ClInclude Include="lua-5.1.5\src\lua_tinker.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="lua-5.1.5\src\Makefile" />

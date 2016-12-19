@@ -25,12 +25,12 @@ FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FStrin
 {
 	
 	int i = 0;
-	FString funcname = FString::Printf(TEXT("int32 %s_%s(lua_State* L)"), *Class->GetName(), *FunctionName, i);
+	FString funcname = FString::Printf(TEXT("static int32 %s_%s(lua_State* L)"), *Class->GetName(), *FunctionName, i);
 	while (true)
 	{
 		if (ExportedFunc.Contains(funcname) == false)
 			break;
-		funcname = FString::Printf(TEXT("int32 %s_%s%d(lua_State* L)"), *Class->GetName(), *FunctionName, i );
+		funcname = FString::Printf(TEXT("static int32 %s_%s%d(lua_State* L)"), *Class->GetName(), *FunctionName, i );
 	}
 	ExportedFunc.Add(funcname);
 	return funcname;
@@ -229,6 +229,28 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
+	if (bExport)
+	{
+		if (Function->GetName() == "Blueprint_GetSizeX" ||
+			Function->GetName() == "Blueprint_GetSizeY" ||
+			Function->GetName() == "ContainsEmitterType" ||
+			Function->GetName() == "StackTrace" ||
+			Function->GetName() == "SetInnerConeAngle" ||
+			Function->GetName() == "SetOuterConeAngle" ||
+			Function->GetName() == "OnInterpToggle" ||
+			Function->GetName() == "StartPrecompute" ||
+			Function->GetName() == "OnRep_Timeline" ||
+			(Function->GetName() == "CreateInstance" && (ClassNameCPP == "ULevelStreaming" || ClassNameCPP == "ULevelStreamingAlwaysLoaded" || ClassNameCPP == "ULevelStreamingKismet")) ||
+			Function->GetName() == "SetAreaClass" ||
+			Function->GetName() == "PaintVerticesSingleColor" ||
+			Function->GetName() == "RemovePaintedVertices" ||
+			Function->GetName() == "LogText" ||
+			Function->GetName() == "LogLocation"
+			)
+		{
+			return false;
+		}
+	}
 	if (bExport)
 	{
 		for (TFieldIterator<UProperty> ParamIt(Function); bExport && ParamIt; ++ParamIt)
@@ -559,7 +581,6 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	}
 
 	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* L)\r\n{\r\n");
-	LibGlue += TEXT("\tUTableUtil::init();\r\n");
 	for (auto Class : LuaExportedClasses)
 	{
 		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *Class->GetName());

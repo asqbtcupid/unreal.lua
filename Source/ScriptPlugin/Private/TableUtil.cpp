@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -41,7 +41,7 @@ void UTableUtil::addmodule(const char* name)
 	luaL_newmetatable(L, name);
 	initmeta();
 	lua_rawset(L, -3);
-	lua_pop(L, 1);
+	lua_pop(L, 2);
 }
 
 void UTableUtil::openmodule(const char* name)
@@ -101,15 +101,22 @@ int32 UTableUtil::test()
 	return 5;
 }
 
-int UTableUtil::tick(float delta)
+float UTableUtil::tick(float delta)
 {
-	lua_pushvalue(L, LUA_GLOBALSINDEX);
-	lua_pushstring(L, "tick");
-	lua_rawget(L, -2);
-	lua_pushnumber(L, delta);
-	lua_call(L, 1, 1);
-	int result = lua_tointeger(L, -1);
-	lua_pop(L, 2);
+	// lua_pushvalue(L, LUA_GLOBALSINDEX);
+	// lua_pushstring(L, "tick");
+	// lua_rawget(L, -2);
+	// lua_pushnumber(L, delta);
+	// lua_call(L, 1, 1);
+	float result = lua_tinker::call<float>(L, "tick", delta);
+	// lua_pop(L, 2);
+	static bool set = false;
+	if (result > 2.0 && set == false)
+	{
+		// set = true;
+		// LuaRegisterExportedClasses(L);
+		// lua_tinker::call<void>(L, "PrintG");
+	}
 	return result;
 }
 	
@@ -126,11 +133,13 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 		{
 			break;
 		}
-		else
+		else if (temp.func != nullptr)
 		{
 			UTableUtil::addfunc(temp.name, temp.func);
 		}
 		i++;
 	}
 	UTableUtil::closemodule();
+	int j = lua_gettop(L);
+	UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
 }

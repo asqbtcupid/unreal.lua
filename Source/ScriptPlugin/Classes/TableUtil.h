@@ -1,10 +1,5 @@
 #pragma once
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
+#include "lua_tinker.h"
 #include <iostream>
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TableUtil.generated.h"
@@ -46,7 +41,7 @@ public:
 	static int32 test();
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static int tick(float delta);
+	static float tick(float delta);
 };
 
 template<>
