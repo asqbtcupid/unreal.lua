@@ -2,6 +2,7 @@
 
 #include "ScriptPluginPrivatePCH.h"
 #include "ScriptObjectReferencer.h"
+#include "TableUtil.h"
 
 // void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
 

@@ -157,17 +157,18 @@ bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)
 {
 	bool bCanExport = (Class->ClassFlags & (CLASS_RequiredAPI | CLASS_MinimalAPI)) && // Don't export classes that don't export DLL symbols
 		!ExportedClasses.Contains(Class->GetFName()); // Don't export classes that have already been exported
-	bCanExport = bCanExport && Class->GetFName() == "testpawn";
+	bCanExport = bCanExport && Class->GetFName() != "DemoNetDriver";
 	return bCanExport;
 }
 
 bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	// We don't support delegates and non-public functions
-	if ((Function->FunctionFlags & FUNC_Delegate))
+	if ((Function->FunctionFlags & FUNC_Delegate) ||  (Function->FunctionFlags & FUNC_Public)==0 )
 	{
 		return false;
 	}
+	
 
 	// Reject if any of the parameter types is unsupported yet
 	for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)

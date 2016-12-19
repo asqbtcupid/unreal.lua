@@ -23,7 +23,17 @@ FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FStrin
 
 FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, UClass* Class, const FString& FunctionName)
 {
-	return FString::Printf(TEXT("int32 %s_%s(lua_State* L)"), *Class->GetName(), *FunctionName);
+	
+	int i = 0;
+	FString funcname = FString::Printf(TEXT("int32 %s_%s(lua_State* L)"), *Class->GetName(), *FunctionName, i);
+	while (true)
+	{
+		if (ExportedFunc.Contains(funcname) == false)
+			break;
+		funcname = FString::Printf(TEXT("int32 %s_%s%d(lua_State* L)"), *Class->GetName(), *FunctionName, i );
+	}
+	ExportedFunc.Add(funcname);
+	return funcname;
 }
 
 FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex)
@@ -232,6 +242,8 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 
 FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
+	FString funcname = Function->GetName();
+	auto xx = funcname == "OnRep_Owner";
 	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, Function);
 	GeneratedGlue += TEXT("\r\n{\r\n");
 
@@ -272,7 +284,7 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 	}
 	else
 	{
-		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(InScriptContext);\r\n"), *FuncSuper->GetName(), *Function->GetName());
+		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *FuncSuper->GetName(), *Function->GetName());
 	}
 
 	GeneratedGlue += FunctionBody;
@@ -364,7 +376,7 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	}
 	else
 	{
-		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(InScriptContext);\r\n"), *PropertySuper->GetName(), *GetterName);
+		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *PropertySuper->GetName(), *GetterName);
 	}
 	GeneratedGlue += FunctionBody;
 	GeneratedGlue += TEXT("}\r\n\r\n");
@@ -391,7 +403,7 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	}
 	else
 	{
-		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(InScriptContext);\r\n"), *PropertySuper->GetName(), *SetterName);
+		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *PropertySuper->GetName(), *SetterName);
 	}
 	GeneratedGlue += FunctionBody;	
 	GeneratedGlue += TEXT("}\r\n\r\n");
@@ -416,7 +428,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	{
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, TEXT("New"));
 		GeneratedGlue += TEXT("\r\n{\r\n");
-		GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)UTableUtil::tousertype(L, 1);\r\n");
+		GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)UTableUtil::tousertype(\"UObject\", 1);\r\n");
 		GeneratedGlue += TEXT("\tFName Name = FName(luaL_checkstring(L, 2));\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\tUObject* Obj = NewObject<%s>(Outer, Name);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
@@ -546,7 +558,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 		LibGlue += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
 	}
 
-	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* InScriptContext)\r\n{\r\n");
+	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* L)\r\n{\r\n");
 	for (auto Class : LuaExportedClasses)
 	{
 		//LibGlue += FString::Printf(TEXT("\tFLuaUtils::RegisterLibrary(InScriptContext, %s_Lib, \"%s\");\r\n"), *Class->GetName(), *Class->GetName());

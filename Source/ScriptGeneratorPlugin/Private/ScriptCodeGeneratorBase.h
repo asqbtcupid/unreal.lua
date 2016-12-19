@@ -22,6 +22,7 @@ protected:
 	FString IncludeBase;
 	/** Set of all exported class names */
 	TSet<FName> ExportedClasses;
+	TSet<FString> ExportedFunc;
 
 	/** Default ctor */
 	FScriptCodeGeneratorBase(const FString& InRootLocalPath, const FString& InRootBuildPath, const FString& OutputDirectory, const FString& InIncludeBase);
