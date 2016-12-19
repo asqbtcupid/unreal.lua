@@ -455,31 +455,31 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	GeneratedGlue += TEXT("\treturn 1;\r\n");
 	GeneratedGlue += TEXT("}\r\n\r\n");
 
-	// Library
-	// GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *ClassName);
-	// if (!(Class->GetClassFlags() & CLASS_Abstract))
-	// {
-	// 	GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *ClassName);
-	// 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassName);
-	// 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Class },\r\n"), *ClassName);
-	// }
-	// auto FunctionExports = ClassExportedFunctions.Find(Class);
-	// if (FunctionExports)
-	// {
-	// 	for (auto& FunctionName : *FunctionExports)
-	// 	{
-	// 		GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s_%s },\r\n"), *FunctionName.ToString(), *ClassName, *FunctionName.ToString());
-	// 	}
-	// }
-	// auto PropertyExports = ClassExportedProperties.Find(Class);
-	// if (PropertyExports)
-	// {
-	// 	for (auto& Accessor : *PropertyExports)
-	// 	{
-	// 		GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s },\r\n"), *Accessor.AccessorName, *Accessor.FunctionName);
-	// 	}
-	// }
-	// GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n\r\n");
+	 //Library
+	 GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *ClassName);
+	 if (!(Class->GetClassFlags() & CLASS_Abstract))
+	 {
+	 	GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *ClassName);
+	 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassName);
+	 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Class },\r\n"), *ClassName);
+	 }
+	 auto FunctionExports = ClassExportedFunctions.Find(Class);
+	 if (FunctionExports)
+	 {
+	 	for (auto& FunctionName : *FunctionExports)
+	 	{
+	 		GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s_%s },\r\n"), *FunctionName.ToString(), *ClassName, *FunctionName.ToString());
+	 	}
+	 }
+	 auto PropertyExports = ClassExportedProperties.Find(Class);
+	 if (PropertyExports)
+	 {
+	 	for (auto& Accessor : *PropertyExports)
+	 	{
+	 		GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s },\r\n"), *Accessor.AccessorName, *Accessor.FunctionName);
+	 	}
+	 }
+	 GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n\r\n");
 
 	return GeneratedGlue;
 }
@@ -559,9 +559,10 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	}
 
 	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* L)\r\n{\r\n");
+	LibGlue += TEXT("\tUTableUtil::init();\r\n");
 	for (auto Class : LuaExportedClasses)
 	{
-		//LibGlue += FString::Printf(TEXT("\tFLuaUtils::RegisterLibrary(InScriptContext, %s_Lib, \"%s\");\r\n"), *Class->GetName(), *Class->GetName());
+		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *Class->GetName());
 	}
 	LibGlue += TEXT("}\r\n\r\n");
 

@@ -32,6 +32,7 @@ public:
 	static void initmeta();
 	static void* tousertype(const char* classname, int i);
 	static int toint(int i);
+	static void loadlib(const luaL_Reg funclist[], const char* classname);
 
 	template<typename T>
 	static void push(T value);

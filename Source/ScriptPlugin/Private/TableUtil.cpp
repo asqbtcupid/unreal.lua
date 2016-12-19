@@ -11,9 +11,13 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
-		int i = 10;
+		//int i = 10;
+	}
+	else
+	{
+		LuaRegisterExportedClasses(l);
 	}
 }
 
@@ -109,3 +113,24 @@ int UTableUtil::tick(float delta)
 	return result;
 }
 	
+void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
+{
+	int i = 0;
+	UTableUtil::addmodule(classname);
+	UTableUtil::openmodule(classname);
+	while (true)
+	{
+		
+		luaL_Reg temp = funclist[i];
+		if (temp.name == nullptr)
+		{
+			break;
+		}
+		else
+		{
+			UTableUtil::addfunc(temp.name, temp.func);
+		}
+		i++;
+	}
+	UTableUtil::closemodule();
+}
