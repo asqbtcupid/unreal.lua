@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -140,6 +140,6 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 		i++;
 	}
 	UTableUtil::closemodule();
-	int j = lua_gettop(L);
-	UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
+	// int j = lua_gettop(L);
+	// UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
 }
