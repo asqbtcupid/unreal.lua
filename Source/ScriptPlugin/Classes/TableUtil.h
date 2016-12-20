@@ -28,6 +28,9 @@ public:
 	static void* tousertype(const char* classname, int i);
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
+	
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void call(FString funcName);
 
 	template<typename T>
 	static void push(T value);
@@ -35,6 +38,7 @@ public:
 	static void push(const char* classname, void* p);
 
 	template<> static void push(int value);
+	template<> static void push(FString value);
 	
 	// static lua_State* lua_state;
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
@@ -49,6 +53,13 @@ void UTableUtil::push(int value)
 {
 	lua_pushinteger(L, value);
 }
+
+template<>
+void UTableUtil::push(FString value)
+{
+	lua_pushstring(L, TCHAR_TO_ANSI(*value));
+}
+
 
 
 template<typename T>

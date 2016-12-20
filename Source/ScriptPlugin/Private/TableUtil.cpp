@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -21,10 +21,32 @@ void UTableUtil::init()
 	}
 }
 
+int32 indexFunc(lua_State* L)
+{
+	lua_getmetatable(L, 1);
+	lua_pushvalue(L, 2);
+	lua_rawget(L,-2);
+	if (lua_isnil(L, -1))
+	{
+		lua_pop(L, 1);
+		FString propertyKey = FString::Printf(TEXT("Get_%s"), lua_tostring(L, 2));
+		UTableUtil::push(propertyKey);
+		lua_rawget(L, -2);
+		if (!lua_isnil(L, -1))
+		{
+			lua_pushvalue(L, 1);
+			lua_pushvalue(L, -2);
+			lua_call(L, 1, 1);
+		}
+	}
+	return 1;
+}
+
 void UTableUtil::initmeta()
 {
 	lua_pushstring(L, "__index");
-	lua_pushvalue(L, -2);
+	//lua_pushvalue(L, -2);
+	lua_pushcfunction(L, indexFunc);
 	lua_rawset(L, -3);
 }
 
@@ -142,4 +164,9 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 	UTableUtil::closemodule();
 	// int j = lua_gettop(L);
 	// UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
+}
+
+void UTableUtil::call(FString funcName)
+{
+	lua_tinker::call<void>(L, TCHAR_TO_ANSI(*funcName));
 }
