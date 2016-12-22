@@ -32,6 +32,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void call(FString funcName);
 
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void setpawn(ADefaultPawn *p);
+
 	template<typename T>
 	static void push(T value);
 

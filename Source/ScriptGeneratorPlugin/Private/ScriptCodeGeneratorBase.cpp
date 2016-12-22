@@ -93,7 +93,7 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 	return PropertyType;
 }
 
-FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function)
+FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP)
 {
 	FString Params;
 	FString paramList;
@@ -123,14 +123,17 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function)
 		Params += FString::Printf(TEXT("\t%s result = "), *returnType);
 	else
 		Params += "\t";
+	FString callobj = "Obj->";
+	if (Function->FunctionFlags & FUNC_Static)
+		callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
 	if (paramList.IsEmpty())
 	{
-		Params += FString::Printf(TEXT("Obj->%s();\r\n"), *Function->GetName());
+		Params += FString::Printf(TEXT("%s%s();\r\n"), *callobj, *Function->GetName());
 	}
 	else
 	{
 		paramList.RemoveAt(paramList.Len()-1);
-		Params += FString::Printf(TEXT("Obj->%s(%s);\r\n"), *Function->GetName(), *paramList);
+		Params += FString::Printf(TEXT("%s%s(%s);\r\n"), *callobj, *Function->GetName(), *paramList);
 	}
 
 	return Params;
@@ -165,7 +168,7 @@ bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)
 bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	// We don't support delegates and non-public functions
-	if ((Function->FunctionFlags & FUNC_Delegate) ||  (Function->FunctionFlags & FUNC_Public)==0 )
+	if ((Function->FunctionFlags & FUNC_Delegate) ||  !(Function->FunctionFlags & FUNC_Public))
 	{
 		return false;
 	}

@@ -63,7 +63,7 @@ FString FGenericScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP,
 	if (FuncSuper == NULL)
 	{
 		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-		FunctionBody += GenerateFunctionDispatch(Function);
+		FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP);
 
 		FString FunctionCallArguments;
 		FString ReturnValueDeclaration;

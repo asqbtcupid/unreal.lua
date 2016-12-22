@@ -279,12 +279,13 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 			FuncSuper = Function->GetOwnerClass();
 		}
 	}
-
+	auto xx = ClassNameCPP == "UGameplayStatics";
 	FString FunctionBody;
 	if (FuncSuper == NULL)
 	{
-		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-		FunctionBody += GenerateFunctionDispatch(Function);
+		if ( !(Function->FunctionFlags & FUNC_Static) )
+			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
+		FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP);
 
 		FString FunctionCallArguments;
 		FString ReturnValueDeclaration;

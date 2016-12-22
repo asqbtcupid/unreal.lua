@@ -38,7 +38,7 @@ protected:
 	/** Gets C++ friendly property type name. */
 	FString GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags = 0);
 
-	virtual FString GenerateFunctionDispatch(UFunction* Function);
+	virtual FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP);
 	virtual FString InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex);
 
 	/** Generates a script glue header filename for the specified class */
