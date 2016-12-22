@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
