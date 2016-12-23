@@ -26,6 +26,14 @@ void UTableUtil::init()
 		lua_pop(L, 1);
 	}
 }
+void UTableUtil::shutdown()
+{
+	if (L != nullptr)
+	{
+		lua_close(L);
+		L = nullptr;
+	}
+}
 
 int32 indexFunc(lua_State* L)
 {
@@ -115,6 +123,13 @@ void UTableUtil::openmodule(const char* name)
 
 void UTableUtil::addfunc(const char* name, luafunc f)
 {
+	static FString gcFuncName("Destroy");
+	if (gcFuncName == name)
+	{
+		lua_pushstring(L, "__gc");
+		lua_pushcfunction(L, f);
+		lua_rawset(L, -3);
+	}
 	lua_pushstring(L, name);
 	lua_pushcfunction(L, f);
 	lua_rawset(L, -3);

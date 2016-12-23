@@ -38,6 +38,7 @@ void FScriptPlugin::StartupModule()
 
 void FScriptPlugin::ShutdownModule()
 {
+	UTableUtil::shutdown();
 	FScriptObjectReferencer::Shutdown();
 }
 #include "GeneratedScriptLibraries.inl"
