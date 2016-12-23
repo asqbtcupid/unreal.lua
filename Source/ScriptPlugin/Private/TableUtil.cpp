@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -34,19 +34,35 @@ int32 indexFunc(lua_State* L)
 	lua_rawget(L,-2);
 	if (lua_isnil(L, -1))
 	{
+		FString property = FString(lua_tostring(L, 2));
 		lua_pop(L, 1);
-		FString propertyKey = FString::Printf(TEXT("Get_%s"), lua_tostring(L, 2));
+		FString propertyKey = FString::Printf(TEXT("Get_%s"), *property);
 		UTableUtil::push(propertyKey);
 		lua_rawget(L, -2);
 		if (!lua_isnil(L, -1))
 		{
 			lua_pushvalue(L, 1);
-			lua_pushvalue(L, -2);
-			lua_call(L, 1, 1);
+			lua_pcall(L, 1, 1, 0);
 		}
 	}
 	return 1;
 }
+
+int32 newindexFunc(lua_State* L)
+{
+	lua_getmetatable(L, 1);
+	FString property = FString(lua_tostring(L, 2));
+	FString propertyKey = FString::Printf(TEXT("Set_%s"), *property);
+	lua_rawget(L, -2);
+	if (!lua_isnil(L, -1))
+	{
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 3);
+		lua_call(L, 2, 1);
+	}
+	return 0;
+}
+
 int32 cast(lua_State* L)
 {
 	lua_pushstring(L, "classname");
@@ -153,13 +169,8 @@ int32 UTableUtil::test()
 
 float UTableUtil::tick(float delta)
 {
-	// lua_pushvalue(L, LUA_GLOBALSINDEX);
-	// lua_pushstring(L, "tick");
-	// lua_rawget(L, -2);
-	// lua_pushnumber(L, delta);
-	// lua_call(L, 1, 1);
+	
 	float result = lua_tinker::call<float>(L, "tick", delta);
-	// lua_pop(L, 2);
 	static bool set = false;
 	if (result > 2.0 && set == false)
 	{
@@ -203,7 +214,7 @@ void UTableUtil::setpawn(ADefaultPawn *p)
 {
 	lua_pushvalue(L, LUA_GLOBALSINDEX);
 	lua_pushstring(L, "PawnIns");
-	push("DefaultPawn", (void*)p);
+	push("ADefaultPawn", (void*)p);
 	lua_rawset(L, -3);
 	lua_pop(L, 1);
 }

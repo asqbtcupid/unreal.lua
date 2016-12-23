@@ -47,6 +47,8 @@ protected:
 	/** Check if a property type is supported */
 	bool IsPropertyTypeSupported(UProperty* Property) const;
 
+	FString InitializeParam(UProperty* Param, int32 ParamIndex);
+
 	// FScriptCodeGeneratorBase interface
 	virtual bool CanExportClass(UClass* Class) override;
 	virtual bool CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function) override;

@@ -36,11 +36,12 @@ FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FStrin
 	return funcname;
 }
 
-FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex)
-{	
+FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIndex)
+{
+	FString Initializer;
+
 	if (!(Param->GetPropertyFlags() & CPF_ReturnParm))
 	{
-		FString Initializer;
 		// In Lua, the first param index on the stack is 1 and it's the object we're invoking the function on
 		ParamIndex += 2;
 
@@ -66,6 +67,7 @@ FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Func
 		}
 		else if (Param->IsA(UClassProperty::StaticClass()))
 		{
+			//FString typeName = GetPropertyTypeCPP(Param, CPPF_Implementation);
 			Initializer = TEXT("(UClass*)(UTableUtil::tousertype(\"UClass\",");
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
@@ -84,12 +86,16 @@ FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Func
 			}
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
-		else
-		{
-			//FError::Throwf(TEXT("Unsupported function param type: %s"), *Param->GetClass()->GetName());
-		}
+	}
+	return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
+}
 
-		return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
+FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex)
+{	
+	if (!(Param->GetPropertyFlags() & CPF_ReturnParm))
+	{
+		//return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
+		return InitializeParam(Param, ParamIndex);
 	}
 	else
 	{
@@ -415,31 +421,35 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	auto& Exports = ClassExportedProperties.FindOrAdd(Class);
 	Exports.Add(Getter);
 
-	// Setter
-	//FString SetterName = FString::Printf(TEXT("Set_%s"), *PropertyName);
-	//GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, SetterName);
-	//GeneratedGlue += TEXT("\r\n{\r\n");
-	//if (PropertySuper == NULL)
-	//{
-	//	FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-	//	FunctionBody += FString::Printf(TEXT("\tstatic UProperty* Property = FindScriptPropertyHelper(%s::StaticClass(), TEXT(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
-	//	FunctionBody += FString::Printf(TEXT("\t%s PropertyValue = %s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *InitializeFunctionDispatchParam(NULL, Property, 0));
-	//	FunctionBody += TEXT("\tProperty->CopyCompleteValue(Property->ContainerPtrToValuePtr<void>(Obj), &PropertyValue);\r\n");
-	//	FunctionBody += TEXT("\treturn 0;\r\n");
-	//}
-	//else
-	//{
-	//	FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *PropertySuper->GetName(), *SetterName);
-	//}
-	//GeneratedGlue += FunctionBody;	
-	//GeneratedGlue += TEXT("}\r\n\r\n");
+	//Setter
+	if (Property->IsA(UObjectPropertyBase::StaticClass()) || Property->IsA(UStructProperty::StaticClass()))
+	{}
+	else
+	{
+		FString SetterName = FString::Printf(TEXT("Set_%s"), *PropertyName);
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, SetterName);
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		auto x = Property->GetName() == "AnimBlueprintGeneratedClass";
+		if (PropertySuper == NULL)
+		{
+			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
+			FunctionBody += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
+		
+			FunctionBody += TEXT("\treturn 0;\r\n");
+		}
+		else
+		{
+			FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *PropertySuper->GetName(), *SetterName);
+		}
+		GeneratedGlue += FunctionBody;	
+		GeneratedGlue += TEXT("}\r\n\r\n");
 
-	//// Store the name of this setter as well as the name of the wrapper function
-	//FPropertyAccessor Setter;
-	//Setter.AccessorName = SetterName;
-	//Setter.FunctionName = FString::Printf(TEXT("%s_%s"), *Class->GetName(), *SetterName);
-	//Exports.Add(Setter);
-
+		// Store the name of this setter as well as the name of the wrapper function
+		FPropertyAccessor Setter;
+		Setter.AccessorName = SetterName;
+		Setter.FunctionName = FString::Printf(TEXT("%s_%s"), *Class->GetName(), *SetterName);
+		Exports.Add(Setter);
+	}
 	return GeneratedGlue;
 }
 
@@ -587,7 +597,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* L)\r\n{\r\n");
 	for (auto Class : LuaExportedClasses)
 	{
-		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *Class->GetName());
+		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
 	}
 	LibGlue += TEXT("}\r\n\r\n");
 
