@@ -289,9 +289,10 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 	FString FunctionBody;
 	if (FuncSuper == NULL)
 	{
-		if ( !(Function->FunctionFlags & FUNC_Static) )
+		bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
+		if ( !bIsStaticFunc)
 			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-		FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP);
+		FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc);
 
 		FString FunctionCallArguments;
 		FString ReturnValueDeclaration;

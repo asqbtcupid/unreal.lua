@@ -93,7 +93,7 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 	return PropertyType;
 }
 
-FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP)
+FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc)
 {
 	FString Params;
 	FString paramList;
@@ -103,6 +103,8 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 	if (bHasParamsOrReturnValue)
 	{
 		int32 ParamIndex = 0;
+		if (bIsStaticFunc)
+			ParamIndex = -1;
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
 			UProperty* Param = *ParamIt;
