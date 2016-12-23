@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -53,6 +53,7 @@ int32 newindexFunc(lua_State* L)
 	lua_getmetatable(L, 1);
 	FString property = FString(lua_tostring(L, 2));
 	FString propertyKey = FString::Printf(TEXT("Set_%s"), *property);
+	UTableUtil::push(propertyKey);
 	lua_rawget(L, -2);
 	if (!lua_isnil(L, -1))
 	{
@@ -80,6 +81,9 @@ void UTableUtil::initmeta()
 	lua_rawset(L, -3);
 	lua_pushstring(L, "cast");
 	lua_pushcfunction(L, cast);
+	lua_rawset(L, -3);
+	lua_pushstring(L, "__newindex");
+	lua_pushcfunction(L, newindexFunc);
 	lua_rawset(L, -3);
 }
 
