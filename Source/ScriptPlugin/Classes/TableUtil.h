@@ -9,7 +9,7 @@ using luafunc = int( struct lua_State* );
 
 // struct lua_State;
 // class UBaseTinkerTable;
-UCLASS()
+UCLASS(MinimalAPI)
 class UTableUtil : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()

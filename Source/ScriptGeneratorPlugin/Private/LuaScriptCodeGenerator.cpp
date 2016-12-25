@@ -397,8 +397,7 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, GetterName);
 	GeneratedGlue += TEXT("\r\n{\r\n");
 	FString FunctionBody;
-	FString df = Property->GetName();
-	auto xx = df.Contains("BookMarks");
+	
 	if (PropertySuper == NULL)
 	{
 		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
@@ -523,6 +522,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 
 void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHeaderFilename, const FString& GeneratedHeaderFilename, bool bHasChanged)
 {
+	auto x = Class->GetName() == "TableUtil";
 	if (!CanExportClass(Class))
 	{
 		return;
