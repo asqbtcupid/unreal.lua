@@ -29,7 +29,7 @@ protected:
 
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();
-
+	bool bHasExportStruct;
 	/** Exports a wrapper function */
 	FString ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function);
 	/** Exports a wrapper functions for properties */
@@ -48,7 +48,7 @@ protected:
 	bool IsPropertyTypeSupported(UProperty* Property) const;
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);
-
+	void ExportStruct();
 	// FScriptCodeGeneratorBase interface
 	virtual bool CanExportClass(UClass* Class) override;
 	virtual bool CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function) override;

@@ -14,6 +14,7 @@ static FName Name_Color("Color");
 FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& InIncludeBase)
 : FScriptCodeGeneratorBase(RootLocalPath, RootBuildPath, OutputDirectory, InIncludeBase)
 {
+	bHasExportStruct = false;
 }
 
 FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
@@ -251,7 +252,10 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 			Function->GetName() == "PaintVerticesSingleColor" ||
 			Function->GetName() == "RemovePaintedVertices" ||
 			Function->GetName() == "LogText" ||
-			Function->GetName() == "LogLocation"
+			Function->GetName() == "LogLocation" ||
+			(ClassNameCPP == "UVisualLoggerKismetLibrary" && Function->GetName() == "LogBox") ||
+			(Function->GetName() == "MakeStringAssetReference") ||
+			(ClassNameCPP == "ULevelStreamingKismet" && Function->GetName() == "LoadLevelInstance")
 			)
 		{
 			return false;
@@ -331,13 +335,13 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 	if (Property->IsA(UStructProperty::StaticClass()))
 	{
 		UStructProperty* StructProp = CastChecked<UStructProperty>(Property);
-		if (StructProp->Struct->GetFName() != Name_Vector2D &&
-			StructProp->Struct->GetFName() != Name_Vector &&
-			StructProp->Struct->GetFName() != Name_Vector4 &&
-			StructProp->Struct->GetFName() != Name_Quat &&
-			StructProp->Struct->GetFName() != Name_LinearColor &&
-			StructProp->Struct->GetFName() != Name_Color &&
-			StructProp->Struct->GetFName() != Name_Transform)
+		if (StructProp->Struct->GetFName() == "InputChord")
+// 			StructProp->Struct->GetFName() != Name_Vector &&
+// 			StructProp->Struct->GetFName() != Name_Vector4 &&
+// 			StructProp->Struct->GetFName() != Name_Quat &&
+// 			StructProp->Struct->GetFName() != Name_LinearColor &&
+// 			StructProp->Struct->GetFName() != Name_Color &&
+// 			StructProp->Struct->GetFName() != Name_Transform)
 		{
 			bSupported = false;
 		}
@@ -367,14 +371,20 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 {
 	//return false;
 	// Only editable properties can be exported
-	if (!(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic) || (Property->PropertyFlags & CPF_Deprecated))
+	bool bsupport = FScriptCodeGeneratorBase::CanExportProperty(ClassNameCPP, Class, Property);
+	if (bsupport)
 	{
-		return false;
+		if (!(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic) || (Property->PropertyFlags & CPF_Deprecated))
+		{
+			return false;
+		}
+		if (Property->GetName() == "BookMarks")
+			return false;
+		// Check if property type is supported
+		return IsPropertyTypeSupported(Property);
 	}
-	if (Property->GetName() == "BookMarks")
+	else
 		return false;
-	// Check if property type is supported
-	return IsPropertyTypeSupported(Property);
 }
 
 FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property, int32 PropertyIndex)
@@ -519,10 +529,53 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 
 	return GeneratedGlue;
 }
+void FLuaScriptCodeGenerator::ExportStruct()
+{
+	if (!bHasExportStruct)
+	{
+		bHasExportStruct = true;
+		for (TObjectIterator<UScriptStruct> It; It; ++It)
+		{
+			FString name = *It->GetName();
+			FString namecpp = "F" + name;
+			const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".script.h"));
+			AllScriptHeaders.Add(ClassGlueFilename);
+			FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
+			int32 PropertyIndex = 0;
+			for (TFieldIterator<UProperty> PropertyIt(*It, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt, ++PropertyIndex)
+			{
+				UProperty* Property = *PropertyIt;
+				FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+				func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
+				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property, TEXT("PropertyValue")));
+				func += "}\r\n\r\n";
+				GeneratedGlue += func;
 
+				func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+				func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
+				func += TEXT("\treturn 0;\r\n}\r\n\r\n");
+				GeneratedGlue += func;
+			}
+			FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
+			addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);
+			addition += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj);\r\n"), *namecpp);
+			addition += FString::Printf(TEXT("\treturn 1;\r\n}\r\n\r\n"));
+
+			addition += FString::Printf(TEXT("static int32 %s_Destroy(lua_State* L)\r\n{\r\n"), *namecpp);
+			addition += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+			addition += FString::Printf(TEXT("\tdelete Obj;\r\n"));
+			addition += TEXT("\treturn 0;\r\n}\r\n\r\n");
+
+			GeneratedGlue += addition;
+			SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
+		}
+	}
+}
 void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHeaderFilename, const FString& GeneratedHeaderFilename, bool bHasChanged)
 {
-	auto x = Class->GetName() == "TableUtil";
+	ExportStruct();
 	if (!CanExportClass(Class))
 	{
 		return;

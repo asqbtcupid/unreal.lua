@@ -197,18 +197,18 @@ bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UC
 bool FScriptCodeGeneratorBase::CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property)
 {
 	// Property must be DLL exported
-	if (!(Class->ClassFlags & CLASS_RequiredAPI))
-	{
-		return false;
-	}
+// 	if (!(Class->ClassFlags & CLASS_RequiredAPI))
+// 	{
+// 		return false;
+// 	}
 
 	// Only public, editable properties can be exported
-	if (!Property->HasAnyFlags(RF_Public) || 
-		  (Property->PropertyFlags & CPF_Protected) || 
-			!(Property->PropertyFlags & CPF_Edit))
-	{
-		return false;
-	}
+// 	if (!Property->HasAnyFlags(RF_Public) || 
+// 		  (Property->PropertyFlags & CPF_Protected) || 
+// 			!(Property->PropertyFlags & CPF_Edit))
+// 	{
+// 		return false;
+// 	}
 
 
 	// Reject if it's one of the unsupported types (yet)
