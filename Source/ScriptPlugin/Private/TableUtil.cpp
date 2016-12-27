@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -236,4 +236,9 @@ void UTableUtil::setpawn(ADefaultPawn *p)
 	push("ADefaultPawn", (void*)p);
 	lua_rawset(L, -3);
 	lua_pop(L, 1);
+}
+
+void* UTableUtil::newobj(const char* classname)
+{
+	return NULL;
 }

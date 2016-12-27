@@ -87,6 +87,10 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			}
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
+		else
+		{
+			Initializer = TEXT("(luaL_checkint");
+		}
 	}
 	return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
 }
@@ -111,10 +115,11 @@ FString FLuaScriptCodeGenerator::GenerateObjectDeclarationFromContext(const FStr
 
 FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, const FString& ReturnValueName)
 {
+	auto x = ClassNameCPP == "FPackedNormal";
 	if (ReturnValue)
 	{
 		FString Initializer;		
-		if (ReturnValue->IsA(UIntProperty::StaticClass()))
+		if (ReturnValue->IsA(UIntProperty::StaticClass()) || ReturnValue->IsA(UInt8Property::StaticClass()))
 		{
 			Initializer = FString::Printf(TEXT("lua_pushinteger(L, result);"), *ReturnValueName);
 		}
@@ -140,38 +145,6 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 			FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
 
 			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(result)));"), *typeName, *typeName);
-			//if (StructProp->Struct->GetFName() == Name_Vector2D)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaVector2D::Return(L, result);"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_Vector)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaVector::Return(L, result);"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_Vector4)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaVector4::Return(L, result);"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_Quat)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaQuat::Return(L, result);"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_LinearColor)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaLinearColor::Return(L, result);"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_Color)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaLinearColor::Return(L, FLinearColor(result));"), *ReturnValueName);
-			//}
-			//else if (StructProp->Struct->GetFName() == Name_Transform)
-			//{
-			//	Initializer = FString::Printf(TEXT("FLuaTransform::Return(L, result);"), *ReturnValueName);
-			//}
-			//else
-			//{
-			//	FError::Throwf(TEXT("Unsupported function return value struct type: %s"), *StructProp->Struct->GetName());
-			//}
 		}
 		else if (ReturnValue->IsA(UObjectPropertyBase::StaticClass()))
 		{
@@ -189,6 +162,7 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 		}
 		else
 		{
+			Initializer = FString::Printf(TEXT("lua_pushinteger(L, result);"), *ReturnValueName);
 			//FError::Throwf(TEXT("Unsupported function return type: %s"), *ReturnValue->GetClass()->GetName());
 		}
 
@@ -537,21 +511,32 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		for (TObjectIterator<UScriptStruct> It; It; ++It)
 		{
 			FString name = *It->GetName();
+			if (name != "Vector" &&
+				name != "Rotator" &&
+				name != "Vector2D" &&
+				name != "Vector4" &&
+				name != "Quat" &&
+				name != "Color" &&
+				name != "LinearColor")
+				continue;
 			FString namecpp = "F" + name;
+			StructNames.Add(namecpp);
 			const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".script.h"));
 			AllScriptHeaders.Add(ClassGlueFilename);
 			FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
 			int32 PropertyIndex = 0;
+			TArray<FString> allPropertyName;
 			for (TFieldIterator<UProperty> PropertyIt(*It, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt, ++PropertyIndex)
 			{
 				UProperty* Property = *PropertyIt;
+				allPropertyName.Add(Property->GetName());
+
 				FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
 				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
 				func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
 				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property, TEXT("PropertyValue")));
 				func += "}\r\n\r\n";
 				GeneratedGlue += func;
-
 				func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
 				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
 				func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
@@ -569,6 +554,19 @@ void FLuaScriptCodeGenerator::ExportStruct()
 			addition += TEXT("\treturn 0;\r\n}\r\n\r\n");
 
 			GeneratedGlue += addition;
+
+			GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *namecpp);
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *namecpp);
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *namecpp);
+
+
+			for (auto& PropertyName : allPropertyName)
+			{
+				GeneratedGlue += FString::Printf(TEXT("\t{ \"Get_%s\", %s_Get_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
+				GeneratedGlue += FString::Printf(TEXT("\t{ \"Set_%s\", %s_Set_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
+			}
+			GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n");
+
 			SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
 		}
 	}
@@ -652,6 +650,10 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	for (auto Class : LuaExportedClasses)
 	{
 		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+	}
+	for (auto Name : StructNames)
+	{
+		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Name, *Name);
 	}
 	LibGlue += TEXT("}\r\n\r\n");
 

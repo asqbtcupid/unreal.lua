@@ -28,6 +28,7 @@ public:
 	static void* tousertype(const char* classname, int i);
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
+	static void* newobj(const char* classname);
 	static void shutdown();
 	
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")

@@ -22,6 +22,7 @@ protected:
 	TArray<FString> AllSourceClassHeaders;
 	/** All exported classes */
 	TArray<UClass*> LuaExportedClasses;
+	TArray<FString> StructNames;
 	/** Functions exported for a class */
 	TMap<UClass*, TArray<FName> > ClassExportedFunctions;
 	/** Proprties exported for a class */
