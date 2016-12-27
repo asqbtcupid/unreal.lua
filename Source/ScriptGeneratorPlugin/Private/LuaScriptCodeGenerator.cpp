@@ -143,8 +143,9 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 		{
 			UStructProperty* StructProp = CastChecked<UStructProperty>(ReturnValue);
 			FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
-
-			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(result)));"), *typeName, *typeName);
+			Initializer = FString::Printf(TEXT("%s* new_result = (%s*)(UTableUtil::newobj(\"%s\"));\r\n"), *typeName, *typeName, *typeName);
+			Initializer += FString::Printf(TEXT("\t*new_result = result;\r\n"));
+			Initializer += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)(new_result));"), *typeName, *typeName);
 		}
 		else if (ReturnValue->IsA(UObjectPropertyBase::StaticClass()))
 		{

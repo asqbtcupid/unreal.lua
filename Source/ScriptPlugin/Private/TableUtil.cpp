@@ -238,7 +238,18 @@ void UTableUtil::setpawn(ADefaultPawn *p)
 	lua_pop(L, 1);
 }
 
-void* UTableUtil::newobj(const char* classname)
+void* UTableUtil::newobj(FString classname)
 {
-	return NULL;
+	lua_pushvalue(L, LUA_GLOBALSINDEX);
+	push(classname);
+	lua_rawget(L, -2);
+	lua_pushstring(L, "New");
+	lua_rawget(L, -2);
+	if (lua_iscfunction(L, -1))
+	{
+		lua_pcall(L, 0, 1, 0);
+		return tousertype(TCHAR_TO_ANSI(*classname), -1);
+	}
+	else
+		return nullptr;
 }
