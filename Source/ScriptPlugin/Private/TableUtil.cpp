@@ -181,10 +181,6 @@ UTableUtil::UTableUtil()
 	
 }
 
-int32 UTableUtil::test()
-{
-	return 5;
-}
 
 float UTableUtil::tick(float delta)
 {
@@ -224,10 +220,8 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 	// UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
 }
 
-void UTableUtil::call(FString funcName)
-{
-	lua_tinker::call<void>(L, TCHAR_TO_ANSI(*funcName));
-}
+
+
 
 void UTableUtil::setpawn(ADefaultPawn *p)
 {
@@ -238,3 +232,69 @@ void UTableUtil::setpawn(ADefaultPawn *p)
 	lua_pop(L, 1);
 }
 
+void UTableUtil::executeFunc(FString funcName)
+{
+	int nargs = lua_gettop(L);
+	lua_pushvalue(L, LUA_GLOBALSINDEX);
+	push(funcName);
+	lua_rawget(L, -2);
+	for (int i = 1; i <= nargs; i++)
+	{
+		lua_pushvalue(L, i);
+	}
+	lua_pcall(L, nargs, 1, 0);
+}
+
+void UTableUtil::clearStack()
+{
+	lua_pop(L, lua_gettop(L));
+}
+// api for blueprint start:
+void UTableUtil::Push_obj(UObject *p)
+{
+	auto Class = p->StaticClass();
+	FString ClassName = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+	push(TCHAR_TO_ANSI(*ClassName), (void*)p);
+}
+
+void UTableUtil::Push_float(float value)
+{
+	lua_pushnumber(L, value);
+}
+
+void UTableUtil::Push_str(FString value)
+{
+	push(value);
+}
+
+
+void UTableUtil::Call_void(FString funcName)
+{
+	executeFunc(funcName);
+	clearStack();
+	// lua_tinker::call<void>(L, TCHAR_TO_ANSI(*funcName));
+}
+
+float UTableUtil::Call_float(FString funcName)
+{
+	executeFunc(funcName);
+	auto result = lua_tonumber(L, -1);
+	clearStack();
+	return result;
+}
+
+UObject* UTableUtil::Call_obj(FString funcName)
+{
+	executeFunc(funcName);
+	auto result = (UObject*)tousertype("", -1);
+	clearStack();
+	return result;
+}
+
+FString UTableUtil::Call_str(FString funcName)
+{
+	executeFunc(funcName);
+	FString result = ANSI_TO_TCHAR(luaL_checkstring(L, -1));
+	clearStack();
+	return result;
+}

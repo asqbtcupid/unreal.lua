@@ -29,9 +29,29 @@ public:
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
 	static void shutdown();
+	static void clearStack();
 	
+	static void executeFunc(FString funcName);
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static void call(FString funcName);
+	static void Call_void(FString funcName);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void Push_obj(UObject *p);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void Push_float(float value);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void Push_str(FString value);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static UObject* Call_obj(FString funcName);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static float Call_float(FString funcName);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static FString Call_str(FString funcName);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void setpawn(ADefaultPawn *p);
@@ -44,10 +64,6 @@ public:
 	template<> static void push(int value);
 	template<> static void push(FString value);
 	
-	// static lua_State* lua_state;
-	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static int32 test();
-
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static float tick(float delta);
 };
