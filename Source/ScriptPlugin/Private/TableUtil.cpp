@@ -11,7 +11,7 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
@@ -238,18 +238,3 @@ void UTableUtil::setpawn(ADefaultPawn *p)
 	lua_pop(L, 1);
 }
 
-void* UTableUtil::newobj(FString classname)
-{
-	lua_pushvalue(L, LUA_GLOBALSINDEX);
-	push(classname);
-	lua_rawget(L, -2);
-	lua_pushstring(L, "New");
-	lua_rawget(L, -2);
-	if (lua_iscfunction(L, -1))
-	{
-		lua_pcall(L, 0, 1, 0);
-		return tousertype(TCHAR_TO_ANSI(*classname), -1);
-	}
-	else
-		return nullptr;
-}
