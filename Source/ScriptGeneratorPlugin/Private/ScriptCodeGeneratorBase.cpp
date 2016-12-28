@@ -90,6 +90,7 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 		int FirstSpaceIndex = PropertyType.Find(TEXT(" "));
 		PropertyType = TEXT("TSubclassOf<") + PropertyType.Mid(FirstSpaceIndex + 1);
 	}
+
 	return PropertyType;
 }
 
@@ -111,7 +112,12 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 			if ( Param->GetName() != "ReturnValue" )
 			{
 				FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
-				Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName(), *initParam);
+				FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+				if ( !(Param->GetFlags() & CPPF_NoRef) && !nameCpp.Contains("*")&&
+					Param->IsA(UStructProperty::StaticClass()))
+					Params += FString::Printf(TEXT("\t%s& %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+				else
+					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
 				paramList += Param->GetName() + ",";
 			}
 			else
@@ -126,7 +132,7 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 	else
 		Params += "\t";
 	FString callobj = "Obj->";
-	if (Function->FunctionFlags & FUNC_Static)
+	if (bIsStaticFunc)
 		callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
 	if (paramList.IsEmpty())
 	{
