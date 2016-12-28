@@ -113,8 +113,7 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 			{
 				FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
 				FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-				if ( !(Param->GetFlags() & CPPF_NoRef) && !nameCpp.Contains("*")&&
-					Param->IsA(UStructProperty::StaticClass()))
+				if ( !nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
 					Params += FString::Printf(TEXT("\t%s& %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
 				else
 					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
