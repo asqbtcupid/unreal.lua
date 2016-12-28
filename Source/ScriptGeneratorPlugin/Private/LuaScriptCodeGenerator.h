@@ -47,6 +47,8 @@ protected:
 	FString GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, const FString& ReturnValueName);
 	/** Check if a property type is supported */
 	bool IsPropertyTypeSupported(UProperty* Property) const;
+	FString GetPropertyType(UProperty* Property) const;
+	FString GetPropertyGetFunc(UProperty* Property) const;
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);
 	void ExportStruct();

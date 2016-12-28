@@ -9,6 +9,13 @@ using luafunc = int( struct lua_State* );
 
 // struct lua_State;
 // class UBaseTinkerTable;
+// USTRUCT(noexport)
+// struct Fstr2property
+// {
+// 	UPROPERTY()
+// 	TMap<FString, UProperty*> map;
+// };
+
 UCLASS(MinimalAPI)
 class UTableUtil : public UBlueprintFunctionLibrary
 {
@@ -66,6 +73,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static float tick(float delta);
+	
+	static TMap<FString, TMap<FString, UProperty*>> propertyMap;
+	static void InitClassMap();
+	static UProperty* GetPropertyByName(FString classname, FString propertyname);
 };
 
 template<>

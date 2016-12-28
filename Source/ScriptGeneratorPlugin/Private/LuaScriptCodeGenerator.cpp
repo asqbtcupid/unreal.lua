@@ -348,7 +348,7 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 	bool bsupport = FScriptCodeGeneratorBase::CanExportProperty(ClassNameCPP, Class, Property);
 	if (bsupport)
 	{
-		if (!(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic) || (Property->PropertyFlags & CPF_Deprecated))
+		if ((Property->PropertyFlags & CPF_Deprecated))
 		{
 			return false;
 		}
@@ -359,6 +359,66 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 	}
 	else
 		return false;
+}
+
+FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
+{
+	if (Property->IsA(UStrProperty::StaticClass()))
+	{
+		return FString("UStrProperty");
+	}
+	else if (Property->IsA(UIntProperty::StaticClass()))
+	{
+		return FString("UIntProperty");
+	}
+	else if (Property->IsA(UFloatProperty::StaticClass()))
+	{
+		return FString("UFloatProperty");
+	}
+	else if (Property->IsA(UBoolProperty::StaticClass()))
+	{
+		return FString("UBoolProperty");
+	}
+	else if (Property->IsA(UNameProperty::StaticClass()))
+	{
+		return FString("UNameProperty");
+	}
+	else if (Property->IsA(UTextProperty::StaticClass()))
+	{
+		return FString("UTextProperty");
+	}
+	else if (Property->IsA(UObjectPropertyBase::StaticClass()))
+	{
+		return FString("UObjectPropertyBase");
+	}
+	else if (Property->IsA(UClassProperty::StaticClass()))
+	{
+		return FString("UClassProperty");
+	}
+	else if (Property->IsA(UStructProperty::StaticClass()))
+	{
+		return FString("UStructProperty");
+	}
+	else
+	{
+		return FString("");
+	}
+}
+
+FString FLuaScriptCodeGenerator::GetPropertyGetFunc(UProperty* Property) const
+{
+	if (Property->IsA(UStrProperty::StaticClass()))
+	{
+		return FString("GetPropertyValue_InContainer");
+	}
+	else if (Property->IsA(UObjectPropertyBase::StaticClass()))
+	{
+		return FString("ContainerPtrToValuePtr<void>");
+	}
+	else
+	{
+		return FString("GetPropertyValue_InContainer");
+	}
 }
 
 FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property, int32 PropertyIndex)
@@ -386,7 +446,19 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	{
 		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
 		//FunctionBody += FString::Printf(TEXT("\tstatic UProperty* Property = FindScriptPropertyHelper(%s::StaticClass(), TEXT(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
-		FunctionBody += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
+		if (Property->PropertyFlags & CPF_NativeAccessSpecifierPublic)
+			FunctionBody += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
+		else
+		{
+			FString statictype = GetPropertyType(Property);
+			if (!statictype.IsEmpty())
+			{
+				FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+				FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(p);\r\n"), *statictype, *statictype);
+				FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+				FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecpp, *GetPropertyGetFunc(Property));
+			}
+		}
 		//FunctionBody += TEXT("\tProperty->CopyCompleteValueGetActorLocation(&PropertyValue, Property->ContainerPtrToValuePtr<void>(Obj));\r\n");
 		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, NULL, Property, TEXT("PropertyValue")));
 	}
@@ -406,7 +478,7 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	Exports.Add(Getter);
 
 	//Setter
-	if (Property->IsA(UObjectPropertyBase::StaticClass()) || Property->IsA(UStructProperty::StaticClass()))
+	if (Property->IsA(UObjectPropertyBase::StaticClass()) || Property->IsA(UStructProperty::StaticClass()) || !(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic))
 	{}
 	else
 	{

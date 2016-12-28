@@ -4,14 +4,40 @@
 #include "ScriptPluginPrivatePCH.h"
 #include "TableUtil.h"
 lua_State* UTableUtil::L = nullptr;
+
+TMap<FString, TMap<FString, UProperty*>> UTableUtil::propertyMap;
+
+void UTableUtil::InitClassMap()
+{
+	for (TObjectIterator<UClass> uClass; uClass; ++uClass)
+	{
+		UClass* theClass = *uClass;
+		FString className = FString::Printf(TEXT("%s%s"), theClass->GetPrefixCPP(), *theClass->GetName());
+		TMap<FString, UProperty*> m;
+		for (TFieldIterator<UProperty> PropertyIt(theClass); PropertyIt; ++PropertyIt)
+		{
+			UProperty* Property = *PropertyIt;
+			m.Add(Property->GetName(), Property);
+		}
+		propertyMap.Add(className ,m);
+	}
+}
+
+UProperty* UTableUtil::GetPropertyByName(FString classname, FString propertyname)
+{
+	return propertyMap[classname][propertyname];
+}
+
+
 void UTableUtil::init()
 {
+	InitClassMap();
 	if (L != nullptr)
 		lua_close(L);
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		//int i = 10;
 	}
