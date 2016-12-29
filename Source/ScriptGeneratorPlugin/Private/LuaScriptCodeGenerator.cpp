@@ -139,6 +139,10 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 		{
 			Initializer = FString::Printf(TEXT("lua_pushboolean(L, result);"), *ReturnValueName);
 		}
+		else if (ReturnValue->IsA(UClassProperty::StaticClass()))
+		{
+			Initializer = FString::Printf(TEXT("UTableUtil::push(\"UClass\", (void*)(result));"));
+		}
 		else if (ReturnValue->IsA(UStructProperty::StaticClass()))
 		{
 			UStructProperty* StructProp = CastChecked<UStructProperty>(ReturnValue);
@@ -420,11 +424,34 @@ FString FLuaScriptCodeGenerator::GetPropertyGetFunc(UProperty* Property) const
 		return FString("GetPropertyValue_InContainer");
 	}
 }
+
+FString FLuaScriptCodeGenerator::GetPropertySetFunc(UProperty* Property) const
+{
+	if (Property->IsA(UObjectPropertyBase::StaticClass()))
+	{
+		return FString("SetObjectPropertyValue_InContainer");
+	}
+	else
+	{
+		return FString("SetPropertyValue_InContainer");
+	}
+}
 FString FLuaScriptCodeGenerator::GetPropertyCastType(UProperty* Property) const
 {
 	if (Property->IsA(UClassProperty::StaticClass()))
 	{
 		return FString("UClass*");
+	}
+	else
+	{
+		return FString("");
+	}
+}
+FString FLuaScriptCodeGenerator::GetPropertySetCastType(UProperty* Property) const
+{
+	if (Property->IsA(UBoolProperty::StaticClass()))
+	{
+		return FString("bool");
 	}
 	else
 	{
@@ -492,19 +519,40 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	Exports.Add(Getter);
 
 	//Setter
-	if (Property->IsA(UObjectPropertyBase::StaticClass()) || Property->IsA(UStructProperty::StaticClass()) || !(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic))
+	if (false)
 	{}
 	else
 	{
 		FString SetterName = FString::Printf(TEXT("Set_%s"), *PropertyName);
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, SetterName);
 		GeneratedGlue += TEXT("\r\n{\r\n");
-		auto x = Property->GetName() == "AnimBlueprintGeneratedClass";
 		if (PropertySuper == NULL)
 		{
 			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-			FunctionBody += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
-		
+			if (Property->PropertyFlags & CPF_NativeAccessSpecifierPublic)
+			{
+				FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+				auto exceptionOne = Property->GetName() == "AnimBlueprintGeneratedClass";
+				if (exceptionOne)
+					FunctionBody += TEXT("\tObj->AnimBlueprintGeneratedClass = (UAnimBlueprintGeneratedClass*)(UTableUtil::tousertype(\"UClass\", 2));\r\n");
+				else
+					FunctionBody += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
+			}
+			else
+			{
+				FString statictype = GetPropertyType(Property);
+				if (!statictype.IsEmpty())
+				{
+					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+					FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(property);\r\n"), *statictype, *statictype);
+					FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+					FString typecast = GetPropertySetCastType(Property);
+					if (typecast.IsEmpty())
+						typecast = typecpp;
+					FunctionBody += FString::Printf(TEXT("\t%s value = %s;\r\n"), *typecast, *InitializeParam(Property, 0));
+					FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, value);\r\n"), *GetPropertySetFunc(Property));
+				}
+			}
 			FunctionBody += TEXT("\treturn 0;\r\n");
 		}
 		else

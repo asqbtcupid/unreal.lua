@@ -49,7 +49,9 @@ protected:
 	bool IsPropertyTypeSupported(UProperty* Property) const;
 	FString GetPropertyType(UProperty* Property) const;
 	FString GetPropertyGetFunc(UProperty* Property) const;
+	FString GetPropertySetFunc(UProperty* Property) const;
 	FString GetPropertyCastType(UProperty* Property) const;
+	FString GetPropertySetCastType(UProperty* Property) const;
 
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);
