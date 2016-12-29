@@ -37,6 +37,7 @@ public:
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
 	static void shutdown();
 	static void clearStack();
+	static bool existdata(void * p);
 	
 	static void executeFunc(FString funcName);
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")

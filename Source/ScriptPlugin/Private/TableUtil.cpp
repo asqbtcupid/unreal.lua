@@ -147,13 +147,34 @@ void UTableUtil::openmodule(const char* name)
 	lua_rawget(L, -2);
 }
 
+int32 gcfunc(lua_State *L)
+{
+	lua_pushvalue(L, -1);
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_pushnil(L);
+	lua_settable(L, LUA_REGISTRYINDEX);
+	lua_pushvalue(L, -1);
+	lua_pushnil(L);
+	lua_settable(L, LUA_REGISTRYINDEX);
+	lua_getmetatable(L, -1);
+	lua_pushstring(L, "Destroy");
+	lua_gettable(L, -2);
+	lua_remove(L, -2);
+	lua_pushvalue(L, 1);
+	if (lua_pcall(L, 1, 0, 0))
+	{
+		UE_LOG(LogScriptPlugin, Warning, TEXT("lua error destroy %s"), *FString(lua_tostring(L,-1)));
+	}
+	return 0;
+}
+
 void UTableUtil::addfunc(const char* name, luafunc f)
 {
 	static FString gcFuncName("Destroy");
 	if (gcFuncName == name)
 	{
 		lua_pushstring(L, "__gc");
-		lua_pushcfunction(L, f);
+		lua_pushcfunction(L, gcfunc);
 		lua_rawset(L, -3);
 	}
 	lua_pushstring(L, name);
@@ -187,18 +208,27 @@ void UTableUtil::push(const char* classname, void* p)
 		lua_pushnil(L);
 		return;
 	}
-	*(void**)lua_newuserdata(L, sizeof(void *)) = p;
-	luaL_getmetatable(L, classname);
-	if (lua_istable(L, -1))
+	if (!existdata(p))
 	{
-		lua_setmetatable(L, -2);
-	}
-	else
-	{
-		lua_pop(L, 1);
-		UTableUtil::addmodule(classname);
+		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
+		lua_pushvalue(L, -1);
+		lua_pushlightuserdata(L, p);
+		lua_settable(L, LUA_REGISTRYINDEX);
+		lua_pushlightuserdata(L, p);
+		lua_pushvalue(L, -2);
+		lua_settable(L, LUA_REGISTRYINDEX);
 		luaL_getmetatable(L, classname);
-		lua_setmetatable(L, -2);
+		if (lua_istable(L, -1))
+		{
+			lua_setmetatable(L, -2);
+		}
+		else
+		{
+			lua_pop(L, 1);
+			UTableUtil::addmodule(classname);
+			luaL_getmetatable(L, classname);
+			lua_setmetatable(L, -2);
+		}
 	}
 }
 
@@ -323,4 +353,17 @@ FString UTableUtil::Call_str(FString funcName)
 	FString result = ANSI_TO_TCHAR(luaL_checkstring(L, -1));
 	clearStack();
 	return result;
+}
+
+bool UTableUtil::existdata(void * p)
+{
+	lua_pushlightuserdata(L, p);
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	if (lua_isnil(L, -1))
+	{
+		lua_pop(L, 1);
+		return false;
+	}
+	else
+		return true;
 }
