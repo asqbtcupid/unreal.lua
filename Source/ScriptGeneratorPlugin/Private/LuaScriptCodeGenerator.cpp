@@ -157,7 +157,7 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 			{
 				FString luatypeName = typeName;
 				luatypeName.RemoveAt(luatypeName.Len() - 1);
-				Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)result);"), *luatypeName);
+				Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)result, true);"), *luatypeName);
 			}
 			else
 			{
@@ -313,7 +313,8 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 	if (Property->IsA(UStructProperty::StaticClass()))
 	{
 		UStructProperty* StructProp = CastChecked<UStructProperty>(Property);
-		if (StructProp->Struct->GetFName() == "InputChord")
+		if (StructProp->Struct->GetFName() == "InputChord" || 
+			StructProp->Struct->GetFName() == "Key" )
 // 			StructProp->Struct->GetFName() != Name_Vector &&
 // 			StructProp->Struct->GetFName() != Name_Vector4 &&
 // 			StructProp->Struct->GetFName() != Name_Quat &&
@@ -586,9 +587,9 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\tFName Name = FName(luaL_checkstring(L, 2));\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\tUObject* Obj = NewObject<%s>(Outer, Name);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
-		GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().AddObjectReference(Obj);\r\n");
+		//GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().AddObjectReference(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj);\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 

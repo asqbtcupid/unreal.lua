@@ -37,9 +37,9 @@ void UTableUtil::init()
 	auto l = lua_open();
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
 	{
-		//int i = 10;
+		UTableUtil::log(FString(lua_tostring(L, -1)));
 	}
 	else
 	{
@@ -100,6 +100,11 @@ int32 newindexFunc(lua_State* L)
 
 int32 cast(lua_State* L)
 {
+	if (lua_isnil(L, 2))
+	{
+		UTableUtil::log(FString("cast error, nil"));
+		return 1;
+	}
 	lua_pushstring(L, "classname");
 	lua_rawget(L, 1);
 	luaL_getmetatable(L, lua_tostring(L, -1));
@@ -107,10 +112,42 @@ int32 cast(lua_State* L)
 	lua_pushvalue(L, 2);
 	return 1;
 }
+
+int32 gcfunc(lua_State *L)
+{
+	auto u = (void**)lua_touserdata(L, -1);
+	if (*u != nullptr)
+	{
+		FScriptObjectReferencer::Get().RemoveObjectReference((UObject*)(*u));
+	}
+	lua_pushvalue(L, -1);
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_pushnil(L);
+	lua_settable(L, LUA_REGISTRYINDEX);
+	lua_pushvalue(L, -1);
+	lua_pushnil(L);
+	lua_settable(L, LUA_REGISTRYINDEX);
+	lua_getmetatable(L, -1);
+	lua_pushstring(L, "Destroy");
+	lua_gettable(L, -2);
+	if (lua_iscfunction(L, -1))
+	{
+		lua_remove(L, -2);
+		lua_pushvalue(L, 1);
+		if (lua_pcall(L, 1, 0, 0))
+		{
+			UTableUtil::log(FString(lua_tostring(L, -1)));
+		}
+	}
+	else
+	{
+	}
+	return 0;
+}
+
 void UTableUtil::initmeta()
 {
 	lua_pushstring(L, "__index");
-	//lua_pushvalue(L, -2);
 	lua_pushcfunction(L, indexFunc);
 	lua_rawset(L, -3);
 	lua_pushstring(L, "cast");
@@ -118,6 +155,9 @@ void UTableUtil::initmeta()
 	lua_rawset(L, -3);
 	lua_pushstring(L, "__newindex");
 	lua_pushcfunction(L, newindexFunc);
+	lua_rawset(L, -3);
+	lua_pushstring(L, "__gc");
+	lua_pushcfunction(L, gcfunc);
 	lua_rawset(L, -3);
 }
 
@@ -147,36 +187,9 @@ void UTableUtil::openmodule(const char* name)
 	lua_rawget(L, -2);
 }
 
-int32 gcfunc(lua_State *L)
-{
-	lua_pushvalue(L, -1);
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
-	lua_pushvalue(L, -1);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
-	lua_getmetatable(L, -1);
-	lua_pushstring(L, "Destroy");
-	lua_gettable(L, -2);
-	lua_remove(L, -2);
-	lua_pushvalue(L, 1);
-	if (lua_pcall(L, 1, 0, 0))
-	{
-		UE_LOG(LogScriptPlugin, Warning, TEXT("lua error destroy %s"), *FString(lua_tostring(L,-1)));
-	}
-	return 0;
-}
 
 void UTableUtil::addfunc(const char* name, luafunc f)
 {
-	static FString gcFuncName("Destroy");
-	if (gcFuncName == name)
-	{
-		lua_pushstring(L, "__gc");
-		lua_pushcfunction(L, gcfunc);
-		lua_rawset(L, -3);
-	}
 	lua_pushstring(L, name);
 	lua_pushcfunction(L, f);
 	lua_rawset(L, -3);
@@ -201,7 +214,7 @@ int UTableUtil::toint(int i)
 }
 
 
-void UTableUtil::push(const char* classname, void* p)
+void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
 {
 	if (p == nullptr)
 	{
@@ -210,6 +223,8 @@ void UTableUtil::push(const char* classname, void* p)
 	}
 	if (!existdata(p))
 	{
+		if (bgcrecord)
+			FScriptObjectReferencer::Get().AddObjectReference((UObject*)p);
 		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
 		lua_pushvalue(L, -1);
 		lua_pushlightuserdata(L, p);
@@ -237,21 +252,6 @@ UTableUtil::UTableUtil()
 	
 }
 
-
-float UTableUtil::tick(float delta)
-{
-	
-	float result = lua_tinker::call<float>(L, "tick", delta);
-	static bool set = false;
-	if (result > 2.0 && set == false)
-	{
-		// set = true;
-		// LuaRegisterExportedClasses(L);
-		// lua_tinker::call<void>(L, "PrintG");
-	}
-	return result;
-}
-	
 void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 {
 	int i = 0;
@@ -366,4 +366,9 @@ bool UTableUtil::existdata(void * p)
 	}
 	else
 		return true;
+}
+
+void UTableUtil::log(FString content)
+{
+	UE_LOG(LogScriptPlugin, Warning, TEXT("[lua error] %s"), *content);
 }

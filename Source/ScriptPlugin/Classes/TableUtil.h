@@ -7,15 +7,6 @@
 using namespace std;
 using luafunc = int( struct lua_State* );
 
-// struct lua_State;
-// class UBaseTinkerTable;
-// USTRUCT(noexport)
-// struct Fstr2property
-// {
-// 	UPROPERTY()
-// 	TMap<FString, UProperty*> map;
-// };
-
 UCLASS(MinimalAPI)
 class UTableUtil : public UBlueprintFunctionLibrary
 {
@@ -35,6 +26,11 @@ public:
 	static void* tousertype(const char* classname, int i);
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void log(FString content);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void shutdown();
 	static void clearStack();
 	static bool existdata(void * p);
@@ -67,13 +63,10 @@ public:
 	template<typename T>
 	static void push(T value);
 
-	static void push(const char* classname, void* p);
+	static void push(const char* classname, void* p, bool bgcrecord = false);
 
 	template<> static void push(int value);
 	template<> static void push(FString value);
-	
-	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static float tick(float delta);
 	
 	static TMap<FString, TMap<FString, UProperty*>> propertyMap;
 	static void InitClassMap();
