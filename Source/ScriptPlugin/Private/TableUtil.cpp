@@ -62,13 +62,16 @@ void UTableUtil::init()
 	}
 	else
 	{
-		LuaRegisterExportedClasses(l);
-		lua_pushvalue(L, LUA_GLOBALSINDEX);
-		lua_pushstring(L, "WorldContext");
-		auto xx = (void*)GEngine->GetWorld();
-		push("UObject", (void*)GEngine->GetWorld());
-		lua_rawset(L, -3);
-		lua_pop(L, 1);
+		//set table for index exist userdata
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_pushstring(L, "v");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		lua_setfield(L, LUA_REGISTRYINDEX, "_existuserdata");
+		//register all function
+		LuaRegisterExportedClasses(L);
+
 	}
 }
 void UTableUtil::shutdown()
@@ -139,13 +142,6 @@ int32 gcfunc(lua_State *L)
 	{
 		FScriptObjectReferencer::Get().RemoveObjectReference((UObject*)(*u));
 	}
-	lua_pushvalue(L, -1);
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
-	lua_pushvalue(L, -1);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
 	lua_getmetatable(L, -1);
 	lua_pushstring(L, "Destroy");
 	lua_gettable(L, -2);
@@ -266,12 +262,13 @@ void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
 		if (bgcrecord)
 			FScriptObjectReferencer::Get().AddObjectReference((UObject*)p);
 		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
-		lua_pushvalue(L, -1);
+
+		lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
 		lua_pushlightuserdata(L, p);
-		lua_settable(L, LUA_REGISTRYINDEX);
-		lua_pushlightuserdata(L, p);
-		lua_pushvalue(L, -2);
-		lua_settable(L, LUA_REGISTRYINDEX);
+		lua_pushvalue(L, -3);
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
+
 		luaL_getmetatable(L, classname);
 		if (lua_istable(L, -1))
 		{
@@ -397,15 +394,19 @@ FString UTableUtil::Call_str(FString funcName)
 
 bool UTableUtil::existdata(void * p)
 {
+	lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
 	lua_pushlightuserdata(L, p);
-	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_rawget(L, -2);
 	if (lua_isnil(L, -1))
 	{
-		lua_pop(L, 1);
+		lua_pop(L, 2);
 		return false;
 	}
 	else
+	{
+		lua_replace(L, 1);
 		return true;
+	}
 }
 
 void UTableUtil::log(FString content)
