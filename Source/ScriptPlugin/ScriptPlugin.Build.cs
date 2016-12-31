@@ -27,9 +27,9 @@ namespace UnrealBuildTool.Rules
 					"Core",
 					"CoreUObject",
 					"Engine",
-					"InputCore",
-					"SlateCore",
-					"uht1215_1",
+					// "InputCore",
+					// "SlateCore",
+				//	"uht1215_1",
 					// ... add other public dependencies that you statically link with here ...
 				}
 				);

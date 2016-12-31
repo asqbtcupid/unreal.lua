@@ -546,33 +546,33 @@ static void LuaOverridePrint(lua_State* LuaState)
 	lua_pop(LuaState, 1);
 }
 
-static void* LuaAlloc(void *Ud, void *Ptr, size_t OldSize, size_t NewSize)
-{
-	if (NewSize != 0)
-	{
-		return FMemory::Realloc(Ptr, NewSize);
-	}
-	else
-	{
-		FMemory::Free(Ptr);
-		return NULL;
-	}
-}
+// static void* LuaAlloc(void *Ud, void *Ptr, size_t OldSize, size_t NewSize)
+// {
+// 	if (NewSize != 0)
+// 	{
+// 		return FMemory::Realloc(Ptr, NewSize);
+// 	}
+// 	else
+// 	{
+// 		FMemory::Free(Ptr);
+// 		return NULL;
+// 	}
+// }
 
-static int32 LuaPanic(lua_State *lua_State)
-{
-	UE_LOG(LogScriptPlugin, Error, TEXT("PANIC: unprotected error in call to Lua API(%s)"), ANSI_TO_TCHAR(lua_tostring(lua_State, -1)));
-	return 0;
-}
+// static int32 LuaPanic(lua_State *lua_State)
+// {
+// 	UE_LOG(LogScriptPlugin, Error, TEXT("PANIC: unprotected error in call to Lua API(%s)"), ANSI_TO_TCHAR(lua_tostring(lua_State, -1)));
+// 	return 0;
+// }
 
 
 static lua_State* LuaNewState()
 {
-	lua_State* LuaState = lua_newstate(LuaAlloc, NULL);
-	if (LuaState)
-	{
-		lua_atpanic(LuaState, &LuaPanic);
-	}
+	lua_State* LuaState = nullptr; // = lua_newstate();
+// 	if (LuaState)
+// 	{
+// 		lua_atpanic(LuaState, &LuaPanic);
+// 	}
 	return LuaState;
 }
 
