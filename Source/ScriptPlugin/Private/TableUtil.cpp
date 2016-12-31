@@ -28,28 +28,50 @@ UProperty* UTableUtil::GetPropertyByName(FString classname, FString propertyname
 	return propertyMap[classname][propertyname];
 }
 
+static void* LuaAlloc(void *Ud, void *Ptr, size_t OldSize, size_t NewSize)
+{
+	if (NewSize != 0)
+	{
+		return FMemory::Realloc(Ptr, NewSize);
+	}
+	else
+	{
+		FMemory::Free(Ptr);
+		return NULL;
+	}
+}
+
+static int32 LuaPanic(lua_State *L)
+{
+	UTableUtil::log(FString::Printf(TEXT("PANIC: unprotected error in call to Lua API(%s)"), ANSI_TO_TCHAR(lua_tostring(L, -1))));
+	return 0;
+}
 
 void UTableUtil::init()
 {
 	InitClassMap();
 	if (L != nullptr)
 		lua_close(L);
-	auto l = lua_open();
+	auto l = lua_newstate(LuaAlloc, nullptr);
+	if (l) lua_atpanic(l, &LuaPanic);
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "D:\\luacode\\main.lua"))
+	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
 	{
 		UTableUtil::log(FString(lua_tostring(L, -1)));
 	}
 	else
 	{
-		LuaRegisterExportedClasses(l);
-		lua_pushvalue(L, LUA_GLOBALSINDEX);
-		lua_pushstring(L, "WorldContext");
-		auto xx = (void*)GEngine->GetWorld();
-		push("UObject", (void*)GEngine->GetWorld());
-		lua_rawset(L, -3);
-		lua_pop(L, 1);
+		//set table for index exist userdata
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_pushstring(L, "v");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+		lua_setfield(L, LUA_REGISTRYINDEX, "_existuserdata");
+		//register all function
+		LuaRegisterExportedClasses(L);
+
 	}
 }
 void UTableUtil::shutdown()
@@ -120,13 +142,6 @@ int32 gcfunc(lua_State *L)
 	{
 		FScriptObjectReferencer::Get().RemoveObjectReference((UObject*)(*u));
 	}
-	lua_pushvalue(L, -1);
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
-	lua_pushvalue(L, -1);
-	lua_pushnil(L);
-	lua_settable(L, LUA_REGISTRYINDEX);
 	lua_getmetatable(L, -1);
 	lua_pushstring(L, "Destroy");
 	lua_gettable(L, -2);
@@ -204,8 +219,29 @@ void* UTableUtil::tousertype(const char* classname, int i)
 {
 	if (lua_isnil(L, i))
 		return nullptr;
-	auto u = static_cast<void**>(lua_touserdata(L, i));
-	return *u;
+	else if (lua_istable(L, i))
+	{
+		lua_pushstring(L,  "_cppinstance_");
+		lua_rawget(L, i);
+		if (lua_isnil(L, -1))
+		{
+			lua_pushstring(L, "suck in tousertype");
+			lua_error(L);
+			return nullptr;
+		}
+		else
+		{
+			lua_replace(L, i);
+			return tousertype(classname, i);
+		}
+	}
+	else if (lua_isuserdata(L, i))
+	{
+		auto u = static_cast<void**>(lua_touserdata(L, i));
+		return *u;
+	}
+	else
+		return nullptr;
 }
 
 int UTableUtil::toint(int i)
@@ -226,12 +262,13 @@ void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
 		if (bgcrecord)
 			FScriptObjectReferencer::Get().AddObjectReference((UObject*)p);
 		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
-		lua_pushvalue(L, -1);
-		lua_pushlightuserdata(L, p);
-		lua_settable(L, LUA_REGISTRYINDEX);
-		lua_pushlightuserdata(L, p);
+
+		lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
 		lua_pushvalue(L, -2);
-		lua_settable(L, LUA_REGISTRYINDEX);
+		lua_pushlightuserdata(L, p);
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
+
 		luaL_getmetatable(L, classname);
 		if (lua_istable(L, -1))
 		{
@@ -310,7 +347,7 @@ void UTableUtil::Push_obj(UObject *p)
 {
 	auto Class = p->StaticClass();
 	FString ClassName = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-	push(TCHAR_TO_ANSI(*ClassName), (void*)p);
+	push(TCHAR_TO_ANSI(*ClassName), (void*)p, true);
 }
 
 void UTableUtil::Push_float(float value)
@@ -357,15 +394,19 @@ FString UTableUtil::Call_str(FString funcName)
 
 bool UTableUtil::existdata(void * p)
 {
+	lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
 	lua_pushlightuserdata(L, p);
-	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_rawget(L, -2);
 	if (lua_isnil(L, -1))
 	{
 		lua_pop(L, 1);
 		return false;
 	}
 	else
+	{
+		lua_replace(L, 1);
 		return true;
+	}
 }
 
 void UTableUtil::log(FString content)
