@@ -271,27 +271,35 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 	FString FunctionBody;
 	if (FuncSuper == NULL)
 	{
-		bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
-		if ( !bIsStaticFunc)
-			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
-		FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc);
+		if (Function->FunctionFlags & FUNC_Public)
+		{
+			bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
+			if (!bIsStaticFunc)
+				FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
+			FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc);
 
-		FString FunctionCallArguments;
-		FString ReturnValueDeclaration;
-		for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
-		{
-			UProperty* Param = *ParamIt;
-			if (Param->GetPropertyFlags() & CPF_ReturnParm)
+			FString FunctionCallArguments;
+			FString ReturnValueDeclaration;
+			for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
 			{
-				ReturnValue = Param;
+				UProperty* Param = *ParamIt;
+				if (Param->GetPropertyFlags() & CPF_ReturnParm)
+				{
+					ReturnValue = Param;
+				}
 			}
+			FString ReturnValueName;
+			if (ReturnValue)
+			{
+				ReturnValueName = FString::Printf(TEXT("Params.%s"), *ReturnValue->GetName());
+			}
+			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, Function, ReturnValue, *ReturnValueName));
 		}
-		FString ReturnValueName;
-		if (ReturnValue)
+		else
 		{
-			ReturnValueName = FString::Printf(TEXT("Params.%s"), *ReturnValue->GetName());
+// 			todo			
+			FunctionBody += FString::Printf(TEXT("\treturn 0;\r\n"));
 		}
-		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, Function, ReturnValue, *ReturnValueName));
 	}
 	else
 	{
@@ -313,14 +321,8 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 	if (Property->IsA(UStructProperty::StaticClass()))
 	{
 		UStructProperty* StructProp = CastChecked<UStructProperty>(Property);
-		if (StructProp->Struct->GetFName() == "InputChord" || 
-			StructProp->Struct->GetFName() == "Key" )
-// 			StructProp->Struct->GetFName() != Name_Vector &&
-// 			StructProp->Struct->GetFName() != Name_Vector4 &&
-// 			StructProp->Struct->GetFName() != Name_Quat &&
-// 			StructProp->Struct->GetFName() != Name_LinearColor &&
-// 			StructProp->Struct->GetFName() != Name_Color &&
-// 			StructProp->Struct->GetFName() != Name_Transform)
+		FString name = StructProp->Struct->GetFName().ToString();
+		if ( !isStructSupported(name))
 		{
 			bSupported = false;
 		}
@@ -638,6 +640,22 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 
 	return GeneratedGlue;
 }
+bool FLuaScriptCodeGenerator::isStructSupported(FString& name) const
+{
+	if (name != "Vector" &&
+		name != "Rotator" &&
+		name != "Vector2D" &&
+		name != "Vector4" &&
+		name != "Quat" &&
+		name != "Color" &&
+		name != "Name" &&
+		name != "HitResult" &&
+		name != "LinearColor")
+		return false;
+	else
+		return true;
+}
+
 void FLuaScriptCodeGenerator::ExportStruct()
 {
 	if (!bHasExportStruct)
@@ -646,13 +664,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		for (TObjectIterator<UScriptStruct> It; It; ++It)
 		{
 			FString name = *It->GetName();
-			if (name != "Vector" &&
-				name != "Rotator" &&
-				name != "Vector2D" &&
-				name != "Vector4" &&
-				name != "Quat" &&
-				name != "Color" &&
-				name != "LinearColor")
+			if (!isStructSupported(name))
 				continue;
 			FString namecpp = "F" + name;
 			StructNames.Add(namecpp);

@@ -52,6 +52,7 @@ protected:
 	FString GetPropertySetFunc(UProperty* Property) const;
 	FString GetPropertyCastType(UProperty* Property) const;
 	FString GetPropertySetCastType(UProperty* Property) const;
+	bool isStructSupported(FString &name) const;
 
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);

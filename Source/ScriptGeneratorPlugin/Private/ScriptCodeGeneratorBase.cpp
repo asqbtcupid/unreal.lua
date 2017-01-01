@@ -114,7 +114,7 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 				FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
 				FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
 				if ( !nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
-					Params += FString::Printf(TEXT("\t%s& %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
 				else
 					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
 				paramList += Param->GetName() + ",";
@@ -175,7 +175,7 @@ bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)
 bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	// We don't support delegates and non-public functions
-	if ((Function->FunctionFlags & FUNC_Delegate) ||  !(Function->FunctionFlags & FUNC_Public))
+	if (Function->FunctionFlags & FUNC_Delegate)
 	{
 		return false;
 	}
