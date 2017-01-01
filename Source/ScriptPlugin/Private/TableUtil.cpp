@@ -156,6 +156,7 @@ int32 gcfunc(lua_State *L)
 	}
 	else
 	{
+		delete *u;
 	}
 	return 0;
 }
