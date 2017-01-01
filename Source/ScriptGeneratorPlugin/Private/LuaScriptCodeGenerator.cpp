@@ -113,64 +113,68 @@ FString FLuaScriptCodeGenerator::GenerateObjectDeclarationFromContext(const FStr
 	return FString::Printf(TEXT("%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);"), *ClassNameCPP, *ClassNameCPP, *ClassNameCPP);
 }
 
-FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, const FString& ReturnValueName)
+FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString& name)
 {
-	auto x = ClassNameCPP == "FPackedNormal";
-	if (ReturnValue)
+	FString Initializer;
+	if (ReturnValue->IsA(UIntProperty::StaticClass()) || ReturnValue->IsA(UInt8Property::StaticClass()))
 	{
-		FString Initializer;		
-		if (ReturnValue->IsA(UIntProperty::StaticClass()) || ReturnValue->IsA(UInt8Property::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("lua_pushinteger(L, result);"), *ReturnValueName);
-		}
-		else if (ReturnValue->IsA(UFloatProperty::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("lua_pushnumber(L, result);"), *ReturnValueName);
-		}
-		else if (ReturnValue->IsA(UStrProperty::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*result));"), *ReturnValueName);
-		}
-		else if (ReturnValue->IsA(UNameProperty::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*result.ToString()));"), *ReturnValueName);
-		}
-		else if (ReturnValue->IsA(UBoolProperty::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("lua_pushboolean(L, result);"), *ReturnValueName);
-		}
-		else if (ReturnValue->IsA(UClassProperty::StaticClass()))
-		{
-			Initializer = FString::Printf(TEXT("UTableUtil::push(\"UClass\", (void*)(result));"));
-		}
-		else if (ReturnValue->IsA(UStructProperty::StaticClass()))
-		{
-			UStructProperty* StructProp = CastChecked<UStructProperty>(ReturnValue);
-			FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
+		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
+	}
+	else if (ReturnValue->IsA(UFloatProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("lua_pushnumber(L, %s);"), *name);
+	}
+	else if (ReturnValue->IsA(UStrProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*%s));"), *name);
+	}
+	else if (ReturnValue->IsA(UNameProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*%s.ToString()));"), *name);
+	}
+	else if (ReturnValue->IsA(UBoolProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("lua_pushboolean(L, %s);"), *name);
+	}
+	else if (ReturnValue->IsA(UClassProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("UTableUtil::push(\"UClass\", (void*)(%s));"), *name);
+	}
+	else if (ReturnValue->IsA(UStructProperty::StaticClass()))
+	{
+		UStructProperty* StructProp = CastChecked<UStructProperty>(ReturnValue);
+		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
 
-			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(result)));"), *typeName, *typeName);
-		}
-		else if (ReturnValue->IsA(UObjectPropertyBase::StaticClass()))
+		Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
+	}
+	else if (ReturnValue->IsA(UObjectPropertyBase::StaticClass()))
+	{
+		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
+		if (typeName.Contains("*"))
 		{
-			FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
-			if (typeName.Contains("*"))
-			{
-				FString luatypeName = typeName;
-				luatypeName.RemoveAt(luatypeName.Len() - 1);
-				Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)result, true);"), *luatypeName);
-			}
-			else
-			{
-				Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(result)));"), *typeName, *typeName);
-			}
+			FString luatypeName = typeName;
+			luatypeName.RemoveAt(luatypeName.Len() - 1);
+			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)%s, true);"), *luatypeName, *name);
 		}
 		else
 		{
-			Initializer = FString::Printf(TEXT("lua_pushinteger(L, result);"), *ReturnValueName);
-			//FError::Throwf(TEXT("Unsupported function return type: %s"), *ReturnValue->GetClass()->GetName());
+			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
 		}
+	}
+	else
+	{
+		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
+		//FError::Throwf(TEXT("Unsupported function return type: %s"), *ReturnValue->GetClass()->GetName());
+	}
+	return Initializer;
+}
 
-		return FString::Printf(TEXT("%s\r\n\treturn 1;"), *Initializer);
+FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue)
+{
+	if (ReturnValue)
+	{
+		FString returnValueName = FString("result");
+		return FString::Printf(TEXT("%s\r\n\treturn 1;"), *Push(ClassNameCPP, Class, Function, ReturnValue, returnValueName));
 	}
 	else
 	{
@@ -280,20 +284,30 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 
 			FString FunctionCallArguments;
 			FString ReturnValueDeclaration;
+			int returnCount = 0;
 			for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
 			{
 				UProperty* Param = *ParamIt;
 				if (Param->GetPropertyFlags() & CPF_ReturnParm)
 				{
 					ReturnValue = Param;
+					FString returnValueName = "result";
+					FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, Class, Function, ReturnValue, returnValueName));
+					returnCount++;
 				}
 			}
-			FString ReturnValueName;
-			if (ReturnValue)
+			for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
 			{
-				ReturnValueName = FString::Printf(TEXT("Params.%s"), *ReturnValue->GetName());
+				UProperty* Param = *ParamIt;
+				if ((Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm)) == CPF_OutParm)
+				{
+					FString name = Param->GetName();
+					FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, Class, Function, Param, name));
+					returnCount++;
+				}
 			}
-			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, Function, ReturnValue, *ReturnValueName));
+			FunctionBody += FString::Printf(TEXT("\treturn %d;\r\n"), returnCount);
+// 			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, Function, ReturnValue));
 		}
 		else
 		{
@@ -504,7 +518,7 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 			}
 		}
 		//FunctionBody += TEXT("\tProperty->CopyCompleteValueGetActorLocation(&PropertyValue, Property->ContainerPtrToValuePtr<void>(Obj));\r\n");
-		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, NULL, Property, TEXT("PropertyValue")));
+		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, NULL, Property));
 	}
 	else
 	{
@@ -681,7 +695,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 				FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
 				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
 				func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
-				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property, TEXT("PropertyValue")));
+				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property));
 				func += "}\r\n\r\n";
 				GeneratedGlue += func;
 				func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());

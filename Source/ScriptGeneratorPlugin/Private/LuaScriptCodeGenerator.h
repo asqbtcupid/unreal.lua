@@ -44,7 +44,7 @@ protected:
 	/** Generates code responsible for getting the object pointer from script context */
 	FString GenerateObjectDeclarationFromContext(const FString& ClassNameCPP, UClass* Class);
 	/** Handles the wrapped function's return value */
-	FString GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, const FString& ReturnValueName);
+	FString GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue);
 	/** Check if a property type is supported */
 	bool IsPropertyTypeSupported(UProperty* Property) const;
 	FString GetPropertyType(UProperty* Property) const;
@@ -53,6 +53,8 @@ protected:
 	FString GetPropertyCastType(UProperty* Property) const;
 	FString GetPropertySetCastType(UProperty* Property) const;
 	bool isStructSupported(FString &name) const;
+	FString Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString& name);
+
 
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);
