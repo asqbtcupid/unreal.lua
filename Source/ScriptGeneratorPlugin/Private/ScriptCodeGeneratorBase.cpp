@@ -74,6 +74,14 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 	static FString TSubclassOfDecl(TEXT("TSubclassOf<class "));
 
 	FString PropertyType = Property->GetCPPType(NULL, PortFlags);
+	if (Property->IsA(UArrayProperty::StaticClass()))
+	{
+		auto PropertyArr = Cast<UArrayProperty>(Property);
+		FString inerTypeCpp = GetPropertyTypeCPP(PropertyArr->Inner, CPPF_ArgumentOrReturnValue);
+		if (inerTypeCpp == "EObjectTypeQuery")
+			inerTypeCpp = "TEnumAsByte<EObjectTypeQuery> ";
+		PropertyType = FString::Printf(TEXT("TArray<%s>"), *inerTypeCpp);
+	}
 	// Strip any forward declaration keywords
 	if (PropertyType.StartsWith(EnumDecl) || PropertyType.StartsWith(StructDecl) || PropertyType.StartsWith(ClassDecl))
 	{
@@ -112,18 +120,14 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 			if (Param->IsA(UArrayProperty::StaticClass()))
 			{ 
 				FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-				auto PropertyArr = Cast<UArrayProperty>(Param);
-				FString inerTypeCpp = GetPropertyTypeCPP(PropertyArr->Inner, CPPF_ArgumentOrReturnValue);
-				if (inerTypeCpp == "EObjectTypeQuery")
-					inerTypeCpp = "TEnumAsByte<EObjectTypeQuery> ";
 				if (Param->GetName() != "ReturnValue")
 				{
 					paramList += Param->GetName() + ",";
-					Params += FString::Printf(TEXT("\tTArray<%s> %s;\r\n"), *inerTypeCpp, *Param->GetName());
+					Params += FString::Printf(TEXT("\t%s %s;\r\n"), *nameCpp, *Param->GetName());
 				}
 				else
 				{
-					returnType = FString::Printf(TEXT("TArray<%s>"), *inerTypeCpp);
+					returnType = FString::Printf(TEXT("%s"), *nameCpp);
 				}
 			}
 			else
@@ -239,7 +243,7 @@ bool FScriptCodeGeneratorBase::CanExportProperty(const FString& ClassNameCPP, UC
 
 
 	// Reject if it's one of the unsupported types (yet)
-	if (Property->IsA(UArrayProperty::StaticClass()) ||
+	if (//Property->IsA(UArrayProperty::StaticClass()) ||
  		Property->ArrayDim > 1 ||
 		Property->IsA(UDelegateProperty::StaticClass()) ||
 		Property->IsA(UMulticastDelegateProperty::StaticClass()) ||

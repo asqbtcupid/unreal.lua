@@ -175,6 +175,17 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class
 		CreateTableCode += "\t\tlua_pushinteger(L, i+1);\r\n";
 		FString pushvalueName = FString::Printf(TEXT("%s[i]"), *name);
 		FString pushCode = Push(ClassNameCPP, Class, Function, PropertyArr->Inner, pushvalueName);
+		if (Function == nullptr && !(ReturnValue->PropertyFlags & CPF_NativeAccessSpecifierPublic))
+		{
+			FString typecast = GetPropertyCastType(PropertyArr->Inner);
+			if (typecast.IsEmpty())
+				typecast = innerType;
+			FString statictype = GetPropertyType(PropertyArr->Inner);
+			CreateTableCode += FString::Printf(TEXT("\t\t%s* InnerProperty = Cast<%s>(p->Inner);\r\n"), *statictype, *statictype);
+			CreateTableCode += FString::Printf(TEXT("\t\t%s temp = (%s)InnerProperty->%s(%s.GetRawPtr(i));\r\n"), *typecast, *typecast, *GetPropertyGetFunc(PropertyArr->Inner), *name);
+			pushvalueName = FString::Printf(TEXT("temp"));
+			pushCode = Push(ClassNameCPP, Class, Function, PropertyArr->Inner, pushvalueName);
+		}
 		CreateTableCode += FString::Printf(TEXT("\t\t%s\r\n"), *pushCode);
 		CreateTableCode += "\t\tlua_rawset(L, -3);\r\n\t}\r\n";
 		Initializer = CreateTableCode;
@@ -398,6 +409,9 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 		}
 		if (Property->GetName() == "BookMarks")
 			return false;
+		if (auto p = Cast<UArrayProperty>(Property))
+			if (GetPropertyType(p->Inner) == "" || !IsPropertyTypeSupported(p->Inner) || GetPropertyType(p->Inner) == "UStructProperty")
+				return false;
 		// Check if property type is supported
 		return IsPropertyTypeSupported(Property);
 	}
@@ -410,6 +424,10 @@ FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
 	if (Property->IsA(UStrProperty::StaticClass()))
 	{
 		return FString("UStrProperty");
+	}
+	else if (Property->IsA(UInt8Property::StaticClass()))
+	{
+		return FString("UInt8Property");
 	}
 	else if (Property->IsA(UIntProperty::StaticClass()))
 	{
@@ -442,6 +460,11 @@ FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
 	else if (Property->IsA(UStructProperty::StaticClass()))
 	{
 		return FString("UStructProperty");
+	}
+	else if (Property->IsA(UArrayProperty::StaticClass()))
+	{
+// 		return "";
+		return FString("UArrayProperty");
 	}
 	else
 	{
@@ -537,7 +560,12 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 				FString typecast = GetPropertyCastType(Property);
 				if (typecast.IsEmpty())
 					typecast = typecpp;
-				FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecast, *GetPropertyGetFunc(Property));
+				if (!typecpp.Contains("TArray"))
+					FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecast, *GetPropertyGetFunc(Property));
+				else
+				{
+					FunctionBody += FString::Printf(TEXT("\tFScriptArrayHelper_InContainer result(p, Obj);\r\n"));
+				}
 			}
 		}
 		//FunctionBody += TEXT("\tProperty->CopyCompleteValueGetActorLocation(&PropertyValue, Property->ContainerPtrToValuePtr<void>(Obj));\r\n");
@@ -575,13 +603,13 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 				auto exceptionOne = Property->GetName() == "AnimBlueprintGeneratedClass";
 				if (exceptionOne)
 					FunctionBody += TEXT("\tObj->AnimBlueprintGeneratedClass = (UAnimBlueprintGeneratedClass*)(UTableUtil::tousertype(\"UClass\", 2));\r\n");
-				else
+				else if ( !Property->IsA(UArrayProperty::StaticClass()))
 					FunctionBody += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
 			}
 			else
 			{
 				FString statictype = GetPropertyType(Property);
-				if (!statictype.IsEmpty())
+				if (!statictype.IsEmpty() && !Property->IsA(UArrayProperty::StaticClass()))
 				{
 					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
 					FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(property);\r\n"), *statictype, *statictype);
