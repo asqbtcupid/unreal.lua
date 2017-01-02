@@ -7,6 +7,12 @@
 using namespace std;
 using luafunc = int( struct lua_State* );
 
+struct EnumItem
+{
+	const char* key;
+	const int32 value;
+};
+
 UCLASS(MinimalAPI)
 class UTableUtil : public UBlueprintFunctionLibrary
 {
@@ -26,6 +32,7 @@ public:
 	static void* tousertype(const char* classname, int i);
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
+	static void loadEnum(const EnumItem list[], const char* enumname);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void log(FString content);

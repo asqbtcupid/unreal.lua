@@ -14,7 +14,6 @@ static FName Name_Color("Color");
 FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& InIncludeBase)
 : FScriptCodeGeneratorBase(RootLocalPath, RootBuildPath, OutputDirectory, InIncludeBase)
 {
-	bHasExportStruct = false;
 }
 
 FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
@@ -71,6 +70,10 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			//FString typeName = GetPropertyTypeCPP(Param, CPPF_Implementation);
 			Initializer = TEXT("(UClass*)(UTableUtil::tousertype(\"UClass\",");
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
+		}
+		else if (Param->IsA(UArrayProperty::StaticClass()))
+		{
+
 		}
 		else if (Param->IsA(UObjectPropertyBase::StaticClass()) || Param->IsA(UStructProperty::StaticClass()))
 		{
@@ -692,69 +695,86 @@ bool FLuaScriptCodeGenerator::isStructSupported(FString& name) const
 
 void FLuaScriptCodeGenerator::ExportStruct()
 {
-	if (!bHasExportStruct)
+	for (TObjectIterator<UScriptStruct> It; It; ++It)
 	{
-		bHasExportStruct = true;
-		for (TObjectIterator<UScriptStruct> It; It; ++It)
+		FString name = *It->GetName();
+		if (!isStructSupported(name))
+			continue;
+		FString namecpp = "F" + name;
+		StructNames.Add(namecpp);
+		const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".script.h"));
+		AllScriptHeaders.Add(ClassGlueFilename);
+		FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
+		int32 PropertyIndex = 0;
+		TArray<FString> allPropertyName;
+		for (TFieldIterator<UProperty> PropertyIt(*It, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt, ++PropertyIndex)
 		{
-			FString name = *It->GetName();
-			if (!isStructSupported(name))
-				continue;
-			FString namecpp = "F" + name;
-			StructNames.Add(namecpp);
-			const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".script.h"));
-			AllScriptHeaders.Add(ClassGlueFilename);
-			FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
-			int32 PropertyIndex = 0;
-			TArray<FString> allPropertyName;
-			for (TFieldIterator<UProperty> PropertyIt(*It, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt, ++PropertyIndex)
-			{
-				UProperty* Property = *PropertyIt;
-				allPropertyName.Add(Property->GetName());
+			UProperty* Property = *PropertyIt;
+			allPropertyName.Add(Property->GetName());
 
-				FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
-				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
-				func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
-				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property));
-				func += "}\r\n\r\n";
-				GeneratedGlue += func;
-				func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
-				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
-				func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
-				func += TEXT("\treturn 0;\r\n}\r\n\r\n");
-				GeneratedGlue += func;
-			}
-			FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
-			addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);
-			addition += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj);\r\n"), *namecpp);
-			addition += FString::Printf(TEXT("\treturn 1;\r\n}\r\n\r\n"));
-
-			addition += FString::Printf(TEXT("static int32 %s_Destroy(lua_State* L)\r\n{\r\n"), *namecpp);
-			addition += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
-			addition += FString::Printf(TEXT("\tdelete Obj;\r\n"));
-			addition += TEXT("\treturn 0;\r\n}\r\n\r\n");
-
-			GeneratedGlue += addition;
-
-			GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *namecpp);
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *namecpp);
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *namecpp);
-
-
-			for (auto& PropertyName : allPropertyName)
-			{
-				GeneratedGlue += FString::Printf(TEXT("\t{ \"Get_%s\", %s_Get_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
-				GeneratedGlue += FString::Printf(TEXT("\t{ \"Set_%s\", %s_Set_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
-			}
-			GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n");
-
-			SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
+			FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+			func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+			func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
+			func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property));
+			func += "}\r\n\r\n";
+			GeneratedGlue += func;
+			func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+			func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+			func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
+			func += TEXT("\treturn 0;\r\n}\r\n\r\n");
+			GeneratedGlue += func;
 		}
+		FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
+		addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);
+		addition += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj);\r\n"), *namecpp);
+		addition += FString::Printf(TEXT("\treturn 1;\r\n}\r\n\r\n"));
+
+		addition += FString::Printf(TEXT("static int32 %s_Destroy(lua_State* L)\r\n{\r\n"), *namecpp);
+		addition += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+		addition += FString::Printf(TEXT("\tdelete Obj;\r\n"));
+		addition += TEXT("\treturn 0;\r\n}\r\n\r\n");
+
+		GeneratedGlue += addition;
+
+		GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *namecpp);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *namecpp);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *namecpp);
+
+
+		for (auto& PropertyName : allPropertyName)
+		{
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"Get_%s\", %s_Get_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"Set_%s\", %s_Set_%s },\r\n"), *PropertyName, *namecpp, *PropertyName);
+		}
+		GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n");
+
+		SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
 	}
 }
+
+void FLuaScriptCodeGenerator::ExportEnum()
+{
+	const FString ClassGlueFilename = GeneratedCodePath / TEXT("allEnum.script.h");
+	FString GeneratedGlue;
+	for (TObjectIterator<UEnum> It; It; ++It)
+	{
+		UEnum* e = *It;
+		FString name = e->GetName();
+		EnumtNames.Add(name);
+		GeneratedGlue += FString::Printf(TEXT("static const EnumItem %s_Enum[] =\r\n{\r\n"), *name);
+		for (int32 i = 0; i < e->GetMaxEnumValue(); ++i)
+		{
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *e->GetEnumName(i), i);
+		}
+		GeneratedGlue += TEXT("\t{ NULL, NULL }\r\n};\r\n\r\n");
+	}
+	AllScriptHeaders.Add(ClassGlueFilename);
+	SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
+}
+
 void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHeaderFilename, const FString& GeneratedHeaderFilename, bool bHasChanged)
 {
-	ExportStruct();
+	//ExportEnum();
 	if (!CanExportClass(Class))
 	{
 		return;
@@ -801,6 +821,8 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 
 void FLuaScriptCodeGenerator::FinishExport()
 {
+	ExportEnum();
+	ExportStruct();
 	GlueAllGeneratedFiles();
 	RenameTempFiles();
 }
@@ -835,6 +857,10 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	for (auto Name : StructNames)
 	{
 		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Name, *Name);
+	}
+	for (auto Name : EnumtNames)
+	{
+		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadEnum(%s_Enum, \"%s\");\r\n"), *Name, *Name);
 	}
 	LibGlue += TEXT("}\r\n\r\n");
 

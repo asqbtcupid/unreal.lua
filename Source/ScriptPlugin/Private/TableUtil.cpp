@@ -314,8 +314,25 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 	// UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
 }
 
-
-
+void UTableUtil::loadEnum(const EnumItem list[], const char* enumname)
+{
+	lua_newtable(L);
+	int i = 0;
+	while (true)
+	{
+		EnumItem temp = list[i];
+		if (temp.key == nullptr)
+			break;
+		else
+		{
+			lua_pushstring(L, temp.key);
+			lua_pushinteger(L, temp.value);
+			lua_rawset(L, -3);
+		}
+		++i;
+	}
+	lua_setfield(L, LUA_GLOBALSINDEX, enumname);
+}
 
 void UTableUtil::setpawn(ADefaultPawn *p)
 {

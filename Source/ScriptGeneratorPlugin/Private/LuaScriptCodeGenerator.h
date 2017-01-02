@@ -23,6 +23,7 @@ protected:
 	/** All exported classes */
 	TArray<UClass*> LuaExportedClasses;
 	TArray<FString> StructNames;
+	TArray<FString> EnumtNames;
 	/** Functions exported for a class */
 	TMap<UClass*, TArray<FName> > ClassExportedFunctions;
 	/** Proprties exported for a class */
@@ -30,7 +31,6 @@ protected:
 
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();
-	bool bHasExportStruct;
 	/** Exports a wrapper function */
 	FString ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function);
 	/** Exports a wrapper functions for properties */
@@ -59,6 +59,7 @@ protected:
 
 	FString InitializeParam(UProperty* Param, int32 ParamIndex);
 	void ExportStruct();
+	void ExportEnum();
 	// FScriptCodeGeneratorBase interface
 	virtual bool CanExportClass(UClass* Class) override;
 	virtual bool CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function) override;
