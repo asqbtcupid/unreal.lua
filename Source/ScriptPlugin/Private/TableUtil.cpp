@@ -56,7 +56,10 @@ void UTableUtil::init()
 	if (l) lua_atpanic(l, &LuaPanic);
 	luaL_openlibs(l);
 	L = l;
-	if (luaL_dofile(l, "G:\\luacode\\main.lua"))
+	FString contentDir = FPaths::GameContentDir();
+	FString luaDir = contentDir / TEXT("luacode");
+	FString mainFilePath = luaDir / TEXT("main.lua");
+	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
 	{
 		UTableUtil::log(FString(lua_tostring(L, -1)));
 	}
@@ -69,6 +72,9 @@ void UTableUtil::init()
 		lua_setfield(L, -2, "__mode");
 		lua_setmetatable(L, -2);
 		lua_setfield(L, LUA_REGISTRYINDEX, "_existuserdata");
+		push(luaDir);
+		lua_setfield(L, LUA_GLOBALSINDEX, "_luadir");
+		Call_void("Init");
 		//register all function
 		LuaRegisterExportedClasses(L);
 
@@ -353,7 +359,8 @@ void UTableUtil::executeFunc(FString funcName)
 	{
 		lua_pushvalue(L, i);
 	}
-	lua_pcall(L, nargs, 1, 0);
+	if (lua_pcall(L, nargs, 1, 0))
+		log(lua_tostring(L, -1));
 }
 
 void UTableUtil::clearStack()
