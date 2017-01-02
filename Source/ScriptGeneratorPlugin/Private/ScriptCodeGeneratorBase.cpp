@@ -99,29 +99,49 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 	FString Params;
 	FString paramList;
 	FString returnType;
-	//auto xx = Function->GetName() == "ReceivePossessed";
 	const bool bHasParamsOrReturnValue = (Function->Children != NULL);
 	if (bHasParamsOrReturnValue)
 	{
 		int32 ParamIndex = 0;
 		if (bIsStaticFunc)
 			ParamIndex = -1;
+// 		auto x = Function->GetName() == "GetHitResultUnderCursorForObjects";
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
 			UProperty* Param = *ParamIt;
-			if ( Param->GetName() != "ReturnValue" )
-			{
-				FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
+			if (Param->IsA(UArrayProperty::StaticClass()))
+			{ 
 				FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-				if ( !nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
-					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+				auto PropertyArr = Cast<UArrayProperty>(Param);
+				FString inerTypeCpp = GetPropertyTypeCPP(PropertyArr->Inner, CPPF_ArgumentOrReturnValue);
+				if (inerTypeCpp == "EObjectTypeQuery")
+					inerTypeCpp = "TEnumAsByte<EObjectTypeQuery> ";
+				if (Param->GetName() != "ReturnValue")
+				{
+					paramList += Param->GetName() + ",";
+					Params += FString::Printf(TEXT("\tTArray<%s> %s;\r\n"), *inerTypeCpp, *Param->GetName());
+				}
 				else
-					Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
-				paramList += Param->GetName() + ",";
+				{
+					returnType = FString::Printf(TEXT("TArray<%s>"), *inerTypeCpp);
+				}
 			}
 			else
 			{
-				returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+				if (Param->GetName() != "ReturnValue")
+				{
+					FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
+					FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+					if (!nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
+						Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+					else
+						Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+					paramList += Param->GetName() + ",";
+				}
+				else
+				{
+					returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+				}
 			}
 		}
 		
@@ -168,6 +188,7 @@ bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)
 	bool bCanExport = (Class->ClassFlags & (CLASS_RequiredAPI | CLASS_MinimalAPI)) && // Don't export classes that don't export DLL symbols
 		!ExportedClasses.Contains(Class->GetFName()); // Don't export classes that have already been exported
 	bCanExport = bCanExport && Class->GetFName() != "DemoNetDriver";
+	bCanExport = bCanExport && Class->GetFName() != "KismetArrayLibrary";
 	//bCanExport = bCanExport && Class->GetFName() == "Actor";
 	return bCanExport;
 }
@@ -175,6 +196,7 @@ bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)
 bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	// We don't support delegates and non-public functions
+	auto x = Function->GetName() == "Array_AddUnique";
 	if (Function->FunctionFlags & FUNC_Delegate)
 	{
 		return false;
@@ -185,7 +207,7 @@ bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UC
 	for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 	{
 		UProperty* Param = *ParamIt;
-		if (Param->IsA(UArrayProperty::StaticClass()) ||
+		if (//Param->IsA(UArrayProperty::StaticClass()) ||
 			  Param->ArrayDim > 1 ||
 			  Param->IsA(UDelegateProperty::StaticClass()) ||
 				Param->IsA(UMulticastDelegateProperty::StaticClass()) ||
@@ -218,7 +240,7 @@ bool FScriptCodeGeneratorBase::CanExportProperty(const FString& ClassNameCPP, UC
 
 	// Reject if it's one of the unsupported types (yet)
 	if (Property->IsA(UArrayProperty::StaticClass()) ||
-		Property->ArrayDim > 1 ||
+ 		Property->ArrayDim > 1 ||
 		Property->IsA(UDelegateProperty::StaticClass()) ||
 		Property->IsA(UMulticastDelegateProperty::StaticClass()) ||
 		Property->IsA(UWeakObjectProperty::StaticClass()) ||

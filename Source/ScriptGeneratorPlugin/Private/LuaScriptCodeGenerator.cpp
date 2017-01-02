@@ -161,6 +161,21 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class
 			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
 		}
 	}
+	else if (ReturnValue->IsA(UArrayProperty::StaticClass()))
+	{
+		auto PropertyArr = Cast<UArrayProperty>(ReturnValue);
+		FString innerType = GetPropertyTypeCPP(PropertyArr->Inner, CPPF_ArgumentOrReturnValue);
+		FString CreateTableCode;
+		CreateTableCode = FString::Printf(TEXT("int32 len = %s.Num();\r\n"), *name);
+		CreateTableCode += "\tlua_newtable(L);\r\n";
+		CreateTableCode += "\tfor(int32 i = 0; i < len; ++i)\r\n\t{\r\n";
+		CreateTableCode += "\t\tlua_pushinteger(L, i+1);\r\n";
+		FString pushvalueName = FString::Printf(TEXT("%s[i]"), *name);
+		FString pushCode = Push(ClassNameCPP, Class, Function, PropertyArr->Inner, pushvalueName);
+		CreateTableCode += FString::Printf(TEXT("\t\t%s\r\n"), *pushCode);
+		CreateTableCode += "\t\tlua_rawset(L, -3);\r\n\t}\r\n";
+		Initializer = CreateTableCode;
+	}
 	else
 	{
 		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
@@ -296,10 +311,11 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 					returnCount++;
 				}
 			}
-			for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
+		//	auto x = Function->GetName() == "CapsuleOverlapComponents_NEW";
+			for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 			{
 				UProperty* Param = *ParamIt;
-				if ((Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm)) == CPF_OutParm)
+				if ((Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) == CPF_OutParm )
 				{
 					FString name = Param->GetName();
 					FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, Class, Function, Param, name));
@@ -340,6 +356,10 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 		{
 			bSupported = false;
 		}
+	}
+	else if (Property->IsA(UArrayProperty::StaticClass()))
+	{
+		bSupported = true;
 	}
 	else if (Property->IsA(ULazyObjectProperty::StaticClass()) ||
 		Property->IsA(UAssetObjectProperty::StaticClass()) ||
