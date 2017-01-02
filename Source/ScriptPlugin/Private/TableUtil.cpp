@@ -162,7 +162,8 @@ int32 gcfunc(lua_State *L)
 	}
 	else
 	{
-		delete *u;
+// 		lua_getmetatable(L, 1);
+// 		log("memoryleak")
 	}
 	return 0;
 }
