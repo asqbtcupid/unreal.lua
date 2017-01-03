@@ -618,7 +618,10 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 					if (typecast.IsEmpty())
 						typecast = typecpp;
 					FunctionBody += FString::Printf(TEXT("\t%s value = %s;\r\n"), *typecast, *InitializeParam(Property, 0));
-					FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, value);\r\n"), *GetPropertySetFunc(Property));
+					if (Property->IsA(UObjectPropertyBase::StaticClass()))
+						FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, (UObject*)value);\r\n"), *GetPropertySetFunc(Property));
+					else
+						FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, value);\r\n"), *GetPropertySetFunc(Property));
 				}
 			}
 			FunctionBody += TEXT("\treturn 0;\r\n");
@@ -664,7 +667,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\r\n{\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
-		GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().RemoveObjectReference(Obj);\r\n");
+		GeneratedGlue += TEXT("\t\t//FScriptObjectReferencer::Get().RemoveObjectReference(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n\treturn 0;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 	}

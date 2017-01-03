@@ -2,9 +2,9 @@
 
 #include "ScriptPluginPrivatePCH.h"
 #include "ScriptObjectReferencer.h"
-#include "TableUtil.h"
+// #include "TableUtil.h"
 
-//void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
+void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
 
 UProperty* FindScriptPropertyHelper(UClass* Class, FName PropertyName)
 {
@@ -38,7 +38,7 @@ void FScriptPlugin::StartupModule()
 
 void FScriptPlugin::ShutdownModule()
 {
-	UTableUtil::shutdown();
+//	UTableUtil::shutdown();
 	FScriptObjectReferencer::Shutdown();
 }
-#include "GeneratedScriptLibraries.inl"
+//#include "GeneratedScriptLibraries.inl"

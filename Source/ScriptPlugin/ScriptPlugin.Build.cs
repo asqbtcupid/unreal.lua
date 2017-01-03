@@ -27,6 +27,7 @@ namespace UnrealBuildTool.Rules
 					"Core",
 					"CoreUObject",
 					"Engine",
+					// "FirstPerson_Cpp"
 					// "InputCore",
 					// "SlateCore",
 				//	"uht1215_1",
