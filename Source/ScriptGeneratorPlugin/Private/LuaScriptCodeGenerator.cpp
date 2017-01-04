@@ -90,6 +90,11 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			}
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
+		else if (Param->IsA(UByteProperty::StaticClass()))
+		{
+			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+			Initializer = FString::Printf(TEXT("(%s)(luaL_checkint"), *typeName);
+		}
 		else
 		{
 			Initializer = TEXT("(luaL_checkint");
@@ -190,6 +195,10 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class
 		CreateTableCode += "\t\tlua_rawset(L, -3);\r\n\t}\r\n";
 		Initializer = CreateTableCode;
 	}
+	else if (ReturnValue->IsA(UByteProperty::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("lua_pushinteger(L, (int)%s);"), *name);
+	}
 	else
 	{
 		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
@@ -246,6 +255,7 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
+// 	auto x = Function->GetName().Contains("Montage_Play");
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
 	if (bExport)
 	{
@@ -265,12 +275,18 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 			Function->GetName() == "LogText" ||
 			Function->GetName() == "LogLocation" ||
 			(ClassNameCPP == "UVisualLoggerKismetLibrary" && Function->GetName() == "LogBox") ||
+			(ClassNameCPP == "UMeshVertexPainterKismetLibrary" && Function->GetName() == "PaintVerticesLerpAlongAxis") ||
 			(Function->GetName() == "MakeStringAssetReference") ||
 			(ClassNameCPP == "ULevelStreamingKismet" && Function->GetName() == "LoadLevelInstance")
 			)
 		{
 			return false;
 		}
+	}
+	if (bExport)
+	{
+		if (Function->GetName().Contains("DEPRECATED"))
+			return false;
 	}
 	if (bExport)
 	{
@@ -300,7 +316,6 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 			FuncSuper = Function->GetOwnerClass();
 		}
 	}
-	auto xx = ClassNameCPP == "UGameplayStatics";
 	FString FunctionBody;
 	if (FuncSuper == NULL)
 	{
@@ -382,6 +397,8 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 	{
 		bSupported = false;
 	}
+	else if(Property->IsA( UByteProperty::StaticClass() ))
+		bSupported = true;
 	else if (!Property->IsA(UIntProperty::StaticClass()) &&
 		!Property->IsA(UFloatProperty::StaticClass()) &&
 		!Property->IsA(UStrProperty::StaticClass()) &&
@@ -566,6 +583,11 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 				{
 					FunctionBody += FString::Printf(TEXT("\tFScriptArrayHelper_InContainer result(p, Obj);\r\n"));
 				}
+			}
+			else
+			{
+				FunctionBody += FString::Printf(TEXT("\tint result = 0;\r\n"));
+
 			}
 		}
 		//FunctionBody += TEXT("\tProperty->CopyCompleteValueGetActorLocation(&PropertyValue, Property->ContainerPtrToValuePtr<void>(Obj));\r\n");
@@ -823,7 +845,7 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 
 	const FString ClassNameCPP = GetClassNameCPP(Class);
 	FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));		
-
+// 	auto x = Class->GetFName() == "AnimInstance";
 	// Export all functions
 	for (TFieldIterator<UFunction> FuncIt(Class /*, EFieldIteratorFlags::ExcludeSuper*/); FuncIt; ++FuncIt)
 	{

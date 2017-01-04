@@ -97,6 +97,7 @@ void FScriptGeneratorPlugin::FinishExport()
 
 bool FScriptGeneratorPlugin::SupportsTarget(const FString& TargetName) const
 {
+	return true;
 	// We only support the target if it explicitly enables the required script plugin in its uproject file
 	bool bSupportsTarget = false;
 	if (FPaths::IsProjectFilePathSet())
