@@ -1,5 +1,5 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
-#define _projectname "firstperson_1228"
+#define _projectname "Demo1"
 #include "ScriptGeneratorPluginPrivatePCH.h"
 #include "ScriptCodeGeneratorBase.h"
 #include "GenericScriptCodeGenerator.h"
