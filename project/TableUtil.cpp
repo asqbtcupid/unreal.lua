@@ -2,13 +2,13 @@
 
 // #include "TestCamera.h"
 // #include "ScriptPluginPrivatePCH.h"
-#include "FirstPerson_Cpp.h"
+#include "firstperson_1228.h"
 #include "TableUtil.h"
 #include "GeneratedScriptLibraries.inl"
 lua_State* UTableUtil::L = nullptr;
 
 TMap<FString, TMap<FString, UProperty*>> UTableUtil::propertyMap;
-
+FLuaGcObj UTableUtil::gcobjs;
 void UTableUtil::InitClassMap()
 {
 	for (TObjectIterator<UClass> uClass; uClass; ++uClass)
@@ -78,7 +78,7 @@ void UTableUtil::init()
 		lua_setfield(L, LUA_GLOBALSINDEX, "_luadir");
 		Call_void("Init");
 		//register all function
-		//LuaRegisterExportedClasses(L);
+		LuaRegisterExportedClasses(L);
 
 	}
 }
@@ -148,7 +148,7 @@ int32 gcfunc(lua_State *L)
 	auto u = (void**)lua_touserdata(L, -1);
 	if (*u != nullptr)
 	{
-//		FScriptObjectReferencer::Get().RemoveObjectReference((UObject*)(*u));
+		UTableUtil::rmgcref((UObject*)(*u));
 	}
 	lua_getmetatable(L, -1);
 	lua_pushstring(L, "Destroy");
@@ -270,7 +270,7 @@ void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
 	if (!existdata(p))
 	{
 		if (bgcrecord)
-//			FScriptObjectReferencer::Get().AddObjectReference((UObject*)p);
+			addgcref((UObject*)p);
 		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
 
 		lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
@@ -440,4 +440,14 @@ bool UTableUtil::existdata(void * p)
 void UTableUtil::log(FString content)
 {
 	//UE_LOG(LogScriptPlugin, Warning, TEXT("[lua error] %s"), *content);
+}
+
+void UTableUtil::addgcref(UObject* p)
+{
+	gcobjs.objs.Add(p);
+}
+
+void UTableUtil::rmgcref(UObject* p)
+{
+	gcobjs.objs.Remove(p);
 }

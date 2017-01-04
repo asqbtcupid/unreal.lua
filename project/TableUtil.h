@@ -1,6 +1,5 @@
 #pragma once
 #include "lua_tinker.h"
-#include <iostream>
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TableUtil.generated.h"
 
@@ -12,6 +11,23 @@ struct EnumItem
 	const char* key;
 	const int32 value;
 };
+
+class FLuaGcObj : FGCObject
+{
+public:
+	TSet<UObject*> objs;
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
+	{
+		Collector.AllowEliminatingReferences(false);
+		for (auto Object : objs)
+		{
+			Collector.AddReferencedObject(Object);
+		}
+		Collector.AllowEliminatingReferences(true);
+	}
+
+};
+
 
 UCLASS(MinimalAPI)
 class UTableUtil : public UBlueprintFunctionLibrary
@@ -67,6 +83,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void setpawn(ADefaultPawn *p);
 
+	static void addgcref(UObject* p);
+	static void rmgcref(UObject* p);
+
+
+	static FLuaGcObj gcobjs;
+// 	UPROPERTY()
+// 	static TArray<UObject*> s;
 	template<typename T>
 	static void push(T value);
 

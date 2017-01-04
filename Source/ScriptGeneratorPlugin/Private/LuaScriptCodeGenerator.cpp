@@ -667,7 +667,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\r\n{\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP, Class));
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
-		GeneratedGlue += TEXT("\t\t//FScriptObjectReferencer::Get().RemoveObjectReference(Obj);\r\n");
+		GeneratedGlue += TEXT("\t\tUTableUtil::rmgcref((UObject*)Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n\treturn 0;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 	}

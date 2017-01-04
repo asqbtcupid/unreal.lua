@@ -1,5 +1,5 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
-
+#define _projectname "firstperson_1228"
 #include "ScriptGeneratorPluginPrivatePCH.h"
 #include "ScriptCodeGeneratorBase.h"
 #include "GenericScriptCodeGenerator.h"
@@ -19,7 +19,7 @@ class FScriptGeneratorPlugin : public IScriptGeneratorPlugin
 	virtual void ShutdownModule() override;
 
 	/** IScriptGeneratorPlugin interface */
-	virtual FString GetGeneratedCodeModuleName() const override { return TEXT("FirstPerson_Cpp"); }
+	virtual FString GetGeneratedCodeModuleName() const override { return TEXT(_projectname); }
 	virtual bool ShouldExportClassesForModule(const FString& ModuleName, EBuildModuleType::Type ModuleType, const FString& ModuleGeneratedIncludeDirectory) const override;
 	virtual bool SupportsTarget(const FString& TargetName) const override;
 	virtual void Initialize(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& IncludeBase) override;
@@ -56,14 +56,14 @@ FString FScriptGeneratorPlugin::GetGeneratorName() const
 
 void FScriptGeneratorPlugin::Initialize(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& IncludeBase)
 {
-#if WITH_LUA
+// #if WITH_LUA
 	UE_LOG(LogScriptGenerator, Log, TEXT("Using Lua Script Generator."));
 	CodeGenerator = new FLuaScriptCodeGenerator(RootLocalPath, RootBuildPath, OutputDirectory, IncludeBase);
-#else
-	UE_LOG(LogScriptGenerator, Log, TEXT("Using Generic Script Generator."));
-	CodeGenerator = new FGenericScriptCodeGenerator(RootLocalPath, RootBuildPath, OutputDirectory, IncludeBase);
-#endif
-	UE_LOG(LogScriptGenerator, Log, TEXT("Output directory: %s"), *OutputDirectory);
+// #else
+// 	UE_LOG(LogScriptGenerator, Log, TEXT("Using Generic Script Generator."));
+// 	CodeGenerator = new FGenericScriptCodeGenerator(RootLocalPath, RootBuildPath, OutputDirectory, IncludeBase);
+// #endif
+// 	UE_LOG(LogScriptGenerator, Log, TEXT("Output directory: %s"), *OutputDirectory);
 }
 
 bool FScriptGeneratorPlugin::ShouldExportClassesForModule(const FString& ModuleName, EBuildModuleType::Type ModuleType, const FString& ModuleGeneratedIncludeDirectory) const
