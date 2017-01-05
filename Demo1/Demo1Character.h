@@ -9,6 +9,7 @@ UCLASS(config=Game,minimalapi)
 class ADemo1Character : public ACharacter
 {
 	GENERATED_BODY()
+public:
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
@@ -41,7 +42,6 @@ class ADemo1Character : public ACharacter
 	/** Motion controller (left hand) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
-public:
 	ADemo1Character();
 
 	virtual void BeginPlay();
@@ -74,30 +74,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
-protected:
+	/** Handles moving forward/backward */
+	UFUNCTION()
+	void MoveForward(float Val);
+
+	/** Handles stafing movement, left and right */
+	UFUNCTION()
+	void MoveRight(float Val);
+
 	
 	/** Fires a projectile. */
+	UFUNCTION()
 	void OnFire();
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
-	/** Handles moving forward/backward */
-	void MoveForward(float Val);
-
-	/** Handles stafing movement, left and right */
-	void MoveRight(float Val);
+	
 
 	/**
 	 * Called via input to turn at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
+	UFUNCTION()
 	void TurnAtRate(float Rate);
 
 	/**
 	 * Called via input to turn look up/down at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
+	UFUNCTION()
 	void LookUpAtRate(float Rate);
 
 	struct TouchData

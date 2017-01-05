@@ -2,9 +2,14 @@
 
 // #include "TestCamera.h"
 // #include "ScriptPluginPrivatePCH.h"
-#include "Demo1.h"
+#define _includefile "Demo1.h"
+#include  "Demo1.h" 
 #include "TableUtil.h"
 #include "GeneratedScriptLibraries.inl"
+
+
+DEFINE_LOG_CATEGORY(LuaLog);
+
 lua_State* UTableUtil::L = nullptr;
 
 TMap<FString, TMap<FString, UProperty*>> UTableUtil::propertyMap;
@@ -59,7 +64,9 @@ void UTableUtil::init()
 	luaL_openlibs(l);
 	L = l;
 	FString gameDir = FPaths::GameDir();
-	FString luaDir = gameDir / "Source" / "Demo1" /TEXT("luacode");
+	FString projectname = _includefile;
+	projectname.RemoveAt(projectname.Len() - 1, 2);
+	FString luaDir = gameDir / "Source" / projectname /TEXT("luacode");
 	FString mainFilePath = luaDir / TEXT("main.lua");
 	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
 	{
@@ -76,14 +83,15 @@ void UTableUtil::init()
 		lua_setfield(L, LUA_REGISTRYINDEX, "_existuserdata");
 		push(luaDir);
 		lua_setfield(L, LUA_GLOBALSINDEX, "_luadir");
-		Call_void("Init");
 		//register all function
 		LuaRegisterExportedClasses(L);
-
+//		LuaRegisterUtils();
+// 		Call_void("Init");
 	}
 }
 void UTableUtil::shutdown()
 {
+	Call_void("shutdown");
 	if (L != nullptr)
 	{
 		lua_close(L);
@@ -183,6 +191,9 @@ void UTableUtil::initmeta()
 	lua_rawset(L, -3);
 	lua_pushstring(L, "__gc");
 	lua_pushcfunction(L, gcfunc);
+	lua_rawset(L, -3);
+	lua_pushstring(L, "__iscppclass");
+	lua_pushboolean(L, true);
 	lua_rawset(L, -3);
 }
 
@@ -306,7 +317,6 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 	UTableUtil::openmodule(classname);
 	while (true)
 	{
-		
 		luaL_Reg temp = funclist[i];
 		if (temp.name == nullptr)
 		{
@@ -322,6 +332,28 @@ void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
 	// int j = lua_gettop(L);
 	// UE_LOG(LogScriptPlugin, Warning, TEXT("lalala %d"), j);
 }
+
+void UTableUtil::addutil(const luaL_Reg funclist[], const char* tablename)
+{
+	lua_newtable(L);
+	int i = 0;
+	while (true)
+	{
+		const luaL_Reg &temp = funclist[i];
+		if (temp.name == nullptr)
+		{
+			break;
+		}
+		else if (temp.func != nullptr)
+		{
+			lua_pushcfunction(L, temp.func);
+			lua_setfield(L, -2, temp.name);
+		}
+		i++;
+	}
+	lua_setfield(L, LUA_GLOBALSINDEX, tablename);
+}
+
 
 void UTableUtil::loadEnum(const EnumItem list[], const char* enumname)
 {
@@ -439,7 +471,7 @@ bool UTableUtil::existdata(void * p)
 
 void UTableUtil::log(FString content)
 {
-	//UE_LOG(LogScriptPlugin, Warning, TEXT("[lua error] %s"), *content);
+	UE_LOG(LuaLog, Warning, TEXT("[lua error] %s"), *content);
 }
 
 void UTableUtil::addgcref(UObject* p)

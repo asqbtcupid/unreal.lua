@@ -2,6 +2,7 @@
 #include "lua_tinker.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TableUtil.generated.h"
+DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
 
 using namespace std;
 using luafunc = int( struct lua_State* );
@@ -49,6 +50,7 @@ public:
 	static int toint(int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
+	static void addutil(const luaL_Reg funclist[], const char* tablename);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void log(FString content);

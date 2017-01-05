@@ -18,6 +18,7 @@ ADemo1Character::ADemo1Character()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
+
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -120,8 +121,8 @@ void ADemo1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ADemo1Character::OnResetVR);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ADemo1Character::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ADemo1Character::MoveRight);
+	//PlayerInputComponent->BindAxis("MoveForward", this, &ADemo1Character::MoveForward);
+	//PlayerInputComponent->BindAxis("MoveRight", this, &ADemo1Character::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
