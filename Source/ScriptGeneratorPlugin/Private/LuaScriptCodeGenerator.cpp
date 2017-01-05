@@ -808,6 +808,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 
 void FLuaScriptCodeGenerator::ExportEnum()
 {
+
 	const FString ClassGlueFilename = GeneratedCodePath / TEXT("allEnum.script.h");
 	FString GeneratedGlue;
 	for (TObjectIterator<UEnum> It; It; ++It)
