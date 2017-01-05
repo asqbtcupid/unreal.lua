@@ -420,6 +420,11 @@ void UTableUtil::Push_str(FString value)
 	push(value);
 }
 
+void UTableUtil::Push_bool(bool isTrue)
+{
+	lua_pushboolean(L, isTrue);
+}
+
 
 void UTableUtil::Call_void(FString funcName)
 {
@@ -448,6 +453,14 @@ FString UTableUtil::Call_str(FString funcName)
 {
 	executeFunc(funcName);
 	FString result = ANSI_TO_TCHAR(luaL_checkstring(L, -1));
+	clearStack();
+	return result;
+}
+
+bool UTableUtil::Call_bool(FString funcName)
+{
+	executeFunc(funcName);
+	bool result = !!lua_toboolean(L, -1);
 	clearStack();
 	return result;
 }

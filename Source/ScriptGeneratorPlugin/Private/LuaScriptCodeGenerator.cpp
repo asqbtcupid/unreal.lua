@@ -741,6 +741,7 @@ bool FLuaScriptCodeGenerator::isStructSupported(FString& name) const
 		name != "Color" &&
 		name != "Name" &&
 		name != "HitResult" &&
+		name != "Transform" &&
 		name != "LinearColor")
 		return false;
 	else
@@ -764,19 +765,26 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		for (TFieldIterator<UProperty> PropertyIt(*It, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt, ++PropertyIndex)
 		{
 			UProperty* Property = *PropertyIt;
-			allPropertyName.Add(Property->GetName());
+			if (name != "Transform")
+			{
+				allPropertyName.Add(Property->GetName());
 
-			FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
-			func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
-			func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
-			func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property));
-			func += "}\r\n\r\n";
-			GeneratedGlue += func;
-			func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
-			func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
-			func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
-			func += TEXT("\treturn 0;\r\n}\r\n\r\n");
-			GeneratedGlue += func;
+				FString func = FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+				func += FString::Printf(TEXT("\t%s result = Obj->%s;\r\n"), *GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue), *Property->GetName());
+				func += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(namecpp, nullptr, NULL, Property));
+				func += "}\r\n\r\n";
+				GeneratedGlue += func;
+				func = FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L)\r\n{\r\n"), *namecpp, *Property->GetName());
+				func += FString::Printf(TEXT("\t%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);\r\n"), *namecpp, *namecpp, *namecpp);
+				func += FString::Printf(TEXT("\tObj->%s = %s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
+				func += TEXT("\treturn 0;\r\n}\r\n\r\n");
+				GeneratedGlue += func;
+			}
+			else
+			{
+
+			}
 		}
 		FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
 		addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);

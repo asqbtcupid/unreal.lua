@@ -74,6 +74,9 @@ public:
 	static void Push_str(FString value);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void Push_bool(bool isTrue);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static UObject* Call_obj(FString funcName);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
@@ -81,6 +84,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static FString Call_str(FString funcName);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static bool Call_bool(FString funcName);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void setpawn(ADefaultPawn *p);

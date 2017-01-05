@@ -3,6 +3,7 @@ local Character_lua = Inherit(ADemo1Character)
 function Character_lua:Ctor()
 	GlobalEvent.On("Input_Forward", self.MoveForward, self)
 	GlobalEvent.On("Input_Right", self.MoveRight, self)
+	GlobalEvent.On("PressFire", self.Fire, self)
 end
 
 function Character_lua:MoveForward(v)
@@ -17,6 +18,12 @@ function Character_lua:MoveRight(v)
 		local rightvector = self:GetActorRightVector()
         self:AddMovementInput(rightvector, v, false)
     end
+end
+
+function Character_lua:Fire(isTrue)
+	if isTrue then
+		self:OnFire()
+	end
 end
 
 return Character_lua

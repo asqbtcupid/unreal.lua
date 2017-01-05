@@ -4,7 +4,7 @@
 #include "ScriptObjectReferencer.h"
 // #include "TableUtil.h"
 
-void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
+//void  LuaRegisterExportedClasses( lua_State* InScriptContext ) {}
 
 UProperty* FindScriptPropertyHelper(UClass* Class, FName PropertyName)
 {

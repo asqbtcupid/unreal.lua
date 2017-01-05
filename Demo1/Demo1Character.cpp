@@ -116,7 +116,7 @@ void ADemo1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	//InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ADemo1Character::TouchStarted);
 	if (EnableTouchscreenMovement(PlayerInputComponent) == false)
 	{
-		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ADemo1Character::OnFire);
+// 		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ADemo1Character::OnFire);
 	}
 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ADemo1Character::OnResetVR);
