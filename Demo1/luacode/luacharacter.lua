@@ -1,5 +1,4 @@
 local Character_lua = Inherit(ADemo1Character)
-
 function Character_lua:Ctor()
 	GlobalEvent.On("Input_Forward", self.MoveForward, self)
 	GlobalEvent.On("Input_Right", self.MoveRight, self)
@@ -22,7 +21,7 @@ end
 
 function Character_lua:Fire(isTrue)
 	if isTrue then
-		self:OnFire()
+		A_(self.ProjectileClass)
 	end
 end
 

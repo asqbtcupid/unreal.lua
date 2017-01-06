@@ -40,29 +40,43 @@ function Object:NewIns(...)
 	return newIns
 end
 
+local function __indexcpp(t, k)
+	local class = getmetatable(t)
+	while class do
+		local v = rawget(class, k)
+		if v then return v end 
+		v = rawget(class, "Get_"..k)
+		if v then return v(t) end
+		class = class.Super and class:Super() 
+	end
+end
+
+local function __newindexcpp(t, k, v)
+	local class = getmetatable(t)
+	while class do
+		local f = class["Set_"..k]
+		if f then f(t, v); return end
+		class = class.Super and class:Super() 
+	end
+	rawset(t, k, v)
+end
+
 function Inherit(parent)
 	local TheNewClass = {}
 	TheNewClass._parentclass = parent
-	TheNewClass.__index = TheNewClass
 	if parent.__iscppclass then
 		TheNewClass._cppclass = parent._cppclass or parent
 		function TheNewClass:Bind(userData)
 			self._cppclass:cast(userData) 
 			self._cppinstance_ = userData 
 		end
-		TheNewClass.NewIns = Object.NewIns
-		TheNewClass.Super = Object.Super
-		local newmeta = {}
-		newmeta.__index = parent
-		newmeta.__newindex = function (t, k, v)
-			if parent["Set_"..k] then
-				parent[k] = v
-			else
-				rawset(t, k, v)
-			end
-		end
-		setmetatable(TheNewClass, newmeta)
+		TheNewClass.NewIns = parent.NewIns or Object.NewIns
+		TheNewClass.Super = parent.Super or Object.Super
+		TheNewClass.__index = __indexcpp
+		TheNewClass.__newindex = __newindexcpp
+		setmetatable(TheNewClass, parent)
 	else
+		TheNewClass.__index = TheNewClass
 		setmetatable(TheNewClass, parent)
 	end
 	return TheNewClass

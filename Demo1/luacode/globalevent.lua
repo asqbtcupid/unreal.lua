@@ -83,9 +83,7 @@ function GlobalEvent.FireEvent(EventName, ...)
 		table.insert(FireList, Subscriber)
 	end
 	for _, Subscriber in ipairs(FireList) do
-		if type(Subscriber[2][1]) == "table" and Subscriber[2][1].GetSingleton ~= nil and Subscriber[2][1] ~= Subscriber[2][1]._instance then
-			GlobalEvent.SubscriberList[EventName][Subscriber] = nil
-		elseif GlobalEvent.SubscriberList[EventName][Subscriber] then
+		if GlobalEvent.SubscriberList[EventName][Subscriber] then
 			CallBack(Subscriber[1], Subscriber[2], arg)
 		end
 	end

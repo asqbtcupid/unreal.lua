@@ -340,7 +340,7 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 					returnCount++;
 				}
 			}
-		//	auto x = Function->GetName() == "CapsuleOverlapComponents_NEW";
+			//auto x = Function->GetName() == "BeginDeferredActorSpawnFromClass";
 			for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 			{
 				UProperty* Param = *ParamIt;

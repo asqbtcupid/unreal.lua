@@ -612,8 +612,8 @@ bool FLuaContext::Initialize(const FString& Code, UObject* Owner)
 	bool bResult = false;
 	LuaState = LuaNewState();
 	luaL_openlibs(LuaState);
-	LuaRegisterExportedClasses(LuaState);
-	LuaRegisterUnrealUtilities(LuaState);
+	//LuaRegisterExportedClasses(LuaState);
+	//LuaRegisterUnrealUtilities(LuaState);
 
 	if (luaL_loadstring(LuaState, TCHAR_TO_ANSI(*Code)) == 0)
 	{

@@ -122,16 +122,23 @@ int32 indexFunc(lua_State* L)
 
 int32 newindexFunc(lua_State* L)
 {
-	lua_getmetatable(L, 1);
-	FString property = FString(lua_tostring(L, 2));
-	FString propertyKey = FString::Printf(TEXT("Set_%s"), *property);
-	UTableUtil::push(propertyKey);
-	lua_rawget(L, -2);
-	if (!lua_isnil(L, -1))
+	if (lua_isuserdata(L, 1))
 	{
-		lua_pushvalue(L, 1);
-		lua_pushvalue(L, 3);
-		lua_call(L, 2, 1);
+		lua_getmetatable(L, 1);
+		FString property = FString(lua_tostring(L, 2));
+		FString propertyKey = FString::Printf(TEXT("Set_%s"), *property);
+		UTableUtil::push(propertyKey);
+		lua_rawget(L, -2);
+		if (!lua_isnil(L, -1))
+		{
+			lua_pushvalue(L, 1);
+			lua_pushvalue(L, 3);
+			lua_call(L, 2, 1);
+		}
+	}
+	else if (lua_istable(L, 1))
+	{
+		lua_rawset(L, -3);
 	}
 	return 0;
 }
@@ -477,7 +484,7 @@ bool UTableUtil::existdata(void * p)
 	}
 	else
 	{
-		lua_replace(L, 1);
+		lua_replace(L, -2);
 		return true;
 	}
 }

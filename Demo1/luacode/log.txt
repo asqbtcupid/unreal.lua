@@ -1,1 +1,14 @@
-[Thu Jan  5 17:02:48 2017] 1  
+[Fri Jan  6 21:37:20 2017] ...ue4 projects/Demo1/Source/Demo1/luacode\luaclass.lua:46: bad argument #1 to 'rawget' (table expected, got nil)
+stack traceback:
+	.../ue4 projects/Demo1/Source/Demo1/luacode\logutil.lua:33: in function <.../ue4 projects/Demo1/Source/Demo1/luacode\logutil.lua:32>
+	[C]: in function 'rawget'
+	...ue4 projects/Demo1/Source/Demo1/luacode\luaclass.lua:46: in function <...ue4 projects/Demo1/Source/Demo1/luacode\luaclass.lua:43>
+	...projects/Demo1/Source/Demo1/luacode\luacharacter.lua:3: in function 'Ctor'
+	...ue4 projects/Demo1/Source/Demo1/luacode\luaclass.lua:34: in function 'CtorRecursively'
+	...ue4 projects/Demo1/Source/Demo1/luacode\luaclass.lua:39: in function 'NewIns'
+	...ue4 projects/Demo1/Source/Demo1/luacode\actormgr.lua:9: in function 'NewActor'
+	.../../ue4 projects/Demo1/Source/Demo1/luacode/main.lua:22: in function <.../../ue4 projects/Demo1/Source/Demo1/luacode/main.lua:21>
+	[C]: in function 'xpcall'
+	.../ue4 projects/Demo1/Source/Demo1/luacode\logutil.lua:37: in function 'Xpcall'
+	.../../ue4 projects/Demo1/Source/Demo1/luacode/main.lua:24: in function <.../../ue4 projects/Demo1/Source/Demo1/luacode/main.lua:20>
+  

@@ -4,7 +4,7 @@ function Init()
     require "luaclass"
     require "globalevent"
     require "inputmgr"
-    require "luacharacter"
+    -- require "luacharacter"
     -- require "actormgr"
     -- require "sqllike"
 end

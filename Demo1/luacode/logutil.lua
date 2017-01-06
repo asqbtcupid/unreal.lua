@@ -18,6 +18,17 @@ function a_(...)
     write("["..tostring(os.date()).."] "..str)
 end
 
+function A_( ... )
+    local str = ""
+    local temp = {...}
+    for i = 1, table.maxn(temp) do
+        str = str..tostring(temp[i]).."  "
+    end
+    str = "["..tostring(os.date()).."] "..str
+    str = str.."\n"
+    UTableUtil.log(str)
+end
+
 function errhandle(err)
     a_(err..'\n'..debug.traceback()..'\n')
 end
