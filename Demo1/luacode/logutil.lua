@@ -30,7 +30,9 @@ function A_( ... )
 end
 
 function errhandle(err)
-    a_(err..'\n'..debug.traceback()..'\n')
+    local err = err..'\n'..debug.traceback()..'\n'
+    a_(err)
+    UTableUtil.log(err)
 end
 
 function Xpcall(f)

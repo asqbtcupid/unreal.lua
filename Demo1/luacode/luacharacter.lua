@@ -21,7 +21,13 @@ end
 
 function Character_lua:Fire(isTrue)
 	if isTrue then
-		A_(self.ProjectileClass)
+		if self.ProjectileClass then
+			local world = UUluautils.GetWorld(self)
+			if world then
+				SpawnRotation = self:GetControlRotation()
+				A_(self.FP_MuzzleLocation)
+			end
+		end
 	end
 end
 

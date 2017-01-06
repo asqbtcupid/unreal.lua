@@ -23,5 +23,5 @@ function NewActor(v, classpath)
         require "actormgr":Get():NewActor(v, classpath)
     end
     Xpcall(f)
-    TimerMgr:Get():On(A_, "xixi"):Time(1000):Num(5)
+    -- TimerMgr:Get():On(A_, "xixi"):Time(1000):Num(5)
 end
