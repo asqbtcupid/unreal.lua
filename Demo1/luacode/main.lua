@@ -4,6 +4,7 @@ function Init()
     require "luaclass"
     require "globalevent"
     require "inputmgr"
+    require "timermgr"
     -- require "luacharacter"
     -- require "actormgr"
     -- require "sqllike"
@@ -13,8 +14,8 @@ function shutdown()
     
 end
 
-function tick(delta)
-    
+function Tick(delta)
+    TimerMgr:Get():Tick(delta)
 end
 
 function NewActor(v, classpath)
@@ -22,4 +23,5 @@ function NewActor(v, classpath)
         require "actormgr":Get():NewActor(v, classpath)
     end
     Xpcall(f)
+    TimerMgr:Get():On(A_, "xixi"):Time(1000):Num(5)
 end
