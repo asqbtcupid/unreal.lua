@@ -36,7 +36,7 @@ local function CallBack(Callbackfunction, parameters, args)
 	for i = 1, table.maxn(args) do
 		par[i + len] = args[i]
 	end
-	xpcall(function()Callbackfunction(unpack(par, 1, table.maxn(par))) end, XpcallErrorHandle)
+	xpcall(function()Callbackfunction(unpack(par, 1, table.maxn(par))) end, errhandle)
 end
 
 -- EventName可以是任意类型数据，如果是table则用table的子项订阅，方便同一函数注册多个事件，

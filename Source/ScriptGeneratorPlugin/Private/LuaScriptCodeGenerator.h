@@ -50,14 +50,14 @@ protected:
 	FString GetPropertyType(UProperty* Property) const;
 	FString GetPropertyGetFunc(UProperty* Property) const;
 	FString GetPropertySetFunc(UProperty* Property) const;
-	FString GetPropertyCastType(UProperty* Property) const;
-	FString GetPropertySetCastType(UProperty* Property) const;
+	FString GetPropertyCastType(UProperty* Property);
+	FString GetPropertySetCastType(UProperty* Property);
 	bool isStructSupported(FString &name) const;
-	FString Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString& name);
+	FString Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString name);
 
 
 
-	FString InitializeParam(UProperty* Param, int32 ParamIndex);
+	FString InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty = false);
 	void ExportStruct();
 	void ExportEnum();
 	// FScriptCodeGeneratorBase interface

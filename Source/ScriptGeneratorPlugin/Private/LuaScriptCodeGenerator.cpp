@@ -36,7 +36,7 @@ FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FStrin
 	return funcname;
 }
 
-FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIndex)
+FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty)
 {
 	FString Initializer;
 
@@ -84,6 +84,10 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 				luatypename.RemoveAt(luatypename.Len() - 1);
 				Initializer = FString::Printf(TEXT("(%s)(UTableUtil::tousertype(\"%s\","), *typeName, *luatypename);
 			}
+			else if (isnotpublicproperty)
+			{
+				Initializer = FString::Printf(TEXT("(%s*)(UTableUtil::tousertype(\"%s\","), *typeName, *typeName);
+			}
 			else
 			{
 				Initializer = FString::Printf(TEXT("*(%s*)(UTableUtil::tousertype(\"%s\","), *typeName, *typeName);
@@ -121,7 +125,7 @@ FString FLuaScriptCodeGenerator::GenerateObjectDeclarationFromContext(const FStr
 	return FString::Printf(TEXT("%s* Obj = (%s*)UTableUtil::tousertype(\"%s\",1);"), *ClassNameCPP, *ClassNameCPP, *ClassNameCPP);
 }
 
-FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString& name)
+FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString name)
 {
 	FString Initializer;
 	if (ReturnValue->IsA(UIntProperty::StaticClass()) || ReturnValue->IsA(UInt8Property::StaticClass()))
@@ -499,6 +503,10 @@ FString FLuaScriptCodeGenerator::GetPropertyGetFunc(UProperty* Property) const
 	{
 		return FString("ContainerPtrToValuePtr<void>");
 	}
+	else if (Property->IsA(UStructProperty::StaticClass()))
+	{
+		return FString("ContainerPtrToValuePtr<uint8>");
+	}
 	else
 	{
 		return FString("GetPropertyValue_InContainer");
@@ -511,27 +519,41 @@ FString FLuaScriptCodeGenerator::GetPropertySetFunc(UProperty* Property) const
 	{
 		return FString("SetObjectPropertyValue_InContainer");
 	}
+	else if( Property->IsA(UStructProperty::StaticClass()))
+	{
+		return FString("CopyCompleteValue");
+	}
 	else
 	{
 		return FString("SetPropertyValue_InContainer");
 	}
 }
-FString FLuaScriptCodeGenerator::GetPropertyCastType(UProperty* Property) const
+FString FLuaScriptCodeGenerator::GetPropertyCastType(UProperty* Property) 
 {
 	if (Property->IsA(UClassProperty::StaticClass()))
 	{
 		return FString("UClass*");
+	}
+	else if (Property->IsA(UStructProperty::StaticClass()))
+	{
+		FString typenamecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+		return FString::Printf(TEXT("%s*"), *typenamecpp);
 	}
 	else
 	{
 		return FString("");
 	}
 }
-FString FLuaScriptCodeGenerator::GetPropertySetCastType(UProperty* Property) const
+FString FLuaScriptCodeGenerator::GetPropertySetCastType(UProperty* Property)
 {
 	if (Property->IsA(UBoolProperty::StaticClass()))
 	{
 		return FString("bool");
+	}
+	else if (Property->IsA(UStructProperty::StaticClass()))
+	{
+		FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+		return FString::Printf(TEXT("%s*"), *typecpp);
 	}
 	else
 	{
@@ -578,7 +600,12 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 				if (typecast.IsEmpty())
 					typecast = typecpp;
 				if (!typecpp.Contains("TArray"))
-					FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecast, *GetPropertyGetFunc(Property));
+				{
+					if (Property->IsA(UStructProperty::StaticClass()))
+						FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecast, *typecast, *GetPropertyGetFunc(Property));
+					else
+						FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecast, *GetPropertyGetFunc(Property));
+				}
 				else
 				{
 					FunctionBody += FString::Printf(TEXT("\tFScriptArrayHelper_InContainer result(p, Obj);\r\n"));
@@ -591,7 +618,10 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 			}
 		}
 		//FunctionBody += TEXT("\tProperty->CopyCompleteValueGetActorLocation(&PropertyValue, Property->ContainerPtrToValuePtr<void>(Obj));\r\n");
-		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, NULL, Property));
+		if (Property->IsA(UStructProperty::StaticClass()) && !(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic))
+			FunctionBody += FString::Printf(TEXT("\t%s\r\n\treturn 1;\r\n"), *Push(ClassNameCPP, Class, NULL, Property, FString("*result")));
+		else
+			FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateReturnValueHandler(ClassNameCPP, Class, NULL, Property));
 	}
 	else
 	{
@@ -630,8 +660,9 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 			}
 			else
 			{
+				bool bIsStruct = Property->IsA(UStructProperty::StaticClass());
 				FString statictype = GetPropertyType(Property);
-				if (!statictype.IsEmpty() && !Property->IsA(UArrayProperty::StaticClass()))
+				if (!statictype.IsEmpty() && !Property->IsA(UArrayProperty::StaticClass()) )
 				{
 					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
 					FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(property);\r\n"), *statictype, *statictype);
@@ -639,9 +670,11 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 					FString typecast = GetPropertySetCastType(Property);
 					if (typecast.IsEmpty())
 						typecast = typecpp;
-					FunctionBody += FString::Printf(TEXT("\t%s value = %s;\r\n"), *typecast, *InitializeParam(Property, 0));
+					FunctionBody += FString::Printf(TEXT("\t%s value = %s;\r\n"), *typecast, *InitializeParam(Property, 0, bIsStruct));
 					if (Property->IsA(UObjectPropertyBase::StaticClass()))
 						FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, (UObject*)value);\r\n"), *GetPropertySetFunc(Property));
+					else if (Property->IsA(UStructProperty::StaticClass()))
+						FunctionBody += FString::Printf(TEXT("\tp->%s(p->ContainerPtrToValuePtr<void>(Obj), (void*)value);\r\n"), *GetPropertySetFunc(Property));
 					else
 						FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, value);\r\n"), *GetPropertySetFunc(Property));
 				}
@@ -870,6 +903,7 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 	for (TFieldIterator<UProperty> PropertyIt(Class /*, EFieldIteratorFlags::ExcludeSuper*/); PropertyIt; ++PropertyIt, ++PropertyIndex)
 	{
 		UProperty* Property = *PropertyIt;
+		//auto x = Property->GetName() == "GunOffset";
 		if (CanExportProperty(ClassNameCPP, Class, Property))
 		{
 			UE_LOG(LogScriptGenerator, Log, TEXT("  %s %s"), *Property->GetClass()->GetName(), *Property->GetName());
