@@ -40,8 +40,10 @@ public:
 	 UTableUtil();
 	static void addmodule(const char* classname);
 
-	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	UFUNCTION(BlueprintCallable, Category = "TableUtil", meta = (DisplayName = "Initlua"))
 	static void init();
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void beginplay();
 	static void openmodule(const char* classname);
 	static void closemodule();
 	static void addfunc(const char* classname, luafunc f);
@@ -51,6 +53,10 @@ public:
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
 	static void addutil(const luaL_Reg funclist[], const char* tablename);
+	static void stopgcref();
+	static void startgcref();
+	static bool bIsGcRef;
+	static bool bIsBeginPlay;
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void log(FString content);
@@ -90,6 +96,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void setpawn(ADefaultPawn *p);
+
+	UFUNCTION(BlueprintCallable, Category = "TableUtil")
+	static void CtorCpp(AActor* p, FString classpath);
 
 	static void addgcref(UObject* p);
 	static void rmgcref(UObject* p);

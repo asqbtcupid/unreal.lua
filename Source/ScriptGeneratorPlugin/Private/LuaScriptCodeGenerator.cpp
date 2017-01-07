@@ -501,7 +501,7 @@ FString FLuaScriptCodeGenerator::GetPropertyGetFunc(UProperty* Property) const
 	}
 	else if (Property->IsA(UObjectPropertyBase::StaticClass()))
 	{
-		return FString("ContainerPtrToValuePtr<void>");
+		return FString("GetObjectPropertyValue_InContainer");
 	}
 	else if (Property->IsA(UStructProperty::StaticClass()))
 	{
@@ -725,8 +725,22 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\t\tUTableUtil::rmgcref((UObject*)Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n\treturn 0;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
-	}
 
+	}
+	if (!(Class->GetClassFlags() & CLASS_Abstract))
+	{
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, TEXT("CreateDefaultSubobject"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)UTableUtil::tousertype(\"UObject\", 1);\r\n");
+		GeneratedGlue += TEXT("\tFName Name = FName(luaL_checkstring(L, 2));\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tUObject* Obj = Outer->CreateDefaultSubobject<%s>(Name);\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
+		//GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().AddObjectReference(Obj);\r\n");
+		GeneratedGlue += TEXT("\t}\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
+	}
 	// Class: Equivalent of StaticClass()
 	GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, TEXT("Class"));
 	GeneratedGlue += TEXT("\r\n{\r\n");
@@ -740,9 +754,11 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	 if (!(Class->GetClassFlags() & CLASS_Abstract))
 	 {
 	 	GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *ClassName);
-	 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassName);
-	 	
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassName);
 	 }
+	 if (!(Class->GetClassFlags() & CLASS_Abstract))
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"CreateDefaultSubobject\", %s_CreateDefaultSubobject },\r\n"), *ClassName);
+
 	 GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Class },\r\n"), *ClassName);
 	 auto FunctionExports = ClassExportedFunctions.Find(Class);
 	 if (FunctionExports)

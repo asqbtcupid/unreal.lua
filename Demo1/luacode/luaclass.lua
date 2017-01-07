@@ -61,6 +61,20 @@ local function __newindexcpp(t, k, v)
 	rawset(t, k, v)
 end
 
+local function CtorCppRecursively(theclass, this, ...)
+	local super = theclass.Super and theclass:Super()
+	if super then
+		CtorRecursively(super, this, ...)
+	end
+	local CtorCpp = rawget(theclass, "CtorCpp")
+	if CtorCpp then CtorCpp(this, ...) end
+end
+
+local function NewInsCpp(self, ...)
+	self._cppinstance_ = self._cppclass.New()
+	Object.NewIns(self)
+end
+
 function Inherit(parent)
 	local TheNewClass = {}
 	TheNewClass._parentclass = parent
@@ -70,8 +84,10 @@ function Inherit(parent)
 			self._cppclass:cast(userData) 
 			self._cppinstance_ = userData 
 		end
-		TheNewClass.NewIns = parent.NewIns or Object.NewIns
-		TheNewClass.Super = parent.Super or Object.Super
+		TheNewClass.NewInsCpp = NewInsCpp
+		TheNewClass.NewIns = Object.NewIns
+		TheNewClass.CtorFromCpp = CtorCppRecursively
+		TheNewClass.Super = Object.Super
 		TheNewClass.__index = __indexcpp
 		TheNewClass.__newindex = __newindexcpp
 		setmetatable(TheNewClass, parent)

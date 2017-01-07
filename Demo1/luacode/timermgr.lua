@@ -14,7 +14,7 @@ function TimerMgr:Tick(delta)
 				h.callback(h.passtime)
 				h.passtime = h.passtime - h.interval
 				h.num = h.num + 1
-				if h.totalnum and h.totalnum == h.num then
+				if h.totalnum and h.totalnum >= h.num then
 					self.deletes[h] = true
 				end
 			end
@@ -31,6 +31,7 @@ function TimerMgr:On(f, ...)
 	handle.passtime = 0
 	handle.num = 0
 	handle.totalnum = 0
+	handle.mgr = self
 	handle.callback = MakeCallBack(f,...)
 	handle.Destroy = function ()
 		self.deletes[handle] = true
@@ -48,3 +49,14 @@ function TimerMgr:Num(n)
 	self.totalnum = n
 	return self
 end
+
+function TimerMgr:Fire(...)
+	self.passtime = 0
+	self.num = self.num + 1
+	if self.totalnum and self.totalnum >= self.num then
+		self.mgr.deletes[self] = true
+	end
+	self.callback(...)
+	return self
+end
+return TimerMgr

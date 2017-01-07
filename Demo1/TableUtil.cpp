@@ -11,7 +11,8 @@
 DEFINE_LOG_CATEGORY(LuaLog);
 
 lua_State* UTableUtil::L = nullptr;
-
+bool UTableUtil::bIsGcRef = true;
+bool UTableUtil::bIsBeginPlay = false;
 TMap<FString, TMap<FString, UProperty*>> UTableUtil::propertyMap;
 FLuaGcObj UTableUtil::gcobjs;
 void UTableUtil::InitClassMap()
@@ -56,9 +57,9 @@ static int32 LuaPanic(lua_State *L)
 
 void UTableUtil::init()
 {
-	InitClassMap();
 	if (L != nullptr)
-		lua_close(L);
+		return;
+	InitClassMap();
 	auto l = lua_newstate(LuaAlloc, nullptr);
 	if (l) lua_atpanic(l, &LuaPanic);
 	luaL_openlibs(l);
@@ -86,14 +87,21 @@ void UTableUtil::init()
 		//register all function
 		LuaRegisterExportedClasses(L);
 //		LuaRegisterUtils();
-// 		Call_void("Init");
+		Call_void("Init");
 	}
 }
+
+void UTableUtil::beginplay()
+{
+	bIsBeginPlay = true;
+}
+
 void UTableUtil::shutdown()
 {
-	Call_void("shutdown");
 	if (L != nullptr)
 	{
+		bIsBeginPlay = false;
+		Call_void("Shutdown");
 		lua_close(L);
 		L = nullptr;
 	}
@@ -287,7 +295,7 @@ void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
 	}
 	if (!existdata(p))
 	{
-		if (bgcrecord)
+		if (bgcrecord && bIsGcRef)
 			addgcref((UObject*)p);
 		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
 
@@ -496,10 +504,32 @@ void UTableUtil::log(FString content)
 
 void UTableUtil::addgcref(UObject* p)
 {
-	gcobjs.objs.Add(p);
+	//gcobjs.objs.Add(p);
 }
 
 void UTableUtil::rmgcref(UObject* p)
 {
-	gcobjs.objs.Remove(p);
+	//gcobjs.objs.Remove(p);
+}
+
+void UTableUtil::stopgcref()
+{
+	if (!bIsBeginPlay)
+		bIsGcRef = false;
+}
+
+void UTableUtil::startgcref()
+{
+	bIsGcRef = true;
+}
+
+void UTableUtil::CtorCpp(AActor* p, FString classpath)
+{
+	if (L == nullptr)
+		init();
+	stopgcref();
+	push("AActor", (void*)p, true);
+	push(classpath);
+	Call_void(FString("CtorCpp"));
+	startgcref();
 }

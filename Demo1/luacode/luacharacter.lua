@@ -1,4 +1,41 @@
 local Character_lua = Inherit(ADemo1Character)
+function Character_lua:CtorCpp()
+	local CapsuleComponent = self.CapsuleComponent
+	CapsuleComponent.CapsuleRadius = 55
+	CapsuleComponent.CapsuleHalfHeight = 96
+	self.BaseTurnRate = 45
+	self.BaseLookUpRate = 45
+	local FirstPersonCameraComponent = UCameraComponent.CreateDefaultSubobject(self, "FirstPersonCamera")
+	self.FirstPersonCameraComponent = FirstPersonCameraComponent
+	FirstPersonCameraComponent.AttachParent = CapsuleComponent
+	FirstPersonCameraComponent.RelativeLocation = FVector.New(-39.56, 1.75, 64)
+	FirstPersonCameraComponent.bUsePawnControlRotation = true
+
+	local Mesh1P = USkeletalMeshComponent.CreateDefaultSubobject(self, "CharacterMesh1P")
+	self.Mesh1P = Mesh1P
+	Mesh1P:SetOnlyOwnerSee(true)
+	Mesh1P.AttachParent = FirstPersonCameraComponent
+	Mesh1P.bCastDynamicShadow = false
+	Mesh1P.CastShadow = false
+	Mesh1P.RelativeLocation = FVector.New(-0.5, -4.4, -155.7)
+	Mesh1P.RelativeRotation = FRotator.New(1.9, -19.19, 5.2)
+
+	local FP_Gun = USkeletalMeshComponent.CreateDefaultSubobject(self, "FP_Gun")
+	self.FP_Gun = FP_Gun
+	FP_Gun:SetOnlyOwnerSee(true)
+	FP_Gun.bCastDynamicShadow = false
+	FP_Gun.CastShadow = false
+	FP_Gun.AttachParent = self.RootComponent
+
+	local FP_MuzzleLocation = USceneComponent.CreateDefaultSubobject(self, "MuzzleLocation")
+	self.FP_MuzzleLocation = FP_MuzzleLocation
+	FP_MuzzleLocation.AttachParent = FP_Gun
+	FP_MuzzleLocation:K2_SetRelativeLocation(FVector.New(0.2, 48.4, -10.6), false, FHitResult.New(), false)
+
+	self.GunOffset = FVector.New(100.0, 0.0, 10.0)
+
+end
+
 function Character_lua:Ctor()
 	GlobalEvent.On("Input_Forward", self.MoveForward, self)
 	GlobalEvent.On("Input_Right", self.MoveRight, self)
@@ -29,12 +66,10 @@ function Character_lua:Fire(isTrue)
 				local vec_offset = UKismetMathLibrary.GreaterGreater_VectorRotator(self.GunOffset, SpawnRotation) 
 				local MuzzleLocation = self.FP_MuzzleLocation:K2_GetComponentLocation()
 				local SpawnLocation = UKismetMathLibrary.Add_VectorVector(MuzzleLocation, vec_offset)
-				local scale = FVector.New()
-				scale.X = 1;scale.Y = 1;scale.Z = 1
-				local transfrom = UKismetMathLibrary.MakeTransform(SpawnLocation, SpawnRotation,scale)
-				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, ADemo1Projectile.Class(), transfrom, ESpawnActorCollisionHandlingMethod.Undefined, nil)
+				local scale = FVector.New(1, 1, 1)
+				local transfrom = UKismetMathLibrary.MakeTransform(SpawnLocation, SpawnRotation, scale)
+				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, self.ProjectileClass, transfrom, ESpawnActorCollisionHandlingMethod.Undefined, self)
 				spawnActor = UGameplayStatics.FinishSpawningActor(spawnActor, transfrom)
-				A_(spawnActor)
 			end
 		end
 	end
