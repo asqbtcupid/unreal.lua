@@ -150,14 +150,14 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class
 	}
 	else if (ReturnValue->IsA(UClassProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("UTableUtil::push(\"UClass\", (void*)(%s));"), *name);
+		Initializer = FString::Printf(TEXT("UTableUtil::pushclass(\"UClass\", (void*)(%s));"), *name);
 	}
 	else if (ReturnValue->IsA(UStructProperty::StaticClass()))
 	{
 		UStructProperty* StructProp = CastChecked<UStructProperty>(ReturnValue);
 		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
 
-		Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
+		Initializer = FString::Printf(TEXT("UTableUtil::pushclass(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
 	}
 	else if (ReturnValue->IsA(UObjectPropertyBase::StaticClass()))
 	{
@@ -166,11 +166,11 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UClass* Class
 		{
 			FString luatypeName = typeName;
 			luatypeName.RemoveAt(luatypeName.Len() - 1);
-			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)%s, true);"), *luatypeName, *name);
+			Initializer = FString::Printf(TEXT("UTableUtil::pushclass(\"%s\", (void*)%s, true);"), *luatypeName, *name);
 		}
 		else
 		{
-			Initializer = FString::Printf(TEXT("UTableUtil::push(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
+			Initializer = FString::Printf(TEXT("UTableUtil::pushclass(\"%s\", (void*)(new %s(%s)));"), *typeName, *typeName, *name);
 		}
 	}
 	else if (ReturnValue->IsA(UArrayProperty::StaticClass()))
@@ -714,7 +714,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
 		//GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().AddObjectReference(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 
@@ -737,7 +737,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
 		//GeneratedGlue += TEXT("\t\tFScriptObjectReferencer::Get().AddObjectReference(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 	}
@@ -745,7 +745,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, TEXT("Class"));
 	GeneratedGlue += TEXT("\r\n{\r\n");
 	GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = %s::StaticClass();\r\n"), *ClassNameCPP);
-	GeneratedGlue += TEXT("\tUTableUtil::push(\"UClass\", (void*)Class);\r\n");
+	GeneratedGlue += TEXT("\tUTableUtil::pushclass(\"UClass\", (void*)Class);\r\n");
 	GeneratedGlue += TEXT("\treturn 1;\r\n");
 	GeneratedGlue += TEXT("}\r\n\r\n");
 
@@ -837,7 +837,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		}
 		FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
 		addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);
-		addition += FString::Printf(TEXT("\tUTableUtil::push(\"%s\", (void*)Obj);\r\n"), *namecpp);
+		addition += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj);\r\n"), *namecpp);
 		addition += FString::Printf(TEXT("\treturn 1;\r\n}\r\n\r\n"));
 
 		addition += FString::Printf(TEXT("static int32 %s_Destroy(lua_State* L)\r\n{\r\n"), *namecpp);

@@ -17,7 +17,8 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 ADemo1Character::ADemo1Character()
 {
 	// Set size for collision capsule
-	UTableUtil::CtorCpp((AActor*)this, FString(TEXT("luacharacter")));
+ 	UTableUtil::call("CtorCpp", (UObject*)this, "luacharacter");
+//	UTableUtil::CtorCpp((UObject*)this, FString(TEXT("luacharacter")));
 	//GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
 

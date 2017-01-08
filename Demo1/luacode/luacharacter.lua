@@ -59,6 +59,7 @@ end
 
 function Character_lua:Fire(isTrue)
 	if isTrue then
+		A_("??")
 		if self.ProjectileClass then
 			local world = UUluautils.GetWorld(self)
 			if world then

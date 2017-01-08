@@ -16,9 +16,9 @@ function Tick(delta)
     TimerMgr:Get():Tick(delta)
 end
 
-function CtorCpp(this, classpath, ...)
+function CtorCpp(inscpp, classpath, ...)
     local function f()
-        ActorMgr:Get():CtorCpp(this, classpath)
+        ActorMgr:Get():CtorCpp(inscpp, classpath)
     end
     Xpcall(f)
 end
@@ -29,9 +29,16 @@ function ShowMem()
 end
 
 
-function NewActor(v, classpath)
+function NewActor(inscpp, classpath, ...)
     local function f()
-        ActorMgr:Get():BindActor(v, classpath)
+        ActorMgr:Get():BindActor(inscpp, classpath)
+    end
+    Xpcall(f)
+end
+
+function ObjectBeginPlay(inscpp, classpath)
+    local function f()
+        ActorMgr:Get():BeginPlay(inscpp, classpath)
     end
     Xpcall(f)
 end

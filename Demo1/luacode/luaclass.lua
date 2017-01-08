@@ -61,18 +61,35 @@ local function __newindexcpp(t, k, v)
 	rawset(t, k, v)
 end
 
-local function CtorCppRecursively(theclass, this, ...)
+local function CtorCppRecursively(theclass, inscpp, ...)
 	local super = theclass.Super and theclass:Super()
 	if super then
-		CtorRecursively(super, this, ...)
+		CtorRecursively(super, inscpp, ...)
 	end
 	local CtorCpp = rawget(theclass, "CtorCpp")
-	if CtorCpp then CtorCpp(this, ...) end
+	if CtorCpp then CtorCpp(inscpp, ...) end
+end
+
+local function CtorFromCpp(theclass, inscpp, ...)
+	theclass._cppclass:cast(inscpp)
+	CtorCppRecursively(theclass, inscpp, ...)
 end
 
 local function NewInsCpp(self, ...)
 	self._cppinstance_ = self._cppclass.New()
-	Object.NewIns(self)
+	self:NewIns(...)
+end
+
+local function Bind(self, inscpp)
+	self._cppclass:cast(inscpp) 
+	self._cppinstance_ = inscpp 
+end
+
+local function NewOn(self, inscpp, ...)
+	local newIns = setmetatable({}, self)
+	self.Bind(newIns, inscpp)
+	CtorRecursively(self, newIns, ...)
+	return newIns
 end
 
 function Inherit(parent)
@@ -80,13 +97,11 @@ function Inherit(parent)
 	TheNewClass._parentclass = parent
 	if parent.__iscppclass then
 		TheNewClass._cppclass = parent._cppclass or parent
-		function TheNewClass:Bind(userData)
-			self._cppclass:cast(userData) 
-			self._cppinstance_ = userData 
-		end
+		TheNewClass.Bind = Bind
+		TheNewClass.NewOn = NewOn
 		TheNewClass.NewInsCpp = NewInsCpp
 		TheNewClass.NewIns = Object.NewIns
-		TheNewClass.CtorFromCpp = CtorCppRecursively
+		TheNewClass.CtorFromCpp = CtorFromCpp
 		TheNewClass.Super = Object.Super
 		TheNewClass.__index = __indexcpp
 		TheNewClass.__newindex = __newindexcpp
@@ -104,7 +119,10 @@ local function InternDestroy(theclass, ins, ...)
 	if theclass == nil then return end
 	local Destroy = rawget(theclass, "Destroy")
 	if Destroy then Destroy(ins, ...) end
-	InternDestroy(theclass:Super(), ins, ...)
+	local super = theclass.Super and theclass:Super()
+	if super then
+		InternDestroy(super, ins, ...)
+	end
 end
 
 function Object:Release(...)

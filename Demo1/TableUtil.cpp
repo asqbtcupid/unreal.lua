@@ -87,7 +87,7 @@ void UTableUtil::init()
 		//register all function
 		LuaRegisterExportedClasses(L);
 //		LuaRegisterUtils();
-		Call_void("Init");
+		executeFunc("Init", 0, 0);
 	}
 }
 
@@ -286,7 +286,7 @@ int UTableUtil::toint(int i)
 }
 
 
-void UTableUtil::push(const char* classname, void* p, bool bgcrecord)
+void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
 {
 	if (p == nullptr)
 	{
@@ -390,26 +390,13 @@ void UTableUtil::loadEnum(const EnumItem list[], const char* enumname)
 	lua_setfield(L, LUA_GLOBALSINDEX, enumname);
 }
 
-void UTableUtil::setpawn(ADefaultPawn *p)
+void UTableUtil::executeFunc(FString funcName, int n, int nargs)
 {
-	lua_pushvalue(L, LUA_GLOBALSINDEX);
-	lua_pushstring(L, "PawnIns");
-	push("ADefaultPawn", (void*)p);
-	lua_rawset(L, -3);
-	lua_pop(L, 1);
-}
-
-void UTableUtil::executeFunc(FString funcName)
-{
-	int nargs = lua_gettop(L);
-	lua_pushvalue(L, LUA_GLOBALSINDEX);
-	push(funcName);
-	lua_rawget(L, -2);
-	for (int i = 1; i <= nargs; i++)
-	{
-		lua_pushvalue(L, i);
-	}
-	if (lua_pcall(L, nargs, 1, 0))
+// 	int nargs = lua_gettop(L);
+	lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcName));
+	if (nargs > 0)
+		lua_insert(L, -nargs-1);
+	if (lua_pcall(L, nargs, n, 0))
 		log(lua_tostring(L, -1));
 }
 
@@ -422,7 +409,7 @@ void UTableUtil::Push_obj(UObject *p)
 {
 	auto Class = p->StaticClass();
 	FString ClassName = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-	push(TCHAR_TO_ANSI(*ClassName), (void*)p, true);
+	pushclass(TCHAR_TO_ANSI(*ClassName), (void*)p, true);
 }
 
 void UTableUtil::Push_float(float value)
@@ -443,14 +430,14 @@ void UTableUtil::Push_bool(bool isTrue)
 
 void UTableUtil::Call_void(FString funcName)
 {
-	executeFunc(funcName);
+	executeFunc(funcName, 0, lua_gettop(L));
 	clearStack();
 	// lua_tinker::call<void>(L, TCHAR_TO_ANSI(*funcName));
 }
 
 float UTableUtil::Call_float(FString funcName)
 {
-	executeFunc(funcName);
+	executeFunc(funcName, 1, lua_gettop(L));
 	auto result = lua_tonumber(L, -1);
 	clearStack();
 	return result;
@@ -458,7 +445,7 @@ float UTableUtil::Call_float(FString funcName)
 
 UObject* UTableUtil::Call_obj(FString funcName)
 {
-	executeFunc(funcName);
+	executeFunc(funcName, 1, lua_gettop(L));
 	auto result = (UObject*)tousertype("", -1);
 	clearStack();
 	return result;
@@ -466,7 +453,7 @@ UObject* UTableUtil::Call_obj(FString funcName)
 
 FString UTableUtil::Call_str(FString funcName)
 {
-	executeFunc(funcName);
+	executeFunc(funcName, 1, lua_gettop(L));
 	FString result = ANSI_TO_TCHAR(luaL_checkstring(L, -1));
 	clearStack();
 	return result;
@@ -474,7 +461,7 @@ FString UTableUtil::Call_str(FString funcName)
 
 bool UTableUtil::Call_bool(FString funcName)
 {
-	executeFunc(funcName);
+	executeFunc(funcName, 1, lua_gettop(L));
 	bool result = !!lua_toboolean(L, -1);
 	clearStack();
 	return result;
@@ -523,12 +510,12 @@ void UTableUtil::startgcref()
 	bIsGcRef = true;
 }
 
-void UTableUtil::CtorCpp(AActor* p, FString classpath)
+void UTableUtil::CtorCpp(UObject* p, FString classpath)
 {
 	if (L == nullptr)
 		init();
 	stopgcref();
-	push("AActor", (void*)p, true);
+	pushclass("UObject", (void*)p, true);
 	push(classpath);
 	Call_void(FString("CtorCpp"));
 	startgcref();
