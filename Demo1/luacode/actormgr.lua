@@ -22,8 +22,8 @@ end
 
 function ActorMgr:BeginPlay(inscpp, classpath, ...)
 	local inslua = self:BindActor(inscpp, classpath)
-	if inslua.BeginPlaylua then
-		inslua:BeginPlaylua(...)
+	if inslua.BeginPlayLua then
+		inslua:BeginPlayLua(...)
 	end
 end
 

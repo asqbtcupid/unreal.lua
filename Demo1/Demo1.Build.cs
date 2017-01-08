@@ -14,7 +14,8 @@ public class Demo1 : ModuleRules
     }
 	public Demo1(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
+        Definitions.Add("WITH_METADATA");
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
 		if (UEBuildConfiguration.bBuildEditor == true)
 			{
 

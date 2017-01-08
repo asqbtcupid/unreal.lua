@@ -36,7 +36,7 @@ function NewActor(inscpp, classpath, ...)
     Xpcall(f)
 end
 
-function ObjectBeginPlay(inscpp, classpath)
+function BeginPlayLua(inscpp, classpath)
     local function f()
         ActorMgr:Get():BeginPlay(inscpp, classpath)
     end

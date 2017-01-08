@@ -305,10 +305,10 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 
 FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
-	
+	//auto x = Function->GetName() == "PlaySoundAtLocation";
+	//auto y = Function->GetMetaData("CPP_Default_dfPitchMultiplier");
 	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, Class, Function);
 	GeneratedGlue += TEXT("\r\n{\r\n");
-
 	UProperty* ReturnValue = NULL;
 	UClass* FuncSuper = NULL;
 	

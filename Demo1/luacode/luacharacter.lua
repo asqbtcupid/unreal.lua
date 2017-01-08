@@ -43,6 +43,17 @@ function Character_lua:Ctor()
 	-- GlobalEvent.On("PressFire", self.test, self)
 end
 
+function Character_lua:BeginPlayLua()
+	self.FP_Gun:K2_AttachToComponent(self.Mesh1P, "GripPoint", EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, true)
+	if self.bUsingMotionControllers then
+		self.VR_Gun:SetHiddenInGame(false, true)
+		self.Mesh1P:SetHiddenInGame(true, true)
+	else
+		self.VR_Gun:SetHiddenInGame(true, true)
+		self.Mesh1P:SetHiddenInGame(false, true)
+	end
+end
+
 function Character_lua:MoveForward(v)
 	if v ~= 0 then
 		local forwardvector = self:GetActorForwardVector()
@@ -59,7 +70,6 @@ end
 
 function Character_lua:Fire(isTrue)
 	if isTrue then
-		A_("??")
 		if self.ProjectileClass then
 			local world = UUluautils.GetWorld(self)
 			if world then
@@ -72,6 +82,10 @@ function Character_lua:Fire(isTrue)
 				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, self.ProjectileClass, transfrom, ESpawnActorCollisionHandlingMethod.Undefined, self)
 				spawnActor = UGameplayStatics.FinishSpawningActor(spawnActor, transfrom)
 			end
+		end
+
+		if self.FireSound then
+			-- UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 		end
 	end
 end

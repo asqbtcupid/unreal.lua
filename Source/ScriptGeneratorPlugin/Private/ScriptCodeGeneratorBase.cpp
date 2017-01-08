@@ -102,11 +102,36 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 	return PropertyType;
 }
 
+FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int num, FString paramlist, FString ClassNameCPP, bool isfinal = false)
+{
+	if (!paramlist.IsEmpty())
+		paramlist.RemoveAt(paramlist.Len() - 1);
+	FString code;
+	if (!isfinal)
+		code += FString::Printf(TEXT("\tif (num_params == %d )\r\n\t{\r\n"), num);
+	if (bIsStaticFunc)
+		if (hasresult)
+			code += FString::Printf(TEXT("\t\tresult = %s::%s(%s);\r\n"), *ClassNameCPP, *Function->GetName(), *paramlist);
+		else
+			code += FString::Printf(TEXT("\t\t%s::%s(%s);\r\n"), *ClassNameCPP, *Function->GetName(), *paramlist);
+	else
+		if (hasresult)
+			code += FString::Printf(TEXT("\t\tresult = Obj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+		else
+			code += FString::Printf(TEXT("\t\tObj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+	if(!isfinal)
+		code += "\t\tgoto end;\r\n\t}\r\n";
+	return code;
+}
+
 FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc)
 {
 	FString Params;
 	FString paramList;
 	FString returnType;
+	int count_all_param = 0;
+	int count_default_param = 0;
+	bool hasDefaultAugmentParam = false;
 	const bool bHasParamsOrReturnValue = (Function->Children != NULL);
 	if (bHasParamsOrReturnValue)
 	{
@@ -114,6 +139,40 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 		if (bIsStaticFunc)
 			ParamIndex = -1;
 // 		auto x = Function->GetName() == "GetHitResultUnderCursorForObjects";
+		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
+		{
+			UProperty* Param = *ParamIt;
+			if (Param->GetName() == "ReturnValue")
+			{
+				returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+			}
+			else
+			{
+				++count_all_param;
+				FString defaultvalue = Function->GetMetaData(*FString::Printf(TEXT("CPP_Default_%s"), *Param->GetName()));
+				if (!defaultvalue.IsEmpty())
+					++count_default_param;
+			}
+		}
+		if (count_default_param > 0)
+		{
+			Params += TEXT("\tint num_params = lua_gettop(L);\r\n");
+			for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
+			{
+				UProperty* Param = *ParamIt;
+				if (! (Param->GetName() == "ReturnValue"))
+				{
+					Params += FString::Printf(TEXT("\t%s %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName());
+				}
+			}
+			if (!returnType.IsEmpty())
+				Params += FString::Printf(TEXT("\t%s result;\r\n"), *returnType);
+		}
+		int count_init_param = 0;
+		if (count_default_param > 0 && count_default_param + count_init_param >= count_all_param)
+		{
+			Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+		}
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
 			UProperty* Param = *ParamIt;
@@ -123,11 +182,16 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 				if (Param->GetName() != "ReturnValue")
 				{
 					paramList += Param->GetName() + ",";
-					Params += FString::Printf(TEXT("\t%s %s;\r\n"), *nameCpp, *Param->GetName());
-				}
-				else
-				{
-					returnType = FString::Printf(TEXT("%s"), *nameCpp);
+					count_init_param++;
+					if (count_default_param > 0 )
+					{
+						if (count_default_param + count_init_param >= count_all_param)
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+					}
+					else
+					{
+						Params += FString::Printf(TEXT("\t%s %s;\r\n"), *nameCpp, *Param->GetName());
+					}
 				}
 			}
 			else
@@ -136,37 +200,53 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 				{
 					FString initParam = InitializeFunctionDispatchParam(Function, Param, ParamIndex);
 					FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-					if (!nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
-						Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
-					else
-						Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+
 					paramList += Param->GetName() + ",";
-				}
-				else
-				{
-					returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+					count_init_param++;
+					if (count_default_param > 0)
+					{
+						if (!nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
+							Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
+						else
+							Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
+						if (count_default_param + count_init_param >= count_all_param)
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+					}
+					else
+					{
+						if (!nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
+							Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+						else
+							Params += FString::Printf(TEXT("\t%s %s = %s;\r\n"), *nameCpp, *Param->GetName(), *initParam);
+					}
 				}
 			}
 		}
 		
 	}
-	if (!returnType.IsEmpty())
-		Params += FString::Printf(TEXT("\t%s result = "), *returnType);
-	else
-		Params += "\t";
-	FString callobj = "Obj->";
-	if (bIsStaticFunc)
-		callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
-	if (paramList.IsEmpty())
+	if (count_default_param == 0)
 	{
-		Params += FString::Printf(TEXT("%s%s();\r\n"), *callobj, *Function->GetName());
+		if (!returnType.IsEmpty())
+			Params += FString::Printf(TEXT("\t%s result = "), *returnType);
+		else
+			Params += "\t";
+		FString callobj = "Obj->";
+		if (bIsStaticFunc)
+			callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
+		if (paramList.IsEmpty())
+		{
+			Params += FString::Printf(TEXT("%s%s();\r\n"), *callobj, *Function->GetName());
+		}
+		else
+		{
+			paramList.RemoveAt(paramList.Len() - 1);
+			Params += FString::Printf(TEXT("%s%s(%s);\r\n"), *callobj, *Function->GetName(), *paramList);
+		}
 	}
 	else
 	{
-		paramList.RemoveAt(paramList.Len()-1);
-		Params += FString::Printf(TEXT("%s%s(%s);\r\n"), *callobj, *Function->GetName(), *paramList);
+		Params += "\tend:\r\n";
 	}
-
 	return Params;
 }
 
