@@ -56,6 +56,7 @@ protected:
 	FString Push(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue, FString name);
 	FString GetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
 	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
+	FString FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper = nullptr);
 
 
 

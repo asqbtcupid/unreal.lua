@@ -303,24 +303,11 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	return bExport;
 }
 
-FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
+FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper)
 {
-	//auto x = Function->GetName() == "PlaySoundAtLocation";
-	//auto y = Function->GetMetaData("CPP_Default_dfPitchMultiplier");
-	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), Function);
-	GeneratedGlue += TEXT("\r\n{\r\n");
 	UProperty* ReturnValue = NULL;
-	UClass* FuncSuper = NULL;
-
-	if (Function->GetOwnerClass() != Class)
-	{
-		// Find the base definition of the function
-		if (ExportedClasses.Contains(Function->GetOwnerClass()->GetFName()))
-		{
-			FuncSuper = Function->GetOwnerClass();
-		}
-	}
-	FString FunctionBody;
+	FString FunctionBody = GenerateWrapperFunctionDeclaration(ClassNameCPP, classname, Function);
+	FunctionBody += TEXT("\r\n{\r\n");
 	if (FuncSuper == NULL)
 	{
 		if (Function->FunctionFlags & FUNC_Public)
@@ -366,11 +353,29 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 	}
 	else
 	{
-		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *FuncSuper->GetName(), *Function->GetName());
+		FunctionBody += FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *FuncSuper->GetName(), *Function->GetName());
 	}
+	FunctionBody += TEXT("}\r\n\r\n");
+	return FunctionBody;
+}
 
-	GeneratedGlue += FunctionBody;
-	GeneratedGlue += TEXT("}\r\n\r\n");
+FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
+{
+	//auto x = Function->GetName() == "PlaySoundAtLocation";
+	//auto y = Function->GetMetaData("CPP_Default_dfPitchMultiplier");
+	
+	UClass* FuncSuper = NULL;
+
+	if (Function->GetOwnerClass() != Class)
+	{
+		// Find the base definition of the function
+		if (ExportedClasses.Contains(Function->GetOwnerClass()->GetFName()))
+		{
+			FuncSuper = Function->GetOwnerClass();
+		}
+	}
+	
+	FString GeneratedGlue = FuncCode(ClassNameCPP, Class->GetName(), Function, FuncSuper);
 
 	auto& Exports = ClassExportedFunctions.FindOrAdd(Class);
 	Exports.Add(Function->GetFName());
@@ -829,6 +834,14 @@ void FLuaScriptCodeGenerator::ExportStruct()
 					GeneratedGlue += GetterCode(namecpp, namecpp, GetterName, Property);
 					FString SetterName = FString::Printf(TEXT("Set_%s"), *Property->GetName());
 					GeneratedGlue += SetterCode(namecpp, namecpp, SetterName, Property);
+				}
+			}
+			for (TFieldIterator<UFunction> FuncIt(*It /*, EFieldIteratorFlags::ExcludeSuper*/); FuncIt; ++FuncIt)
+			{
+				UFunction* Function = *FuncIt;
+				if (CanExportFunction(namecpp, nullptr, Function))
+				{
+					//GeneratedGlue += ExportFunction(namecpp, Class, Function);
 				}
 			}
 		}
