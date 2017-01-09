@@ -13,6 +13,11 @@ struct EnumItem
 	const int32 value;
 };
 
+struct lua_class {
+	void *p;
+	const char* name;
+};
+
 class FLuaGcObj : FGCObject
 {
 public:
@@ -108,7 +113,8 @@ public:
 	static void push(T value);
 
 	static void pushclass(const char* classname, void* p, bool bgcrecord = false);
-
+	
+	template<> static void push(lua_class value);
 	template<> static void push(int value);
 	template<> static void push(float value);
 	template<> static void push(double value);
@@ -160,6 +166,11 @@ public:
 	static UProperty* GetPropertyByName(FString classname, FString propertyname);
 };
 
+template<>
+void UTableUtil::push(lua_class value)
+{
+	pushclass(value.name, value.p, true);
+}
 template<>
 void UTableUtil::push(int value)
 {

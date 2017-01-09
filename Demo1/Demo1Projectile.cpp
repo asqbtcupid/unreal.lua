@@ -3,10 +3,13 @@
 #include "Demo1.h"
 #include "Demo1Projectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "TableUtil.h"
 
 ADemo1Projectile::ADemo1Projectile() 
 {
 	// Use a sphere as a simple collision representation
+// 	UTableUtil::call("CtorCpp", (UObject*)this, TEXT("luaprojectile"));
+
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");

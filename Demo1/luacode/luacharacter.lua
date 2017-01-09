@@ -3,6 +3,7 @@ function Character_lua:CtorCpp()
 	local CapsuleComponent = self.CapsuleComponent
 	CapsuleComponent.CapsuleRadius = 55
 	CapsuleComponent.CapsuleHalfHeight = 96
+
 	self.BaseTurnRate = 45
 	self.BaseLookUpRate = 45
 	local FirstPersonCameraComponent = UCameraComponent.CreateDefaultSubobject(self, "FirstPersonCamera")
@@ -40,11 +41,14 @@ function Character_lua:Ctor()
 	GlobalEvent.On("Input_Forward", self.MoveForward, self)
 	GlobalEvent.On("Input_Right", self.MoveRight, self)
 	GlobalEvent.On("PressFire", self.Fire, self)
-	-- GlobalEvent.On("PressFire", self.test, self)
+	GlobalEvent.On("Jump", self.PressJump, self)
+	GlobalEvent.On("Turn", self.AddControllerYawInput, self)
+	GlobalEvent.On("LookUpDown", self.AddControllerPitchInput, self)
 end
 
 function Character_lua:BeginPlayLua()
 	self.FP_Gun:K2_AttachToComponent(self.Mesh1P, "GripPoint", EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, true)
+
 	if self.bUsingMotionControllers then
 		self.VR_Gun:SetHiddenInGame(false, true)
 		self.Mesh1P:SetHiddenInGame(true, true)
@@ -57,14 +61,14 @@ end
 function Character_lua:MoveForward(v)
 	if v ~= 0 then
 		local forwardvector = self:GetActorForwardVector()
-        self:AddMovementInput(forwardvector, v, false)
+        self:AddMovementInput(forwardvector, v)
     end
 end
 
 function Character_lua:MoveRight(v)
 	if v ~= 0 then
 		local rightvector = self:GetActorRightVector()
-        self:AddMovementInput(rightvector, v, false)
+        self:AddMovementInput(rightvector, v)
     end
 end
 
@@ -77,21 +81,30 @@ function Character_lua:Fire(isTrue)
 				local vec_offset = UKismetMathLibrary.GreaterGreater_VectorRotator(self.GunOffset, SpawnRotation) 
 				local MuzzleLocation = self.FP_MuzzleLocation:K2_GetComponentLocation()
 				local SpawnLocation = UKismetMathLibrary.Add_VectorVector(MuzzleLocation, vec_offset)
-				local scale = FVector.New(1, 1, 1)
-				local transfrom = UKismetMathLibrary.MakeTransform(SpawnLocation, SpawnRotation, scale)
-				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, self.ProjectileClass, transfrom, ESpawnActorCollisionHandlingMethod.Undefined, self)
+				local transfrom = UKismetMathLibrary.MakeTransform(SpawnLocation, SpawnRotation, FVector.New(1, 1, 1))
+				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, self.ProjectileClass, transfrom, ESpawnActorCollisionHandlingMethod.AlwaysSpawn)
 				spawnActor = UGameplayStatics.FinishSpawningActor(spawnActor, transfrom)
 			end
 		end
 
 		if self.FireSound then
-			-- UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+			UGameplayStatics.PlaySoundAtLocation(self, self.FireSound, self:K2_GetActorLocation(), self:K2_GetActorRotation())
+		end
+
+		if self.FireAnimation then
+			local AnimInstance = self.Mesh1P:GetAnimInstance()
+			if AnimInstance then
+				AnimInstance:Montage_Play(self.FireAnimation, 1);
+			end
 		end
 	end
 end
 
-function Character_lua:test(isTrue)
+function Character_lua:PressJump(isTrue)
 	if isTrue then
+		self:Jump()
+	else
+		self:StopJumping()
 	end
 end
 

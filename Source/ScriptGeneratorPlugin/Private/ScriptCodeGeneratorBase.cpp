@@ -106,6 +106,8 @@ FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int nu
 {
 	if (!paramlist.IsEmpty())
 		paramlist.RemoveAt(paramlist.Len() - 1);
+	if (!bIsStaticFunc)
+		num = num + 1;
 	FString code;
 	if (!isfinal)
 		code += FString::Printf(TEXT("\tif (num_params == %d )\r\n\t{\r\n"), num);
@@ -131,6 +133,7 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 	FString returnType;
 	int count_all_param = 0;
 	int count_default_param = 0;
+	int index_first_default = 0;
 	bool hasDefaultAugmentParam = false;
 	const bool bHasParamsOrReturnValue = (Function->Children != NULL);
 	if (bHasParamsOrReturnValue)
@@ -138,7 +141,7 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 		int32 ParamIndex = 0;
 		if (bIsStaticFunc)
 			ParamIndex = -1;
-// 		auto x = Function->GetName() == "GetHitResultUnderCursorForObjects";
+		auto x = Function->GetName() == "PlaySoundAtLocation";
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 		{
 			UProperty* Param = *ParamIt;
@@ -149,11 +152,16 @@ FString FScriptCodeGeneratorBase::GenerateFunctionDispatch(UFunction* Function, 
 			else
 			{
 				++count_all_param;
-				FString defaultvalue = Function->GetMetaData(*FString::Printf(TEXT("CPP_Default_%s"), *Param->GetName()));
-				if (!defaultvalue.IsEmpty())
-					++count_default_param;
+				if (index_first_default == 0)
+				{
+					FString defaultvalue = Function->GetMetaData(*FString::Printf(TEXT("CPP_Default_%s"), *Param->GetName()));
+					if (!defaultvalue.IsEmpty())
+						index_first_default = count_all_param;
+				}
 			}
 		}
+		if (index_first_default != 0 && Function->GetName() != "SpawnSoundAttached")
+			count_default_param = count_all_param - index_first_default + 1;
 		if (count_default_param > 0)
 		{
 			Params += TEXT("\tint num_params = lua_gettop(L);\r\n");

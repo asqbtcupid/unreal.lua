@@ -1,9 +1,32 @@
+local Handle = Inherit(Object)
+function Handle:Time(t)
+	self.interval = t
+	return self
+end
+
+function Handle:Num(n)
+	self.totalnum = n
+	return self
+end
+
+function Handle:Fire(...)
+	self.passtime = 0
+	self.num = self.num + 1
+	if self.totalnum and self.totalnum >= self.num then
+		self.mgr.deletes[self] = true
+	end
+	self.callback(...)
+	return self
+end
+
+function Handle:Destroy()
+	self.mgr.deletes[self] = true
+end
+
 TimerMgr = Inherit(Singleton)
 function TimerMgr:Ctor(isHandle)
-	if not isHandle then
-		self.handles={}
-		self.deletes={}
-	end
+	self.handles={}
+	self.deletes={}
 end
 
 function TimerMgr:Tick(delta)
@@ -15,7 +38,7 @@ function TimerMgr:Tick(delta)
 				h.passtime = h.passtime - h.interval
 				h.num = h.num + 1
 				if h.totalnum and h.totalnum >= h.num then
-					self.deletes[h] = true
+					h:Destroy()
 				end
 			end
 		end
@@ -27,36 +50,14 @@ function TimerMgr:Tick(delta)
 end
 
 function TimerMgr:On(f, ...)
-	local handle = TimerMgr:NewIns(true)
+	local handle = Handle:NewIns()
 	handle.passtime = 0
 	handle.num = 0
 	handle.totalnum = 0
 	handle.mgr = self
 	handle.callback = MakeCallBack(f,...)
-	handle.Destroy = function ()
-		self.deletes[handle] = true
-	end
 	self.handles[handle] = true
 	return handle
 end
 
-function TimerMgr:Time(t)
-	self.interval = t
-	return self
-end
-
-function TimerMgr:Num(n)
-	self.totalnum = n
-	return self
-end
-
-function TimerMgr:Fire(...)
-	self.passtime = 0
-	self.num = self.num + 1
-	if self.totalnum and self.totalnum >= self.num then
-		self.mgr.deletes[self] = true
-	end
-	self.callback(...)
-	return self
-end
 return TimerMgr

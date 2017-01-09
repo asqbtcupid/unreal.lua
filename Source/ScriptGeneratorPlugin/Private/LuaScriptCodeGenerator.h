@@ -38,13 +38,13 @@ protected:
 	/** Exports additional class glue code (like ctor/dtot) */
 	FString ExportAdditionalClassGlue(const FString& ClassNameCPP, UClass* Class);
 	/** Generates wrapper function declaration */
-	FString GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, UClass* Class, UFunction* Function);
+	FString GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, FString classname, UFunction* Function);
 	/** Generates wrapper function declaration */
-	FString GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, UClass* Class, const FString& FunctionName);
+	FString GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, FString classname, const FString& FunctionName);
 	/** Generates code responsible for getting the object pointer from script context */
-	FString GenerateObjectDeclarationFromContext(const FString& ClassNameCPP, UClass* Class);
+	FString GenerateObjectDeclarationFromContext(const FString& ClassNameCPP);
 	/** Handles the wrapped function's return value */
-	FString GenerateReturnValueHandler(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue);
+	FString GenerateReturnValueHandler(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue);
 	/** Check if a property type is supported */
 	bool IsPropertyTypeSupported(UProperty* Property) const;
 	FString GetPropertyType(UProperty* Property) const;
@@ -53,7 +53,9 @@ protected:
 	FString GetPropertyCastType(UProperty* Property);
 	FString GetPropertySetCastType(UProperty* Property);
 	bool isStructSupported(FString &name) const;
-	FString Push(const FString& ClassNameCPP, UClass* Class, UFunction* Function, UProperty* ReturnValue, FString name);
+	FString Push(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue, FString name);
+	FString GetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
+	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
 
 
 

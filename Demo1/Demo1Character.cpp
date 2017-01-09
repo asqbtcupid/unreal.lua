@@ -88,7 +88,8 @@ void ADemo1Character::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	UTableUtil::call("BeginPlayLua", (void*)this, "luacharacter");
+// 	UTableUtil::call("BeginPlayLua", (void*)this);
+	UTableUtil::call("CppCallBack", (void*)this, "luacharacter", "BeginPlayLua");
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 // 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 // 
@@ -113,8 +114,8 @@ void ADemo1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	//InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ADemo1Character::TouchStarted);
 	if (EnableTouchscreenMovement(PlayerInputComponent) == false)
@@ -130,59 +131,59 @@ void ADemo1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ADemo1Character::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ADemo1Character::LookUpAtRate);
+	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("TurnRate", this, &ADemo1Character::TurnAtRate);
+	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("LookUpRate", this, &ADemo1Character::LookUpAtRate);
 }
 
 void ADemo1Character::OnFire()
 {
 	// try and fire a projectile
-	if (ProjectileClass != NULL)
-	{
-		UWorld* const World = GetWorld();
-		if (World != NULL)
-		{
-			if (bUsingMotionControllers)
-			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<ADemo1Projectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
-
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-				// spawn the projectile at the muzzle
-				World->SpawnActor<ADemo1Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			}
-		}
-	}
-
-	// try and play the sound if specified
-	if (FireSound != NULL)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
-
-	// try and play a firing animation if specified
-	if (FireAnimation != NULL)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != NULL)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
+// 	if (ProjectileClass != NULL)
+// 	{
+// 		UWorld* const World = GetWorld();
+// 		if (World != NULL)
+// 		{
+// 			if (bUsingMotionControllers)
+// 			{
+// 				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
+// 				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
+// 				World->SpawnActor<ADemo1Projectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+// 			}
+// 			else
+// 			{
+// 
+// 				const FRotator SpawnRotation = GetControlRotation();
+// 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+// 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+// 
+// 				//Set Spawn Collision Handling Override
+// 				FActorSpawnParameters ActorSpawnParams;
+// 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+// 
+// 				// spawn the projectile at the muzzle
+// 				World->SpawnActor<ADemo1Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+// 			}
+// 		}
+// 	}
+// 
+// 	// try and play the sound if specified
+// 	if (FireSound != NULL)
+// 	{
+// 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+// 	}
+// 
+// 	// try and play a firing animation if specified
+// 	if (FireAnimation != NULL)
+// 	{
+// 		// Get the animation object for the arms mesh
+// 		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+// 		if (AnimInstance != NULL)
+// 		{
+// 			AnimInstance->Montage_Play(FireAnimation, 1.f);
+// 		}
+// 	}
 }
 
 void ADemo1Character::OnResetVR()
@@ -255,32 +256,32 @@ void ADemo1Character::EndTouch(const ETouchIndex::Type FingerIndex, const FVecto
 
 void ADemo1Character::MoveForward(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorForwardVector(), Value);
-	}
+// 	if (Value != 0.0f)
+// 	{
+// 		// add movement in that direction
+// 		AddMovementInput(GetActorForwardVector(), Value);
+// 	}
 }
 
 void ADemo1Character::MoveRight(float Value)
 {
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorRightVector(), Value);
-	}
+// 	if (Value != 0.0f)
+// 	{
+// 		// add movement in that direction
+// 	//	AddMovementInput(GetActorRightVector(), Value);
+// 	}
 }
 
 void ADemo1Character::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	//AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void ADemo1Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	//AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 bool ADemo1Character::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent)

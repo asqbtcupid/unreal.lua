@@ -9,6 +9,10 @@ function Init()
     require "inputmgr"
     require "timermgr"
     require "actormgr"
+    local function ShowMem()
+        collectgarbage("collect")
+        A_("lua memory: ", collectgarbage("count"))
+    end
     TimerMgr:Get():On(ShowMem):Time(5000):Fire()
 end
 
@@ -17,17 +21,8 @@ function Tick(delta)
 end
 
 function CtorCpp(inscpp, classpath, ...)
-    local function f()
-        ActorMgr:Get():CtorCpp(inscpp, classpath)
-    end
-    Xpcall(f)
+    ActorMgr:Get():CtorCpp(inscpp, classpath, ...)
 end
-
-function ShowMem()
-    collectgarbage("collect")
-    A_("lua memory: ", collectgarbage("count"))
-end
-
 
 function NewActor(inscpp, classpath, ...)
     local function f()
@@ -36,9 +31,6 @@ function NewActor(inscpp, classpath, ...)
     Xpcall(f)
 end
 
-function BeginPlayLua(inscpp, classpath)
-    local function f()
-        ActorMgr:Get():BeginPlay(inscpp, classpath)
-    end
-    Xpcall(f)
+function CppCallBack(inscpp, classpath, functionName, ...)
+    ActorMgr:Get():CallLuaInsFunc(inscpp, classpath, functionName, ...)
 end

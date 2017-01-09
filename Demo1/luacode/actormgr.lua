@@ -14,17 +14,14 @@ function ActorMgr:BindActor(inscpp, classpath)
 end
 
 function ActorMgr:CtorCpp(inscpp, classpath, ...)
-	if self.m_ExistObject[inscpp] then return end
 	local class = require (classpath)
 	class:CtorFromCpp(inscpp, ...)
 	self.m_ExistObject[inscpp] = class:NewOn(inscpp, ...)
 end
 
-function ActorMgr:BeginPlay(inscpp, classpath, ...)
-	local inslua = self:BindActor(inscpp, classpath)
-	if inslua.BeginPlayLua then
-		inslua:BeginPlayLua(...)
-	end
+function ActorMgr:CallLuaInsFunc(inscpp, classpath, functionName, ...)
+	local luains = self:BindActor(inscpp, classpath)
+	luains[functionName](luains, ...)
 end
 
 return ActorMgr
