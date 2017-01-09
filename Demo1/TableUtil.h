@@ -111,6 +111,8 @@ public:
 // 	static TArray<UObject*> s;
 	template<typename T>
 	static void push(T value);
+	template<typename T>
+	static void push(T* value);
 
 	static void pushclass(const char* classname, void* p, bool bgcrecord = false);
 	
@@ -123,6 +125,8 @@ public:
 	template<> static void push(void* value);
 	template<> static void push(FString value);
 	template<> static void push(const char* value);
+	template<> static void push(FVector value);
+	template<> static void push(FHitResult value);
 
 	template<typename T>
 	static T pop(int index);
@@ -215,10 +219,34 @@ void UTableUtil::push(const char* value)
 	lua_pushstring(L, value);
 }
 
+template<>
+void UTableUtil::push(FVector value)
+{
+	pushclass("FVecotr", new FVector(value));
+}
+
+template<>
+void UTableUtil::push(FHitResult value)
+{
+	pushclass("FHitResult", new FHitResult(value));
+}
+
+template<typename T>
+void UTableUtil::push(T* value)
+{
+// 	class T;
+// 	UClass* Class = T::StaticClass();
+// 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+// 	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value, true);
+}
+
 template<typename T>
 void UTableUtil::push(T value)
 {
-
+	// 	class T;
+// 	UClass* Class = T::StaticClass();
+// 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+// 	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value, true);
 }
 
 template<typename T>

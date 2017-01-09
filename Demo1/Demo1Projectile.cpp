@@ -37,10 +37,11 @@ ADemo1Projectile::ADemo1Projectile()
 void ADemo1Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
-	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
-		Destroy();
-	}
+// 	UTableUtil::call("CppCallBack", (void*)this, "luaprojectile", HitComp);
+// 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
+// 	{
+// 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+// 
+// 		Destroy();
+// 	}
 }

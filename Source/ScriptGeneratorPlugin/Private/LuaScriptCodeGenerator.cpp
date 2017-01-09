@@ -790,6 +790,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 
 	return GeneratedGlue;
 }
+
 bool FLuaScriptCodeGenerator::isStructSupported(FString& name) const
 {
 	if (name != "Vector" &&
@@ -802,6 +803,7 @@ bool FLuaScriptCodeGenerator::isStructSupported(FString& name) const
 		name != "HitResult" &&
 		name != "Transform" &&
 		name != "BodyInstance" &&
+		name != "WalkableSlopeOverride" &&
 		name != "LinearColor")
 		return false;
 	else
@@ -841,7 +843,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 				UFunction* Function = *FuncIt;
 				if (CanExportFunction(namecpp, nullptr, Function))
 				{
-					//GeneratedGlue += ExportFunction(namecpp, Class, Function);
+					GeneratedGlue += FuncCode(namecpp, namecpp, Function);
 				}
 			}
 		}

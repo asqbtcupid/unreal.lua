@@ -32,5 +32,6 @@ function NewActor(inscpp, classpath, ...)
 end
 
 function CppCallBack(inscpp, classpath, functionName, ...)
+    A_("lalala", inscpp, classpath, functionName, ...)
     ActorMgr:Get():CallLuaInsFunc(inscpp, classpath, functionName, ...)
 end
