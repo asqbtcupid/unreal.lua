@@ -13,7 +13,18 @@ function Init()
         collectgarbage("collect")
         A_("lua memory: ", collectgarbage("count"))
     end
+    InitLuahotupdate()
     TimerMgr:Get():On(ShowMem):Time(5000):Fire()
+end
+
+function InitLuahotupdate()
+    if hasInitHoupdate then
+        return
+    end
+    hasInitHoupdate = true
+    local HU = require "luahotupdate"
+    HU.Init("hotupdatelist", {_luadir}, A_)
+    TimerMgr:Get():On(HU.Update):Time(1000)
 end
 
 function Tick(delta)

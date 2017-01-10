@@ -74,7 +74,7 @@ public:
 	
 	static void executeFunc(FString funcName, int n = 0, int nargs = 0);
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static void Call_void(FString funcName);
+	static void Call_void(FString funcName, int count_param = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void Push_obj(UObject *p);
@@ -89,16 +89,16 @@ public:
 	static void Push_bool(bool isTrue);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static UObject* Call_obj(FString funcName);
+	static UObject* Call_obj(FString funcName, int count_param);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static float Call_float(FString funcName);
+	static float Call_float(FString funcName, int count_param);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static FString Call_str(FString funcName);
+	static FString Call_str(FString funcName, int count_param);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
-	static bool Call_bool(FString funcName);
+	static bool Call_bool(FString funcName, int count_param);
 
 	UFUNCTION(BlueprintCallable, Category = "TableUtil")
 	static void CtorCpp(UObject* p, FString classpath);

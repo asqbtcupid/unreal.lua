@@ -428,40 +428,50 @@ void UTableUtil::Push_bool(bool isTrue)
 }
 
 
-void UTableUtil::Call_void(FString funcName)
+void UTableUtil::Call_void(FString funcName, int count_param)
 {
-	executeFunc(funcName, 0, lua_gettop(L));
+	if (count_param == -1)
+		count_param = lua_gettop(L);
+	executeFunc(funcName, 0, count_param);
 	clearStack();
 	// lua_tinker::call<void>(L, TCHAR_TO_ANSI(*funcName));
 }
 
-float UTableUtil::Call_float(FString funcName)
+float UTableUtil::Call_float(FString funcName, int count_param)
 {
-	executeFunc(funcName, 1, lua_gettop(L));
+	if (count_param == -1)
+		count_param = lua_gettop(L);
+	executeFunc(funcName, 0, count_param);
 	auto result = lua_tonumber(L, -1);
 	clearStack();
 	return result;
 }
 
-UObject* UTableUtil::Call_obj(FString funcName)
+UObject* UTableUtil::Call_obj(FString funcName, int count_param)
 {
-	executeFunc(funcName, 1, lua_gettop(L));
+	if (count_param == -1)
+		count_param = lua_gettop(L);
+	executeFunc(funcName, 0, count_param);
 	auto result = (UObject*)tousertype("", -1);
 	clearStack();
 	return result;
 }
 
-FString UTableUtil::Call_str(FString funcName)
+FString UTableUtil::Call_str(FString funcName, int count_param)
 {
-	executeFunc(funcName, 1, lua_gettop(L));
+	if (count_param == -1)
+		count_param = lua_gettop(L);
+	executeFunc(funcName, 0, count_param);
 	FString result = ANSI_TO_TCHAR(luaL_checkstring(L, -1));
 	clearStack();
 	return result;
 }
 
-bool UTableUtil::Call_bool(FString funcName)
+bool UTableUtil::Call_bool(FString funcName, int count_param)
 {
-	executeFunc(funcName, 1, lua_gettop(L));
+	if (count_param == -1)
+		count_param = lua_gettop(L);
+	executeFunc(funcName, 0, count_param);
 	bool result = !!lua_toboolean(L, -1);
 	clearStack();
 	return result;
