@@ -1,3 +1,6 @@
+function FVector:__add(other)
+	return UKismetMathLibrary.Add_VectorVector(self, other)
+end 
 local FVector_CppNew = FVector.New
 function FVector.New(x, y, z)
 	local v = FVector_CppNew()

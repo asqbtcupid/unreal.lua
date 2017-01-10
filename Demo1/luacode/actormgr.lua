@@ -24,4 +24,12 @@ function ActorMgr:CallLuaInsFunc(inscpp, classpath, functionName, ...)
 	luains[functionName](luains, ...)
 end
 
+function ActorMgr:DestroyActor(ins)
+	if type(ins) == "table" then
+		self.m_ExistObject[ins._cppinstance_] = nil
+	else
+		self.m_ExistObject[ins] = nil
+	end
+end
+
 return ActorMgr

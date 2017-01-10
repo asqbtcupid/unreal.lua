@@ -46,14 +46,12 @@ function Character_lua:Ctor()
 	GlobalEvent.On("LookUpDown", self.AddControllerPitchInput, self)
 end
 
-function Character_lua:BeginPlayLua()
+function Character_lua:BeginPlayLua(v)
 	self.FP_Gun:K2_AttachToComponent(self.Mesh1P, "GripPoint", EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, EAttachmentRule.SnapToTarget, true)
 
 	if self.bUsingMotionControllers then
-		self.VR_Gun:SetHiddenInGame(false, true)
 		self.Mesh1P:SetHiddenInGame(true, true)
 	else
-		self.VR_Gun:SetHiddenInGame(true, true)
 		self.Mesh1P:SetHiddenInGame(false, true)
 	end
 end
@@ -80,7 +78,7 @@ function Character_lua:Fire(isTrue)
 				local SpawnRotation = self:GetControlRotation()
 				local vec_offset = UKismetMathLibrary.GreaterGreater_VectorRotator(self.GunOffset, SpawnRotation) 
 				local MuzzleLocation = self.FP_MuzzleLocation:K2_GetComponentLocation()
-				local SpawnLocation = UKismetMathLibrary.Add_VectorVector(MuzzleLocation, vec_offset)
+				local SpawnLocation = MuzzleLocation + vec_offset
 				local transfrom = UKismetMathLibrary.MakeTransform(SpawnLocation, SpawnRotation, FVector.New(1, 1, 1))
 				local spawnActor = UGameplayStatics.BeginDeferredActorSpawnFromClass(world, self.ProjectileClass, transfrom, ESpawnActorCollisionHandlingMethod.AlwaysSpawn)
 				spawnActor = UGameplayStatics.FinishSpawningActor(spawnActor, transfrom)

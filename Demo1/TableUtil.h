@@ -1,5 +1,6 @@
 #pragma once
 #include "lua_tinker.h"
+#include <typeinfo>
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TableUtil.generated.h"
 DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
@@ -110,23 +111,19 @@ public:
 // 	UPROPERTY()
 // 	static TArray<UObject*> s;
 	template<typename T>
-	static void push(T value);
+	static int push(T value);
 	template<typename T>
-	static void push(T* value);
+	static int push(T* value);
 
 	static void pushclass(const char* classname, void* p, bool bgcrecord = false);
-	
-	template<> static void push(lua_class value);
-	template<> static void push(int value);
-	template<> static void push(float value);
-	template<> static void push(double value);
-	template<> static void push(bool value);
-	template<> static void push(UObject* value);
-	template<> static void push(void* value);
-	template<> static void push(FString value);
-	template<> static void push(const char* value);
-	template<> static void push(FVector value);
-	template<> static void push(FHitResult value);
+	template<> static int push(lua_class value);
+	template<> static int push(int value);
+	template<> static int push(float value);
+	template<> static int push(double value);
+	template<> static int push(bool value);
+	template<> static int push(FString value);
+	template<> static int push(const char* value);
+
 
 	template<typename T>
 	static T pop(int index);
@@ -140,10 +137,10 @@ public:
 
 
 	template<class T1, class... T>
-	static void push(T1 value, T... args)
+	static int push(T1 value, T... args)
 	{
-		push(value);
-		push(args...);
+		int i = push(value); 
+		return i + push(args...);
 	}
 
 	template<class returnType, class... T>
@@ -151,8 +148,7 @@ public:
 	{
 		if (L == nullptr)
 			init();
-		push(args...);
-		executeFunc(funcname, 1, lua_gettop(L));
+		executeFunc(funcname, 1, push(args...));
 		return pop<returnType>(-1);
 	}
 
@@ -161,8 +157,7 @@ public:
 	{
 		if (L == nullptr)
 			init();
-		push(args...);
-		executeFunc(funcname, 0, lua_gettop(L));
+		executeFunc(funcname, 0, push(args...));
 	}
 	
 	static TMap<FString, TMap<FString, UProperty*>> propertyMap;
@@ -171,82 +166,69 @@ public:
 };
 
 template<>
-void UTableUtil::push(lua_class value)
+int UTableUtil::push(lua_class value)
 {
 	pushclass(value.name, value.p, true);
+	return 1;
 }
 template<>
-void UTableUtil::push(int value)
+int UTableUtil::push(int value)
 {
 	lua_pushinteger(L, value);
+	return 1;
 }
 template<>
-void UTableUtil::push(float value)
+int UTableUtil::push(float value)
 {
 	lua_pushnumber(L, value);
+	return 1;
 }
 template<>
-void UTableUtil::push(double value)
+int UTableUtil::push(double value)
 {
 	lua_pushnumber(L, value);
+	return 1;
 }
 template<>
-void UTableUtil::push(bool value)
+int UTableUtil::push(bool value)
 {
 	lua_pushboolean(L, value);
-}
-template<>
-void UTableUtil::push(UObject* value)
-{
-	pushclass("UObjcet", (void*)value, true);
+	return 1;
 }
 
 template<>
-void UTableUtil::push(void* value)
-{
-	pushclass("UObjcet", value, true);
-}
-
-template<>
-void UTableUtil::push(FString value)
+int UTableUtil::push(FString value)
 {
 	lua_pushstring(L, TCHAR_TO_ANSI(*value));
+	return 1;
 }
 
 template<>
-void UTableUtil::push(const char* value)
+int UTableUtil::push(const char* value)
 {
 	lua_pushstring(L, value);
-}
-
-template<>
-void UTableUtil::push(FVector value)
-{
-	pushclass("FVecotr", new FVector(value));
-}
-
-template<>
-void UTableUtil::push(FHitResult value)
-{
-	pushclass("FHitResult", new FHitResult(value));
+	return 1;
 }
 
 template<typename T>
-void UTableUtil::push(T* value)
+int UTableUtil::push(T* value)
 {
 // 	class T;
-// 	UClass* Class = T::StaticClass();
-// 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-// 	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value, true);
+	UClass* Class = T::StaticClass();
+	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value, true);
+	return 1;
 }
 
 template<typename T>
-void UTableUtil::push(T value)
+int UTableUtil::push(T value)
 {
 	// 	class T;
-// 	UClass* Class = T::StaticClass();
-// 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-// 	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value, true);
+	FString name = typeid(T).name();
+	int FirstSpaceIndex = name.Find(TEXT(" "));
+	name = name.Mid(FirstSpaceIndex + 1);
+	pushclass(TCHAR_TO_ANSI(*name), (void*)(new T(value)));
+	return 1;
 }
 
 template<typename T>

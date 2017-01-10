@@ -40,6 +40,21 @@ function Object:NewIns(...)
 	return newIns
 end
 
+local function InternDestroy(theclass, ins, ...)
+	if theclass == nil then return end
+	local Destroy = rawget(theclass, "Destroy")
+	if Destroy then Destroy(ins, ...) end
+	local super = theclass.Super and theclass:Super()
+	if super then
+		InternDestroy(super, ins, ...)
+	end
+end
+
+function Object:Release(...)
+	InternDestroy(getmetatable(self), self, ...)
+end
+
+
 local function __indexcpp(t, k)
 	local class = getmetatable(t)
 	while class do
@@ -92,6 +107,12 @@ local function NewOn(self, inscpp, ...)
 	return newIns
 end
 
+local function DestroyCpp(self)
+	Object.Release(self)
+	self:K2_DestroyActor()
+	ActorMgr:Get():DestroyActor(self)
+end
+
 function Inherit(parent)
 	local TheNewClass = {}
 	TheNewClass._parentclass = parent
@@ -102,6 +123,7 @@ function Inherit(parent)
 		TheNewClass.NewInsCpp = NewInsCpp
 		TheNewClass.NewIns = Object.NewIns
 		TheNewClass.CtorFromCpp = CtorFromCpp
+		TheNewClass.DestroyCpp = DestroyCpp
 		TheNewClass.Super = Object.Super
 		TheNewClass.__index = __indexcpp
 		TheNewClass.__newindex = __newindexcpp
@@ -111,22 +133,6 @@ function Inherit(parent)
 		setmetatable(TheNewClass, parent)
 	end
 	return TheNewClass
-end
-
-
-
-local function InternDestroy(theclass, ins, ...)
-	if theclass == nil then return end
-	local Destroy = rawget(theclass, "Destroy")
-	if Destroy then Destroy(ins, ...) end
-	local super = theclass.Super and theclass:Super()
-	if super then
-		InternDestroy(super, ins, ...)
-	end
-end
-
-function Object:Release(...)
-	InternDestroy(getmetatable(self), self, ...)
 end
 
 Singleton = Inherit(Object)

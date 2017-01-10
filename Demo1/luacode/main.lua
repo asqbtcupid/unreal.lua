@@ -21,7 +21,10 @@ function Tick(delta)
 end
 
 function CtorCpp(inscpp, classpath, ...)
-    ActorMgr:Get():CtorCpp(inscpp, classpath, ...)
+    local function f()
+        ActorMgr:Get():CtorCpp(inscpp, classpath)
+    end
+    Xpcall(f)
 end
 
 function NewActor(inscpp, classpath, ...)
@@ -31,7 +34,6 @@ function NewActor(inscpp, classpath, ...)
     Xpcall(f)
 end
 
-function CppCallBack(inscpp, classpath, functionName, ...)
-    A_("lalala", inscpp, classpath, functionName, ...)
+function CppCallBack(classpath, functionName, inscpp, ...)
     ActorMgr:Get():CallLuaInsFunc(inscpp, classpath, functionName, ...)
 end
