@@ -19,6 +19,9 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	class USkeletalMeshComponent* FP_Gun;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	class UStaticMeshComponent* AK;
+
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	class USceneComponent* FP_MuzzleLocation;

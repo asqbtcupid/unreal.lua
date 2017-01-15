@@ -14,7 +14,7 @@ function Init()
         A_("lua memory: ", collectgarbage("count"))
     end
     InitLuahotupdate()
-    TimerMgr:Get():On(ShowMem):Time(5000):Fire()
+    -- TimerMgr:Get():On(ShowMem):Time(5000):Fire()
 end
 
 function InitLuahotupdate()
@@ -31,7 +31,7 @@ function Tick(delta)
     TimerMgr:Get():Tick(delta)
 end
 
-function CtorCpp(inscpp, classpath, ...)
+function CtorCpp(classpath, inscpp, ...)
     local function f()
         ActorMgr:Get():CtorCpp(inscpp, classpath)
     end

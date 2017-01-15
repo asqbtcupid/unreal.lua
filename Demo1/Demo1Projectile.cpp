@@ -19,7 +19,7 @@ ADemo1Projectile::ADemo1Projectile()
 
 	// Set as root component
 	RootComponent = CollisionComp;
-	UTableUtil::call("CtorCpp", this, "luaprojectile");
+	UTableUtil::call("CtorCpp", "luaprojectile", this);
 
 }
 

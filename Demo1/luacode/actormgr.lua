@@ -17,7 +17,7 @@ function ActorMgr:CtorCpp(inscpp, classpath, ...)
 	if self.m_ExistObject[inscpp] then return end
 	local class = require (classpath)
 	class:CtorFromCpp(inscpp, ...)
-	self.m_ExistObject[inscpp] = class:NewOn(inscpp, ...)
+	-- self.m_ExistObject[inscpp] = class:NewOn(inscpp, ...)
 end
 
 function ActorMgr:CallLuaInsFunc(inscpp, classpath, functionName, ...)

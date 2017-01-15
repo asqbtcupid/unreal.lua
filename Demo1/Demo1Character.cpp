@@ -17,7 +17,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 ADemo1Character::ADemo1Character()
 {
 	//init in lua
- 	UTableUtil::call("CtorCpp", this, "luacharacter");
+ 	 UTableUtil::call("CtorCpp", "luacharacter", this);
 }
 
 void ADemo1Character::BeginPlay()
