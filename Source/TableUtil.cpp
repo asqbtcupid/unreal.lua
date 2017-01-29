@@ -2,8 +2,8 @@
 
 // #include "TestCamera.h"
 // #include "ScriptPluginPrivatePCH.h"
-#define _includefile "FirstPerson.h"
-#include  "FirstPerson.h" 
+#define _includefile "change_to_your_project_hearder_name.h"
+#include  "change_to_your_project_hearder_name.h" 
 #include "TableUtil.h"
 #include "UObject/UObjectThreadContext.h"
 #include "GeneratedScriptLibraries.inl"
