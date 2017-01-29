@@ -1,0 +1,27 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "ljh Lua Plugin",
+	"Description" : "Generate Lua Glue",
+	"Category" : "Examples",
+	"CreatedBy" : "asqbtcupid",
+	"CreatedByURL" : "https://github.com/asqbtcupid",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : false,
+	"IsBetaVersion" : false,
+	"Installed" : false,
+	"CanBeUsedWithUnrealHeaderTool" : true,
+	
+	"Modules" :
+	[
+		{
+			"Name" : "LuaglueGenerator",
+			"Type" : "Program",
+			"LoadingPhase" : "PostConfigInit"
+		}
+	]
+}
