@@ -11,22 +11,59 @@ basically:
 4. copy Source/TableUtil.h, TableUtil.cpp, Luautils.h, Luautils.cpp to your cpp source folder
 5. Edit TableUtil.cpp and Luautils.cpp to include your project header file.
 
-## How to call lua in c++ and how to call c++ in lua?
+## Communication between C++ and Lua:  
 Checkout branch demo_firstperson or demo_shootergame, there are some example.
 
-1.call lua in c++:
+1.call lua function in c++, There are Two way, In both method, No matter how many parameters:
 
-without return value:
+  without return value:
 
-```
-UTableUtil::call(function_name, parameter1, parameter2, ...);
+  ```
+  UTableUtil::call(function_name, parameter1, parameter2, ...);
+  ```
+
+  with return value:
+
+  ```
+  UTableUtil::callr<returntype>(function_name, parameter1, parameter2, ...);
 ```
 
-with return value:
+2.call c++ in lua is similar with Blueprint.You can call c++ class function which with UFUNCTION() and You can get or set c++ memberdata which with UPROPERTY().
 
-```
-UTableUtil::callr<returntype>(function_name, parameter1, parameter2, ...);
-```
+## Communication between Blueprint and Lua:
+1.Lua can't not comunicate with Blueprint derectly.But Lua can call C++ class's blueprint implement function.
+2.Blueprint can call lua function derectly, But It's not convenient.For example, there is a function in lua name Tick(delta), It accept one parameter.First Blueprint need to push an argument and then to call the function.
+![tickexample](https://github.com/asqbtcupid/asqbtcupid.github.com/blob/master/_image/TickExamplebp.gif?raw=true)
+there are different push function to push different type parameter:
+![pushfunction](https://github.com/asqbtcupid/asqbtcupid.github.com/blob/master/_image/pushmethodbp.png?raw=true)
+ and different call function to get different type result:
+![callfunction](https://github.com/asqbtcupid/asqbtcupid.github.com/blob/master/_image/callmethodbp.png?raw=true)
+K2Node may help to do this more simple.
+
+## Export Class, Struct, Enum to Lua
+
+1.config:In the Config/luaconfig.ini, "SupportedModules" mean The UCLASS of this module are exported to Lua, But for Now I only test CoreUobject and Engine."SupportedStruct" mean the USTRUCT exported to Lua.Please ignore "NoPropertyStruct" for now.All EENUM are exported.
+
+2.if you want to export your class or struct or enum,you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
+## How to know what function or property of class are exported?
+The lua binding code is generate to the folder base on your vs project config,In Development Editor,
+please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class and struct has their corresponding file.Enum are in allEnum.script.h.
+
+## What type are suppoted?
+
+1.TArray and C array is supported.TSet and TMap is not supported.
+
+2.TWeakObjectPtr is supported.
+
+## Featrue
+
+1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in demo_firstperson, you can change the luacharacter.lua's function code and see what happen.You can try demo_shootergame too.
+
+
+
+
+
+
 
 
 
