@@ -36,7 +36,7 @@ Checkout branch demo_firstperson or demo_shootergame, there are some example.
   UTableUtil::callr<returntype>(function_name, parameter1, parameter2, ...);
 ```
 
-2.call c++ in lua is similar with Blueprint.You can call c++ class function which with UFUNCTION() and You can get or set c++ memberdata which with UPROPERTY().
+2.call c++ in lua is similar with Blueprint.You can call c++ class function which with UFUNCTION() and You can get or set c++ member data which with UPROPERTY().
 
 ## Communication between Blueprint and Lua:
 1.Lua can't not comunicate with Blueprint derectly.But Lua can call C++ class's blueprint implement function.
@@ -61,8 +61,7 @@ K2Node may help to do this more simple.
 
 2.if you want to export your class or struct or enum,you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
 ## How to know what function or property of class are exported?
-The lua binding code is generate to the folder base on your vs project config,In Development Editor,
-please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class and struct has their corresponding file.Enum are in allEnum.script.h.
+The lua binding code is generate to the folder base on your visual studio project config.If you use Development Editor config,please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class or struct has their corresponding file.Enum are in allEnum.script.h.
 
 ## What other type are suppoted?
 
