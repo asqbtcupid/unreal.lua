@@ -74,4 +74,6 @@ please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_na
 
 1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in demo_firstperson, you can change the luacharacter.lua's function code and see what happen.You can try demo_shootergame too.
 ## Finally
-All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
+1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
+
+2.All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
