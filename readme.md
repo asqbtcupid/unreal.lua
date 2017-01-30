@@ -76,3 +76,5 @@ The lua binding code is generate to the folder base on your visual studio projec
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
 2.All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
+
+3.It's an experimental project,If you has any good idea or advise, welcome to fallback.
