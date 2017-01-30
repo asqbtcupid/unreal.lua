@@ -61,7 +61,7 @@ K2Node may help to do this more simple.
 The lua binding code is generate to the folder base on your vs project config,In Development Editor,
 please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class and struct has their corresponding file.Enum are in allEnum.script.h.
 
-## What type are suppoted?
+## What other type are suppoted?
 
 1.TArray and C array is supported.TSet and TMap is not supported.
 
