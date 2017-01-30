@@ -16,6 +16,8 @@ basically:
 
 5. Edit TableUtil.cpp and Luautils.cpp to include your project header file.
 
+6.put lua file into projectname/LuaSource folder.At least need one file name main.lua.
+
 
 ## Communication between C++ and Lua:  
 Checkout branch demo_firstperson or demo_shootergame, there are some example.
