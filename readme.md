@@ -6,15 +6,15 @@ Checkout branch demo_firstperson or demo_shootergame to see how to implement.
 
 It can be used in UE4 4.14.1 version.basically:
 
-1. copy all the file and folder of this repository to your project folder.
+1.copy all the file and folder of this repository to your project folder.
 
-2. build lua lib manually.
+2.build lua lib manually.
 
-3. add lua include path and libarary path to youproject.build.cs
+3.add lua include path and libarary path to youproject.build.cs
 
-4. copy Source/TableUtil.h, TableUtil.cpp, Luautils.h, Luautils.cpp to your cpp source folder
+4.copy Source/TableUtil.h, TableUtil.cpp, Luautils.h, Luautils.cpp to your cpp source folder
 
-5. Edit TableUtil.cpp and Luautils.cpp to include your project header file.
+5.Edit TableUtil.cpp and Luautils.cpp to include your project header file.
 
 6.put lua file into projectname/LuaSource folder.At least need one file name main.lua.
 
