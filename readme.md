@@ -39,6 +39,7 @@ Checkout branch demo_firstperson or demo_shootergame, there are some example.
 1.Lua can't not comunicate with Blueprint derectly.But Lua can call C++ class's blueprint implement function.
 
 2.Blueprint can call lua function derectly, But It's not convenient.For example, there is a function in lua name Tick(delta), It accept one parameter.First Blueprint need to push an argument and then to call the function.
+
 ![tickexample](https://github.com/asqbtcupid/asqbtcupid.github.com/blob/master/_image/TickExamplebp.gif?raw=true)
 
 there are different push function to push different type parameter:
