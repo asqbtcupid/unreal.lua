@@ -5,6 +5,7 @@ This can be used to generate lua binding code of UE4 Engine.That means you can w
 Checkout branch demo_firstperson or demo_shootergame to see how to implement.
 
 basically:
+
 1. copy all the file and folder of this repository to your project folder.
 
 2. build lua lib manually.
