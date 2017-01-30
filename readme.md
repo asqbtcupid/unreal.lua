@@ -54,7 +54,7 @@ K2Node may help to do this more simple.
 
 ## Export Class, Struct, Enum to Lua
 
-1.config:In the Config/luaconfig.ini, "SupportedModules" mean The UCLASS of this module are exported to Lua, But for Now I only test CoreUobject and Engine."SupportedStruct" mean the USTRUCT exported to Lua.Please ignore "NoPropertyStruct" for now.All EENUM are exported.
+1.config:In the Config/luaconfig.ini, "SupportedModules" mean The UCLASS of this module are exported to Lua, But for Now I only test CoreUobject and Engine."SupportedStruct" mean the USTRUCT exported to Lua.Please ignore "NoPropertyStruct" for now.All UENUM are exported.
 
 2.if you want to export your class or struct or enum,you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
 ## How to know what function or property of class are exported?
