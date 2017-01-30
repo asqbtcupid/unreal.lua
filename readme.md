@@ -1,10 +1,10 @@
 
 ## Lua5.1 Plugin
-This can be used to generate lua binding code of UE4 Engine.That means you can write game logic by lua.It can be used in UE4 4.14.1 version.
+This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
 ## How to build
 Checkout branch demo_firstperson or demo_shootergame to see how to implement.
 
-basically:
+It can be used in UE4 4.14.1 version.basically:
 
 1. copy all the file and folder of this repository to your project folder.
 
