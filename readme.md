@@ -73,7 +73,7 @@ The lua binding code is generate to the folder base on your visual studio projec
 
 ## Featrue
 
-1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in demo_firstperson, you can change the luacharacter.lua's function code and see what happen.You can try demo_shootergame too.
+1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in branch demo_firstperson_umg.Project path can't contain space.
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
