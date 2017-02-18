@@ -74,6 +74,10 @@ The lua binding code is generate to the folder base on your visual studio projec
 ## Featrue
 
 1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in branch demo_firstperson_umg.Project path can't contain space.
+
+2.When lua can call c++ function which contains default argument.It does need to pass all arguments.
+
+3.When lua call c++ function which contains reference parameter, such as void example(int &i, FVector &v),lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
