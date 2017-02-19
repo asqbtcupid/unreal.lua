@@ -67,9 +67,9 @@ The lua binding code is generate to the folder base on your visual studio projec
 
 1.TArray and C array is supported.TSet and TMap is not supported.
 
-2.TWeakObjectPtr is supported.
+2.TWeakObjectPtr is supported,There are some example code in branch demo_shootergame.
 
-3.MulticastDelegate is supported, But only in branch demo_fristperson_umg.I will merge to master later.
+3.MulticastDelegate is supported, There are some example code In branch demo_fristperson_umg.
 
 ## Featrue
 
