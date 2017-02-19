@@ -2,7 +2,7 @@
 ## Lua5.1 Plugin
 This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
 ## How to build
-This plugin can be used in UE4 4.14 version.Checkout branch demo_firstperson_umg to see how to implement.
+This plugin can be used in UE4 4.14 version.Checkout branch **demo_firstperson_umg** to see how to implement.
 
 basically:
 
@@ -20,7 +20,7 @@ basically:
 
 
 ## Communication between C++ and Lua:  
-Checkout branch demo_firstperson or demo_shootergame, there are some example.
+Checkout branch **demo_firstperson_umg** or **demo_shootergame**, there are some example.
 
 1.call lua function in c++, There are Two way, In both method, No matter how many parameters:
 
@@ -67,17 +67,17 @@ The lua binding code is generate to the folder base on your visual studio projec
 
 1.TArray and C array is supported.TSet and TMap is not supported.
 
-2.TWeakObjectPtr is supported,There are some example code in branch demo_shootergame.
+2.TWeakObjectPtr is supported,There are some example code in branch **demo_shootergame**.
 
-3.MulticastDelegate is supported, There are some example code In branch demo_fristperson_umg.
+3.MulticastDelegate is supported, There are some example code In **branch demo_fristperson_umg**.
 
 ## Featrue
 
-1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in branch demo_firstperson_umg.Project path can't contain space.
+1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in branch **demo_firstperson_umg**.Project path can't contain space.
 
-2.When lua call c++ function which contains default argument.you dont't have to pass all arguments.For an example,In c++,you declare void example(int i, int j =1, int k = 2).When you call this function in lua,you can just pass one argument:example(0).
+2.When lua call c++ function which contains default argument.you dont't have to pass all arguments.For an example,In c++,you declare _void example(int i, int j =1, int k = 2)_.When you call this function in lua,you can just pass one argument:example(0).
 
-3.When lua call c++ function which contains reference parameter, such as void example(int &i, FVector &v),lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
+3.When lua call c++ function which contains reference parameter, such as _void example(int &i, FVector &v)_,lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
