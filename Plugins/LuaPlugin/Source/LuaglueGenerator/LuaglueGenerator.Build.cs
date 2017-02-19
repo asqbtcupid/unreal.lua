@@ -9,7 +9,7 @@ namespace UnrealBuildTool.Rules
 		public LuaglueGenerator(TargetInfo Target)
 		{
 			PublicIncludePaths.AddRange(
-				new string[] {					
+				new string[] {				
 					"Programs/UnrealHeaderTool/Public",
 					// ... add other public include paths required here ...
 				}

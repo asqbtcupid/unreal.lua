@@ -1,7 +1,7 @@
 function Shutdown()
 end
 function Init()
-    package.path = package.path .. ";".._luadir.."\\?.lua"
+    package.path = package.path .. ";".._luadir.."/?.lua"
     require "structutil"
     require "logutil"
     require "luaclass"
@@ -9,6 +9,7 @@ function Init()
     require "timermgr"
     require "actormgr"
     require "baseutil"
+    require "testtemplate"
     local function ShowMem()
         collectgarbage("collect")
         A_("lua memory: ", collectgarbage("count"))

@@ -9,13 +9,20 @@
 class FLuaScriptCodeGenerator : public FScriptCodeGeneratorBase
 {
 protected:
-
+	FString IncludeBase;
+	FString ExportingClassSourcefile;
+	TArray<FString> DelegateSourceFiles;
 	struct FPropertyAccessor
 	{
 		FString FunctionName;
 		FString AccessorName;
 	};
-
+	struct FDelegateExported
+	{
+		FString ClassNameCPP;
+		FString DelegateName;
+		UFunction* SignatureFunction;
+	};
 	/** All generated script header filenames */
 	TArray<FString> AllScriptHeaders;
 	/** Source header filenames for all exported classes */
@@ -33,6 +40,8 @@ protected:
 	TArray<FString> NoexportPropertyStruct;
 	TSet<FString> WeakPtrClass;
 
+	TArray<FDelegateExported> delegates;
+	bool bExportDelegateProxy;
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();
 	/** Exports a wrapper function */
@@ -62,8 +71,10 @@ protected:
 	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
 	FString FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper = nullptr);
 	void GenerateWeakClass();
+	void GenerateDelegateClass();
 	
 	virtual FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
+	FString GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
 	FString InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty = false, FString arrayName = "");
 	void ExportStruct();
 	void ExportEnum();
@@ -74,7 +85,6 @@ protected:
 	virtual FString InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex) override;
 
 public:
-
 	FLuaScriptCodeGenerator(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& InIncludeBase);
 
 	// FScriptCodeGeneratorBase interface

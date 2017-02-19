@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
-// #include "TestCamera.h"
-// #include "ScriptPluginPrivatePCH.h"
-#define _includefile "change_to_your_project_hearder_name.h"
-#include  "change_to_your_project_hearder_name.h" 
+#include "Your_Project_Module_Name.h" 
 #include "TableUtil.h"
+#include "DelegateLuaProxy.h"
 #include "UObject/UObjectThreadContext.h"
 #include "GeneratedScriptLibraries.inl"
 
@@ -12,6 +9,8 @@ DEFINE_LOG_CATEGORY(LuaLog);
 
 lua_State* UTableUtil::L = nullptr;
 TMap<FString, TMap<FString, UProperty*>> UTableUtil::propertyMap;
+TMap<FString, TMap<FString, UFunction*>> UTableUtil::functionMap;
+// FLuaGcObj UTableUtil::gcobjs;
 #ifdef LuaDebug
 TMap<FString, int> UTableUtil::countforgc;
 #endif
@@ -29,12 +28,36 @@ void UTableUtil::InitClassMap()
 			m.Add(Property->GetName(), Property);
 		}
 		propertyMap.Add(className ,m);
+		TMap<FString, UFunction*> funcs;
+		for (TFieldIterator<UFunction> FuncIt(theClass); FuncIt; ++FuncIt)
+		{
+			UFunction* func = *FuncIt;
+			funcs.Add(func->GetName(), func);
+		}
+		functionMap.Add(className, funcs);
+	}
+	for (TObjectIterator<UScriptStruct> uStruct; uStruct; ++uStruct)
+	{
+		auto theStruct = *uStruct;
+		FString className = FString::Printf(TEXT("%s%s"), theStruct->GetPrefixCPP(), *theStruct->GetName());
+		TMap<FString, UProperty*> m;
+		for (TFieldIterator<UProperty> PropertyIt(theStruct); PropertyIt; ++PropertyIt)
+		{
+			UProperty* Property = *PropertyIt;
+			m.Add(Property->GetName(), Property);
+		}
+		propertyMap.Add(className ,m);
 	}
 }
 
 UProperty* UTableUtil::GetPropertyByName(FString classname, FString propertyname)
 {
 	return propertyMap[classname][propertyname];
+}
+
+UFunction* UTableUtil::GetFunctionByName(FString classname, FString funcname)
+{
+	return functionMap[classname][funcname];
 }
 
 UProperty* UTableUtil::GetPropertyByName(UClass *Class, FString propertyname)
@@ -72,8 +95,6 @@ void UTableUtil::init()
 	luaL_openlibs(l);
 	L = l;
 	FString gameDir = FPaths::GameDir();
-	FString projectname = _includefile;
-	projectname.RemoveAt(projectname.Len() - 1, 2);
 	FString luaDir = gameDir /TEXT("LuaSource");
 	FString mainFilePath = luaDir / TEXT("main.lua");
 	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
@@ -94,11 +115,15 @@ void UTableUtil::init()
 		lua_newtable(L);
 		lua_setfield(L, LUA_REGISTRYINDEX, "_needgcdata");
 
+		lua_newtable(L);
+		lua_setfield(L, LUA_REGISTRYINDEX, "_luacallback");
+
 		push(luaDir);
 		lua_setfield(L, LUA_GLOBALSINDEX, "_luadir");
 		//register all function
 		LuaRegisterExportedClasses(L);
 		executeFunc("Init", 0, 0);
+		testtemplate();
 	}
 }
 
@@ -262,7 +287,7 @@ void UTableUtil::closemodule()
 	lua_pop(L, 2);
 }
 
-void* UTableUtil::tousertype(const char* classname, int i)
+void* tousertype(lua_State* L, const char* classname, int i)
 {
 	if (lua_isnil(L, i))
 		return nullptr;
@@ -279,7 +304,7 @@ void* UTableUtil::tousertype(const char* classname, int i)
 		else
 		{
 			lua_replace(L, i);
-			return tousertype(classname, i);
+			return tousertype(L, classname, i);
 		}
 	}
 	else if (lua_isuserdata(L, i))
@@ -291,9 +316,9 @@ void* UTableUtil::tousertype(const char* classname, int i)
 		return nullptr;
 }
 
-int UTableUtil::toint(int i)
+void* UTableUtil::tousertype(const char* classname, int i)
 {
-	return lua_tointeger(L, i);
+	return ::tousertype(L, classname, i);
 }
 
 void UTableUtil::setmeta(const char* classname, int index)
@@ -310,6 +335,55 @@ void UTableUtil::setmeta(const char* classname, int index)
 		luaL_getmetatable(L, classname);
 		lua_setmetatable(L, index-1);
 	}
+}
+int UTableUtil::push(uint8 value)
+{
+	lua_pushboolean(L, !!value);
+	return 1;
+}
+int UTableUtil::push(int value)
+{
+	lua_pushinteger(L, value);
+	return 1;
+}
+int UTableUtil::push(float value)
+{
+	lua_pushnumber(L, value);
+	return 1;
+}
+int UTableUtil::push(double value)
+{
+	lua_pushnumber(L, value);
+	return 1;
+}
+int UTableUtil::push(bool value)
+{
+	lua_pushboolean(L, value);
+	return 1;
+}
+
+int UTableUtil::push(FString value)
+{
+	lua_pushstring(L, TCHAR_TO_ANSI(*value));
+	return 1;
+}
+
+int UTableUtil::push(FText value)
+{
+	lua_pushstring(L, TCHAR_TO_ANSI(*value.ToString()));
+	return 1;
+}
+
+int UTableUtil::push(FName value)
+{
+	lua_pushstring(L, TCHAR_TO_ANSI(*value.ToString()));
+	return 1;
+}
+
+int UTableUtil::push(const char* value)
+{
+	lua_pushstring(L, value);
+	return 1;
 }
 
 void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
@@ -424,12 +498,21 @@ void UTableUtil::executeFunc(FString funcName, int n, int nargs)
 		log(lua_tostring(L, -1));
 }
 
+void UTableUtil::executeFuncid(int32 funcid, int n, int nargs)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, funcid);
+	if (nargs > 0)
+		lua_insert(L, -nargs-1);
+	if (lua_pcall(L, nargs, n, 0))
+		log(lua_tostring(L, -1));
+}
+
 // api for blueprint start:
 void UTableUtil::Push_obj(UObject *p)
 {
 	auto Class = p->StaticClass();
 	FString ClassName = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-	pushclass(TCHAR_TO_ANSI(*ClassName), (void*)p, true);
+	pushclass(TCHAR_TO_ANSI(*ClassName), (void*)p);
 }
 
 void UTableUtil::Push_float(float value)
@@ -547,4 +630,76 @@ UObject* UTableUtil::FObjectFinder( UClass* Class, FString PathName )
 		result->AddToRoot();
 	}
 	return result;
+}
+
+int UTableUtil::pushluafunc(int index)
+{
+	if (index < 0)
+		index = lua_gettop(L) + index + 1;
+
+	lua_pushvalue(L, index);
+	int r = luaL_ref(L, LUA_REGISTRYINDEX);
+
+	return r;
+}
+
+int UTableUtil::popluafunc(int index)
+{
+	if (index < 0)
+		index = lua_gettop(L) + index + 1;
+	lua_getfield(L, LUA_REGISTRYINDEX, "_luacallback");
+	lua_pushvalue(L, index);
+	lua_rawget(L, -2);
+	if (lua_isnil(L, -1))
+	{
+		lua_pop(L, 3);
+		return -1;
+	}
+	else
+	{
+		int r = lua_tointeger(L, -1);
+		luaL_unref(L, LUA_REGISTRYINDEX, r);
+		lua_pushvalue(L, index);
+		lua_pushnil(L);
+		lua_rawset(L, -4);
+		lua_pop(L, 3);
+		return r;
+	}
+}
+
+void UTableUtil::unref(int r)
+{
+	luaL_unref(L, LUA_REGISTRYINDEX, r);
+}
+
+void UTableUtil::addgcref(UObject *p)
+{
+	FLuaGcObj::Get()->objs.Add(p);
+}
+
+void UTableUtil::rmgcref(UObject *p)
+{
+	FLuaGcObj::Get()->objs.Remove(p);
+}
+
+void UTableUtil::testtemplate()
+{
+	FVector f;
+	AActor *p = nullptr;
+	TArray<FVector> t;
+	call("testtemplate_call", f, 1,"test", p, 2.0, true, t);
+	if (callr<int>("testtemplate_r_int") != 1)
+		log("int");
+	if ( callr<float>("testtemplate_r_float") != 1.0 )
+		log("float");
+	if ( callr<double>("testtemplate_r_double") != 1.0 )
+		log("double");
+	if (callr<AActor*>("testtemplate_r_AActor") != nullptr)
+		log("AActor");
+	f = callr<FVector>("testtemplate_r_FVector");
+	if (f.X != 1 || f.Y != 2 || f.Z != 3)
+		log("FVector");
+	auto t1 = callr<TArray<int>>("testtemplate_r_TArray");
+	if (t1[0] != 1 || t1[1] != 2 || t1[2] != 3)
+		log("TArray");
 }

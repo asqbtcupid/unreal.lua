@@ -160,7 +160,7 @@ bool FScriptCodeGeneratorBase::CanExportProperty(const FString& ClassNameCPP, UC
 {
 	if (
 		Property->IsA(UDelegateProperty::StaticClass()) ||
-		Property->IsA(UMulticastDelegateProperty::StaticClass()) ||
+//		Property->IsA(UMulticastDelegateProperty::StaticClass()) ||
 // 		Property->IsA(UWeakObjectProperty::StaticClass()) ||
 		Property->IsA(UInterfaceProperty::StaticClass())
 		)

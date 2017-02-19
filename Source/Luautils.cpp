@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "change_to_your_project_hearder_name.h" 
-#include "Luautils.h"
+#include "Your_Project_Module_Name.h" 
 #include "TableUtil.h"
-
-
+#include "Luautils.h"
 
 UWorld* ULuautils::GetWorld(AActor* obj)
 {
@@ -42,3 +39,12 @@ FColor ULuautils::FColor_New(uint8 InR, uint8 InG, uint8 InB, uint8 InA)
 	return FColor(InR,InG,InB,InA);
 }
 
+void ULuautils::GetAllWidgets(UUserWidget* UserWidget, TArray<FName>& Names, TArray<UWidget*>& Widgets)
+{
+	UWidgetTree* WidgetTree = UserWidget->WidgetTree;
+	WidgetTree->GetAllWidgets(Widgets);
+	for (auto &v : Widgets)
+	{
+		Names.Add(v->GetFName());
+	}
+}

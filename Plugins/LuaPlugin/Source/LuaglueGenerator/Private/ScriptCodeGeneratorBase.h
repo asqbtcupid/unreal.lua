@@ -51,7 +51,7 @@ protected:
 	virtual bool CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property);
 
 public:
-
+	FString GameModuleName;
 	virtual ~FScriptCodeGeneratorBase() {}
 
 	// IScriptGeneratorPlugin interface
