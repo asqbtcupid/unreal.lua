@@ -2,15 +2,15 @@
 ## Lua5.1 Plugin
 This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
 ## How to build
-Checkout branch demo_firstperson_umg to see how to implement.
+This plugin can be used in UE4 4.14 version.Checkout branch demo_firstperson_umg to see how to implement.
 
-It can be used in UE4 4.14.1 version.basically:
+basically:
 
 1.copy all the file and folder of this repository to your project folder.
 
-2.build lua lib manually.
+2.build lua lib manually.(I have build mac64 and win64 lib for you)
 
-3.add lua include path and libarary path to youproject.build.cs
+3.add lua include path and libarary path to youproject.build.cs(have a look to Source/sample.build.cs)
 
 4.copy Source/TableUtil.h, TableUtil.cpp, Luautils.h, Luautils.cpp to your cpp source folder
 
