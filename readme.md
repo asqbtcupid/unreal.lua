@@ -71,6 +71,8 @@ The lua binding code is generate to the folder base on your visual studio projec
 
 3.MulticastDelegate is supported, There are some example code In **branch demo_fristperson_umg**.
 
+4.UInterface is supported in branch demo_firstperson_umg.I will merge to master later.
+
 ## Featrue
 
 1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).you can try it in branch **demo_firstperson_umg**.Project path can't contain space.
