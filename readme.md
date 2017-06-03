@@ -3,6 +3,7 @@
 This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
 ## How to build
 This plugin can be used in UE4 4.14 version.Checkout branch **demo_firstperson_umg** to see how to implement.
+branch 4.16demo can be used in UE 4.16 release.
 
 basically:
 
