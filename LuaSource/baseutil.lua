@@ -30,3 +30,4 @@ function CppType(t)
     end
     return getmetatable(t).classname
 end
+

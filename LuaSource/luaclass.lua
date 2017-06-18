@@ -16,17 +16,62 @@ function clone(t, cache)
 	return result
 end
 
+function addfunc(des_t, src_t)
+	for k,v in pairs(src_t) do
+		if type(v) == "function" and not des_t[k] then
+			des_t[k] = v
+		end
+	end
+end
+
 Object = {}
 Object.__index = Object
+Object._meta_ = Object
 function Object:Ctor(...)
+end
+
+function Object:Destroy()
+	if self._cppinstance_ then
+		_objectins2luatable[self._cppinstance_] = nil
+	end
+	self._has_destroy_ = true
+end
+
+function Object:IsChildOf(parent)
+	if rawget(self, "_meta_") == nil then
+		error("not class")
+	end
+	local direct_parent = self:Super()
+	if direct_parent == parent then
+		return true
+	elseif direct_parent then
+		return direct_parent:IsChildOf(parent)
+	else
+		return false
+	end
 end
 
 function Object:Super()
 	return self._parentclass
 end
 
+function Object:Ins()
+	if rawget(self, "_meta_") == nil then
+		error("not class")
+	end
+	local newIns = setmetatable({}, self)
+	return newIns
+end
+
+function Object:NewIns(...)
+	local ins = self:Ins()
+	ins:Initialize(...)
+	return ins
+end
+
 local function CtorRecursively(theclass, ins, ...)
-	local super = theclass.Super and theclass:Super()
+	if theclass == nil then return end
+	local super = theclass:Super()
 	if super then
 		CtorRecursively(super, ins, ...)
 	end
@@ -34,16 +79,19 @@ local function CtorRecursively(theclass, ins, ...)
 	if Ctor then Ctor(ins, ...) end
 end
 
-function Object:NewIns(...)
-	local newIns = setmetatable({}, self)
-	CtorRecursively(self, newIns, ...)
-	return newIns
+function Object:Initialize(...)
+	if rawget(self, "_meta_") then
+		error("not ins")
+	end
+	CtorRecursively(self._meta_, self, ...)
 end
 
 local function InternDestroy(theclass, ins, ...)
 	if theclass == nil then return end
 	local Destroy = rawget(theclass, "Destroy")
-	if Destroy then Destroy(ins, ...) end
+	if  Destroy then
+		Destroy(ins, ...)
+	end
 	local super = theclass.Super and theclass:Super()
 	if super then
 		InternDestroy(super, ins, ...)
@@ -51,7 +99,13 @@ local function InternDestroy(theclass, ins, ...)
 end
 
 function Object:Release(...)
-	InternDestroy(getmetatable(self), self, ...)
+	if rawget(self, "_meta_") then
+		error("not ins")
+	end
+	if self._has_destroy_ then
+		error("double Destroy")
+	end
+	InternDestroy(self._meta_, self, ...)
 end
 
 
@@ -78,74 +132,106 @@ local function __newindexcpp(t, k, v)
 	rawset(t, k, v)
 end
 
-local function CtorCppRecursively(theclass, inscpp, ...)
-	local super = theclass.Super and theclass:Super()
-	if super then
-		CtorRecursively(super, inscpp, ...)
-	end
-	local CtorCpp = rawget(theclass, "CtorCpp")
-	if CtorCpp then CtorCpp(inscpp, ...) end
-end
-
-local function CtorFromCpp(theclass, inscpp, ...)
-	-- theclass._cppclass:cast(inscpp)
-	CtorCppRecursively(theclass, inscpp, ...)
-end
-
-local function NewInsCpp(self, ...)
-	self._cppinstance_ = self._cppclass.New()
-	self:NewIns(...)
-end
-
 local function Bind(self, inscpp)
-	-- self._cppclass:cast(inscpp) 
+	if self._cppinstance_ then 
+		_objectins2luatable[self._cppinstance_] = nil	
+	end
+	_objectins2luatable[inscpp] = self
 	self._cppinstance_ = inscpp 
-end
-
-local function NewOn(self, inscpp, ...)
-	local newIns = setmetatable({}, self)
-	self.Bind(newIns, inscpp)
-	CtorRecursively(self, newIns, ...)
-	return newIns
-end
-
-local function DestroyCpp(self)
-	Object.Release(self)
-	self:K2_DestroyActor()
-	ActorMgr:Get():DestroyActor(self)
 end
 
 function Inherit(parent, cppclass)
 	local TheNewClass = {}
 	TheNewClass._parentclass = parent
-	if parent.__iscppclass then
+	if parent.__iscppclass or cppclass then
 		TheNewClass._cppclass = cppclass or parent._cppclass or parent
-		TheNewClass.Bind = Bind
-		TheNewClass.NewOn = NewOn
-		TheNewClass.NewInsCpp = NewInsCpp
-		TheNewClass.NewIns = Object.NewIns
-		TheNewClass.CtorFromCpp = CtorFromCpp
-		TheNewClass.DestroyCpp = DestroyCpp
-		TheNewClass.Super = Object.Super
 		TheNewClass.__index = __indexcpp
 		TheNewClass.__newindex = __newindexcpp
-		setmetatable(TheNewClass, parent)
 	else
 		TheNewClass.__index = TheNewClass
-		setmetatable(TheNewClass, parent)
 	end
+	setmetatable(TheNewClass, parent)
+	rawset(TheNewClass, "_meta_", TheNewClass)
 	return TheNewClass
 end
+Class = Inherit
 
-Singleton = Inherit(Object)
-function Singleton:Get(...)
-	if self._ins == nil then
-		local newins = self:NewIns(...)
-		self._ins = newins
+ObjectBase = Inherit(Object)
+ObjectBase.New = Object.NewIns
+function ObjectBase:Ctor()
+	self._timer_handles_ = {}
+	self._event_handles_ = {}
+	self._childs_ = {}
+end
+
+function ObjectBase:Destroy()
+	for i, v in ipairs(self._timer_handles_) do
+		v:Destroy()
 	end
-	return self._ins
+	for i, v in ipairs(self._event_handles_) do
+		v:Destroy()
+	end
+	for i, v in ipairs(self._childs_) do
+		v:Release()
+	end
+end
+
+function ObjectBase:Timer(...)
+	local handle = TimerMgr:Get():On(...)
+	table.insert(self._timer_handles_, handle)
+	return handle
+end
+
+function ObjectBase:On(...)
+	local handle = GlobalEvent.On(...)
+	table.insert(self._event_handles_, handle)
+	return handle
+end
+
+function ObjectBase:AddChild(ins)
+	if not ins._meta_:IsChildOf(Object) then
+		error("not class")
+	else
+		table.insert(self._childs_, ins)
+		return ins
+	end
+end
+
+Singleton = Inherit(ObjectBase)
+function Singleton:Ins(...)
+	local meta = self._meta_
+	if meta._ins == nil then
+		meta._ins = setmetatable({}, self)
+	end
+	return meta._ins
+end
+
+function Singleton:Get(...)
+	local meta = self._meta_
+	if rawget(meta, "_ins") == nil then
+		local ins = setmetatable({}, self)
+		rawset(meta, "_ins", ins)
+		ins:Initialize(...)
+	end
+	return meta._ins
+end
+
+function Singleton:GetRaw()
+	return rawget(self._meta_, "_ins")
+end
+
+function Singleton:Release(...)
+	local meta = self._meta_
+	if rawget(meta, "_ins") then
+		InternDestroy(meta, meta._ins, ...)
+	end
 end
 
 function Singleton:Destroy()
-	getmetatable(self)._ins = nil
+	rawset(self._meta_,"_ins", nil)
 end
+
+local map = {
+	__indexcpp
+}
+return map

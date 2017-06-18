@@ -1,6 +1,6 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
-#include "LuaglueGeneratorPrivatePCH.h"
 #include "LuaScriptCodeGenerator.h"
+#include "LuaglueGeneratorPrivatePCH.h"
 #define GetWeakObjType(varname, returnname) 		FString typeName = GetPropertyTypeCPP(varname, CPPF_ArgumentOrReturnValue); \
 		int FirstSpaceIndex = typeName.Find(TEXT("<"));\
 		typeName = typeName.Mid(FirstSpaceIndex + 1);\
@@ -57,7 +57,7 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		}
 		else if (Param->IsA(UStrProperty::StaticClass()))
 		{
-			Initializer = TEXT("ANSI_TO_TCHAR(luaL_checkstring");
+			Initializer = TEXT("UTF8_TO_TCHAR(luaL_checkstring");
 		}
 		else if (Param->IsA(UNameProperty::StaticClass()))
 		{
@@ -65,7 +65,7 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		}
 		else if (Param->IsA(UTextProperty::StaticClass()))
 		{
-			Initializer = TEXT("FText::FromString(luaL_checkstring");
+			Initializer = TEXT("FText::FromString(UTF8_TO_TCHAR(luaL_checkstring");
 		}
 		else if (Param->IsA(UBoolProperty::StaticClass()))
 		{
@@ -118,7 +118,7 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			}
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
-		else if (Param->IsA(UByteProperty::StaticClass()))
+		else if (Param->IsA(UByteProperty::StaticClass()) || Param->IsA(UEnumProperty::StaticClass()))
 		{
 			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
 			Initializer = FString::Printf(TEXT("(%s)(luaL_checkint"), *typeName);
@@ -133,7 +133,10 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			Initializer = TEXT("(luaL_checkint");
 		}
 	}
-	return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
+	if (Param->IsA(UTextProperty::StaticClass()))
+		return FString::Printf(TEXT("%s(L, %d)))"), *Initializer, ParamIndex);
+	else
+		return FString::Printf(TEXT("%s(L, %d))"), *Initializer, ParamIndex);
 }
 
 FString FLuaScriptCodeGenerator::InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex)
@@ -181,15 +184,15 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	}
 	else if (ReturnValue->IsA(UStrProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*%s));"), *name);
+		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s));"), *name);
 	}
 	else if (ReturnValue->IsA(UNameProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*%s.ToString()));"), *name);
+		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
 	}
 	else if (ReturnValue->IsA(UTextProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_ANSI(*%s.ToString()));"), *name);
+		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
 	}
 	else if (ReturnValue->IsA(UBoolProperty::StaticClass()))
 	{
@@ -252,7 +255,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 		CreateTableCode += "\t\tlua_rawset(L, -3);\r\n\t}\r\n";
 		Initializer = CreateTableCode;
 	}
-	else if (ReturnValue->IsA(UByteProperty::StaticClass()))
+	else if (ReturnValue->IsA(UByteProperty::StaticClass()) || ReturnValue->IsA(UEnumProperty::StaticClass()))
 	{
 		Initializer = FString::Printf(TEXT("lua_pushinteger(L, (int)%s);"), *name);
 	}
@@ -287,6 +290,7 @@ FString FLuaScriptCodeGenerator::GenerateReturnValueHandler(const FString& Class
 
 bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 {
+// 	auto x = GetClassNameCPP(Class) == "UFoliageType";
 	bool bCanExport = FScriptCodeGeneratorBase::CanExportClass(Class);
 	if (bCanExport)
 	{
@@ -320,7 +324,7 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
-	if (Function->GetName().Contains("DEPRECATED"))
+	if (Function->GetName().Contains("DEPRECATED") || Function->HasMetaData("DeprecatedFunction"))
 		return false;
 	if (Function->GetName() == "Blueprint_GetSizeX" ||
 		Function->GetName() == "Blueprint_GetSizeY" ||
@@ -345,6 +349,8 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	{
 		return false;
 	}
+	if (Class->ClassFlags & CLASS_Interface && Function->GetName() == "ExecuteUbergraph")
+		return false;
 
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
 	if (bExport)
@@ -359,8 +365,13 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	return bExport;
 }
 
-FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int num, FString paramlist, FString ClassNameCPP, bool isfinal = false)
+FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int num, FString paramlist, FString ClassNameCPP, bool isfinal = false, bool bIsInterface = false)
 {
+	if (bIsInterface)
+	{
+		paramlist = "p,"+ paramlist;
+		num = num + 1;
+	}
 	if (!paramlist.IsEmpty())
 		paramlist.RemoveAt(paramlist.Len() - 1);
 	if (!bIsStaticFunc)
@@ -374,10 +385,20 @@ FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int nu
 		else
 			code += FString::Printf(TEXT("\t\t%s::%s(%s);\r\n"), *ClassNameCPP, *Function->GetName(), *paramlist);
 	else
-		if (hasresult)
-			code += FString::Printf(TEXT("\t\tresult = Obj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+		if (bIsInterface)
+		{
+			if (hasresult)
+				code += FString::Printf(TEXT("\t\tresult = Obj->Execute_%s(%s);\r\n"), *Function->GetName(), *paramlist);
+			else
+				code += FString::Printf(TEXT("\t\tObj->Execute_%s(%s);\r\n"), *Function->GetName(), *paramlist);	
+		}
 		else
-			code += FString::Printf(TEXT("\t\tObj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+		{
+			if (hasresult)
+				code += FString::Printf(TEXT("\t\tresult = Obj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+			else
+				code += FString::Printf(TEXT("\t\tObj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
+		}
 	if (!isfinal)
 		code += "\t\tgoto end;\r\n\t}\r\n";
 	return code;
@@ -419,7 +440,8 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Fun
 		}
 
 	}
-	Params += FString::Printf(TEXT("\tUFunction* Func = UTableUtil::GetFunctionByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *FuncName);
+// 	Params += FString::Printf(TEXT("\tUFunction* Func = UTableUtil::GetFunctionByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *FuncName);
+	Params += FString::Printf(TEXT("\tUFunction* Func = %s::StaticClass()->FindFunctionByName(FName(\"%s\"));\r\n"), *ClassNameCPP, *FuncName);
 	Params += FString::Printf(TEXT("\tObj->ProcessEvent(Func, %s);\r\n"), *args);
 	// if (!returnType.IsEmpty())
 	// 	Params += FString::Printf(TEXT("\t%s& result = args.ReturnValue;\r\n"), *returnType);
@@ -428,7 +450,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Fun
 	return Params;
 }
 
-FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc)
+FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc, bool bIsInterface)
 {
 	FString Params;
 	FString paramList;
@@ -441,9 +463,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 	const bool bHasParamsOrReturnValue = (Function->Children != NULL);
 	if (bHasParamsOrReturnValue)
 	{
-		int32 ParamIndex = 0;
-		if (bIsStaticFunc)
-			ParamIndex = -1;
+		
 // 		auto x = Function->GetName() == "PlaySoundAtLocation";
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 		{
@@ -463,6 +483,16 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 				}
 			}
 		}
+
+		int32 ParamIndex = 0;
+		if (bIsStaticFunc)
+			ParamIndex = -1;
+
+		if(bIsInterface)
+		{
+			count_all_param++; 
+			ParamIndex = 1;
+		}
 		if (index_first_default != 0 )
 			count_default_param = count_all_param - index_first_default + 1;
 
@@ -476,6 +506,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		{
 			Params += FString::Printf(TEXT("\tif (totalPamCount < %d)\r\n"), count_all_param - count_default_param + 1);
 		}
+
 		Params += FString::Printf(TEXT("\t{\r\n\t\tlua_pushstring(L, \"too less param in %s\");\r\n"), *Function->GetName());
 		Params += FString::Printf(TEXT("\t\tlua_error(L);\r\n\t\treturn 0;\r\n\t}\r\n"));
 		Params += TEXT("\t#endif\r\n");
@@ -500,7 +531,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		int count_init_param = 0;
 		if (count_default_param > 0 && count_default_param + count_init_param >= count_all_param)
 		{
-			Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+			Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
 		}
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
@@ -516,7 +547,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 					{
 						Params += InitializeParam(Param, ParamIndex, false, Param->GetName());
 						if (count_default_param + count_init_param >= count_all_param)
-							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
 					}
 					else
 					{
@@ -546,7 +577,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 							Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
 						// SpawnSoundAttached ambiouscall blame UE4 not me
 						if (count_default_param + count_init_param >= count_all_param  && !(FuncName == "SpawnSoundAttached" && count_init_param == 4))
-							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param);
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
 					}
 					else
 					{
@@ -567,6 +598,11 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		else
 			Params += "\t";
 		FString callobj = "Obj->";
+		if (bIsInterface)
+		{
+			callobj = callobj + "Execute_";
+			paramList = "p," + paramList;
+		}
 		if (bIsStaticFunc)
 			callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
 		if (paramList.IsEmpty())
@@ -586,7 +622,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 	return Params;
 }
 
-FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper)
+FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper, UClass* Class)
 {
 	UProperty* ReturnValue = NULL;
 	FString FunctionBody = GenerateWrapperFunctionDeclaration(ClassNameCPP, classname, Function);
@@ -598,8 +634,12 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 			bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
 			if (!bIsStaticFunc)
 				FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
-			FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc);
-
+			bool bIsInterface = !!(Class->ClassFlags & CLASS_Interface);
+			if ( bIsInterface )
+			{
+				FunctionBody += TEXT("\tUObject *p = (UObject*)UTableUtil::tousertype(\"UObject\", 2);\r\n");
+			}
+			FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc, bIsInterface);
 			int returnCount = 0;
 			for (TFieldIterator<UProperty> ParamIt(Function); !ReturnValue && ParamIt; ++ParamIt)
 			{
@@ -647,6 +687,10 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 	}
 	else
 	{
+		if (IsGameClass(Class))
+		{
+			GameScriptHeaders.AddUnique(Class2ScriptName[FuncSuper]);
+		}
 		FunctionBody += FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *GetClassNameCPP(FuncSuper), *Function->GetName());
 	}
 	FunctionBody += TEXT("}\r\n\r\n");
@@ -657,21 +701,22 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 {
 	UClass* FuncSuper = NULL;
 
+	auto& Exports = ClassExportedFunctions.FindOrAdd(Class);
+	Exports.Add(Function->GetFName());
 	if (Function->GetOwnerClass() != Class)
 	{
 		// Find the base definition of the function
 		if (ExportedClasses.Contains(Function->GetOwnerClass()->GetFName()))
 		{
 			FuncSuper = Function->GetOwnerClass();
+			if (!IsGameClass(Class))
+			{
+				FuncSuperClassName.Add(Function->GetFName(), GetClassNameCPP(FuncSuper));
+				return "";
+			}
 		}
 	}
-	
-	FString GeneratedGlue = FuncCode(ClassNameCPP, Class->GetName(), Function, FuncSuper);
-
-	auto& Exports = ClassExportedFunctions.FindOrAdd(Class);
-	Exports.Add(Function->GetFName());
-
-	return GeneratedGlue;
+	return FuncCode(ClassNameCPP, Class->GetName(), Function, FuncSuper, Class);
 }
 
 bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
@@ -706,8 +751,9 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 		!Property->IsA(UNameProperty::StaticClass()) &&
 		!Property->IsA(UBoolProperty::StaticClass()) &&
 		!Property->IsA(UObjectPropertyBase::StaticClass()) &&
-		!Property->IsA(UMapProperty::StaticClass()) &&
+// 		!Property->IsA(UMapProperty::StaticClass()) &&
 		!Property->IsA(UMulticastDelegateProperty::StaticClass()) &&
+		!Property->IsA(UEnumProperty::StaticClass()) &&
 		!Property->IsA(UClassProperty::StaticClass()))
 	{
 		bSupported = false;
@@ -718,7 +764,8 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 
 bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property)
 {
-	if (Property->GetName() == "BookMarks")
+
+	if (Property->GetName() == "BookMarks" || Property->GetName() == "ClothingSimulationFactory")
 		return false;
 
 	if ((Property->PropertyFlags & CPF_Deprecated))
@@ -797,6 +844,10 @@ FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
 	{
 		return FString("UArrayProperty");
 	}
+	else if (Property->IsA(UByteProperty::StaticClass()))
+	{
+		return FString("UByteProperty");
+	}
 	else
 	{
 		return FString("");
@@ -821,6 +872,10 @@ FString FLuaScriptCodeGenerator::GetPropertyGetFunc(UProperty* Property) const
 	{
 		return FString("ContainerPtrToValuePtr<uint8>");
 	}
+	else if (Property->IsA(UByteProperty::StaticClass()))
+	{
+		return FString("GetPropertyValue_InContainer");
+	}
 	else
 	{
 		return FString("GetPropertyValue_InContainer");
@@ -836,6 +891,10 @@ FString FLuaScriptCodeGenerator::GetPropertySetFunc(UProperty* Property) const
 	else if (Property->IsA(UStructProperty::StaticClass()))
 	{
 		return FString("CopyCompleteValue");
+	}
+	else if (Property->IsA(UByteProperty::StaticClass()))
+	{
+		return FString("SetPropertyValue_InContainer");
 	}
 	else
 	{
@@ -883,7 +942,7 @@ FString FLuaScriptCodeGenerator::GetPropertySetCastType(UProperty* Property)
 		return FString("");
 	}
 }
-FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper)
+FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class, UClass* PropertySuper)
 {
 	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, classname, FuncName);
 	GeneratedGlue += TEXT("\r\n{\r\n");
@@ -923,7 +982,11 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 				FString statictype = GetPropertyType(Property);
 				if (!statictype.IsEmpty())
 				{
-					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+					if (ClassNameCPP[0] != 'F')
+						FunctionBody += FString::Printf(TEXT("\tUProperty* property = %s::StaticClass()->FindPropertyByName(FName(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+					else
+						FunctionBody += FString::Printf(TEXT("\tUProperty* property = %s::StaticStruct()->FindPropertyByName(FName(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+// 					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
 					FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(property);\r\n"), *statictype, *statictype);
 					FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
 					FString typecast = GetPropertyCastType(Property);
@@ -971,6 +1034,10 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 	}
 	else
 	{
+		if (IsGameClass(Class))
+		{
+			GameScriptHeaders.AddUnique(Class2ScriptName[PropertySuper]);
+		}
 		FunctionBody += FString::Printf(TEXT("\treturn %s_%s(L);\r\n"),  *GetClassNameCPP(PropertySuper), *FuncName);
 	}
 	GeneratedGlue += FunctionBody;
@@ -978,7 +1045,7 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 	return GeneratedGlue;
 }
 
-FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper)
+FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class, UClass* PropertySuper)
 {
 	FString GeneratedGlue = GenerateWrapperFunctionDeclaration(ClassNameCPP, classname, FuncName);
 	GeneratedGlue += TEXT("\r\n{\r\n");
@@ -1019,7 +1086,10 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 				FString statictype = GetPropertyType(Property);
 				if (!statictype.IsEmpty())
 				{
-					FunctionBody += FString::Printf(TEXT("\tUProperty* property = UTableUtil::GetPropertyByName(FString(\"%s\"), FString(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+					if (ClassNameCPP[0] !='F')
+						FunctionBody += FString::Printf(TEXT("\tUProperty* property = %s::StaticClass()->FindPropertyByName(FName(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
+					else
+						FunctionBody += FString::Printf(TEXT("\tUProperty* property = %s::StaticStruct()->FindPropertyByName(FName(\"%s\"));\r\n"), *ClassNameCPP, *Property->GetName());
 					FunctionBody += FString::Printf(TEXT("\t%s* p = Cast<%s>(property);\r\n"), *statictype, *statictype);
 					if (!Property->IsA(UArrayProperty::StaticClass()))
 					{
@@ -1032,6 +1102,8 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 							FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, (UObject*)value);\r\n"), *GetPropertySetFunc(Property));
 						else if (Property->IsA(UStructProperty::StaticClass()))
 							FunctionBody += FString::Printf(TEXT("\tp->%s(p->ContainerPtrToValuePtr<void>(Obj), (void*)value);\r\n"), *GetPropertySetFunc(Property));
+						else if (Property->IsA(UByteProperty::StaticClass()))
+							FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, (int)value);\r\n"), *GetPropertySetFunc(Property));
 						else
 							FunctionBody += FString::Printf(TEXT("\tp->%s(Obj, value);\r\n"), *GetPropertySetFunc(Property));
 					}
@@ -1058,6 +1130,8 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 							FunctionBody += FString::Printf(TEXT("\t\tinnerProperty->%s(result.GetRawPtr(i), (UObject*)value);\r\n"), *GetPropertySetFunc(innerType));
 						else if (innerType->IsA(UStructProperty::StaticClass()))
 							FunctionBody += FString::Printf(TEXT("\t\tinnerProperty->%s(innerProperty->ContainerPtrToValuePtr<void>(result.GetRawPtr(i)), (void*)value);\r\n"), *GetPropertySetFunc(innerType));
+						else if (innerType->IsA(UByteProperty::StaticClass()))
+							FunctionBody += FString::Printf(TEXT("\t\tinnerProperty->%s(result.GetRawPtr(i), (int)value);\r\n"), *GetPropertySetFunc(innerType));
 						else
 							FunctionBody += FString::Printf(TEXT("\t\tinnerProperty->%s(result.GetRawPtr(i), value);\r\n"), *GetPropertySetFunc(innerType));
 						FunctionBody += FString::Printf(TEXT("\t\tlua_pop(L, 1);\r\n\t}\r\n"));
@@ -1090,9 +1164,16 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 	}
 	else
 	{
+		if (IsGameClass(Class))
+		{
+			GameScriptHeaders.AddUnique(Class2ScriptName[PropertySuper]);
+		}
 		FunctionBody = FString::Printf(TEXT("\treturn %s_%s(L);\r\n"), *GetClassNameCPP(PropertySuper), *FuncName);
 	}
-	GeneratedGlue += FunctionBody;
+	if (Property->GetName() != "PrimaryActorTick" && Property->GetName() != "PrimaryComponentTick")
+		GeneratedGlue += FunctionBody;
+	else
+		GeneratedGlue += "\treturn 0;\r\n";
 	GeneratedGlue += TEXT("}\r\n\r\n");
 	return GeneratedGlue;
 }
@@ -1113,22 +1194,37 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 
 	// Getter	
 	FString GetterName = FString::Printf(TEXT("Get_%s"), *PropertyName);
-	GeneratedGlue += GetterCode(ClassNameCPP, Class->GetName(), GetterName, Property, PropertySuper);
-
 	// Store the name of this getter as well as the name of the wrapper function
 	FPropertyAccessor Getter;
 	Getter.AccessorName = GetterName;
-	Getter.FunctionName = FString::Printf(TEXT("%s_%s"), *ClassNameCPP, *GetterName);
+	if (PropertySuper && !IsGameClass(Class))
+	{
+		Getter.FunctionName = FString::Printf(TEXT("%s_%s"), *GetClassNameCPP(PropertySuper), *GetterName);
+// 		GeneratedGlue += FString::Printf(TEXT("static int32 %s_Get_%s(lua_State* L);\r\n"), *GetClassNameCPP(PropertySuper), *PropertyName);
+	}
+	else
+	{
+		GeneratedGlue += GetterCode(ClassNameCPP, Class->GetName(), GetterName, Property, Class, PropertySuper);
+		Getter.FunctionName = FString::Printf(TEXT("%s_%s"), *ClassNameCPP, *GetterName);
+	}
 	auto& Exports = ClassExportedProperties.FindOrAdd(Class);
 	Exports.Add(Getter);
 
 	//Setter
 	FString SetterName = FString::Printf(TEXT("Set_%s"), *PropertyName);
-	GeneratedGlue += SetterCode(ClassNameCPP, Class->GetName(), SetterName, Property, PropertySuper);
 	// Store the name of this setter as well as the name of the wrapper function
 	FPropertyAccessor Setter;
 	Setter.AccessorName = SetterName;
-	Setter.FunctionName = FString::Printf(TEXT("%s_%s"), *ClassNameCPP, *SetterName);
+	if (PropertySuper && !IsGameClass(Class))
+	{
+		Setter.FunctionName = FString::Printf(TEXT("%s_%s"), *GetClassNameCPP(PropertySuper), *SetterName);
+// 		GeneratedGlue += FString::Printf(TEXT("static int32 %s_Set_%s(lua_State* L);\r\n"), *GetClassNameCPP(PropertySuper), *PropertyName);
+	}
+	else
+	{
+		GeneratedGlue += SetterCode(ClassNameCPP, Class->GetName(), SetterName, Property, Class, PropertySuper);
+		Setter.FunctionName = FString::Printf(TEXT("%s_%s"), *ClassNameCPP, *SetterName);
+	}
 	Exports.Add(Setter);
 	return GeneratedGlue;
 }
@@ -1140,7 +1236,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	const FString ClassName = Class->GetName();
 
 	// Constructor and destructor
-	if (!(Class->GetClassFlags() & CLASS_Abstract))
+	if (!(Class->ClassFlags & CLASS_Interface))
 	{
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("New"));
 		GeneratedGlue += TEXT("\r\n{\r\n");
@@ -1148,8 +1244,9 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\tFName Name = FName(luaL_checkstring(L, 2));\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\tUObject* Obj = NewObject<%s>(Outer, Name);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
+		GeneratedGlue += TEXT("\t\t\tUTableUtil::addgcref(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj);\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj, true);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 
@@ -1157,9 +1254,12 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("\r\n{\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
+		GeneratedGlue += TEXT("\t\t\tUTableUtil::rmgcref(Obj);\r\n");
 		GeneratedGlue += TEXT("\t}\r\n\treturn 0;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
-
+	}
+	if (!(Class->GetClassFlags() & CLASS_Abstract))
+	{
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("CreateDefaultSubobject"));
 		GeneratedGlue += TEXT("\r\n{\r\n");
 		GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)UTableUtil::tousertype(\"UObject\", 1);\r\n");
@@ -1170,22 +1270,49 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)Obj);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
+	}
 
+	
+	if (!(Class->ClassFlags & CLASS_Interface))
+	{
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("FObjectFinder"));
 		GeneratedGlue += TEXT("\r\n{\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\tvoid* Obj = (void*)UTableUtil::FObjectFinder(%s::StaticClass(), luaL_checkstring(L, 1));\r\n"), *ClassNameCPP);
-		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", Obj);\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", Obj, true);\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
 
-		
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("FClassFinder"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FClassFinder<%s> Obj(ANSI_TO_TCHAR(luaL_checkstring(L, 1)));\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"UClass\", Obj.Class);\r\n"));
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
+
+		// Class: Equivalent of StaticClass()
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("Class"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = %s::StaticClass();\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\tUTableUtil::pushclass(\"UClass\", (void*)Class);\r\n");
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
+
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("LoadClass"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += TEXT("\tUObject* obj = (UObject*)UTableUtil::tousertype(\"UObject\", 1);\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = LoadClass<%s>(obj, ANSI_TO_TCHAR(luaL_checkstring(L, 2)));\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\tUTableUtil::pushclass(\"UClass\", (void*)Class);\r\n");
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
+
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("LoadObject"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += TEXT("\tUObject* obj = (UObject*)UTableUtil::tousertype(\"UObject\", 1);\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\t%s* result = LoadObject<%s>(obj, ANSI_TO_TCHAR(luaL_checkstring(L, 2)));\r\n"), *ClassNameCPP, *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)result);\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
 	}
-	GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("FClassFinder"));
-	GeneratedGlue += TEXT("\r\n{\r\n");
-	GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FClassFinder<%s> Obj(ANSI_TO_TCHAR(luaL_checkstring(L, 1)));\r\n"), *ClassNameCPP);
-	GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"UClass\", Obj.Class);\r\n"));
-	GeneratedGlue += TEXT("\treturn 1;\r\n");
-	GeneratedGlue += TEXT("}\r\n\r\n");
 
 	GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("Cast"));
 	GeneratedGlue += TEXT("\r\n{\r\n");
@@ -1194,33 +1321,33 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	GeneratedGlue += FString::Printf(TEXT("\tUTableUtil::pushclass(\"%s\", (void*)to);\r\n"), *ClassNameCPP);
 	GeneratedGlue += TEXT("\treturn 1;\r\n");
 	GeneratedGlue += TEXT("}\r\n\r\n");
-	// Class: Equivalent of StaticClass()
-	GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("Class"));
-	GeneratedGlue += TEXT("\r\n{\r\n");
-	GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = %s::StaticClass();\r\n"), *ClassNameCPP);
-	GeneratedGlue += TEXT("\tUTableUtil::pushclass(\"UClass\", (void*)Class);\r\n");
-	GeneratedGlue += TEXT("\treturn 1;\r\n");
-	GeneratedGlue += TEXT("}\r\n\r\n");
-
 	//Library
 	GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *ClassName);
 	if (!(Class->GetClassFlags() & CLASS_Abstract))
 	{
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"CreateDefaultSubobject\", %s_CreateDefaultSubobject },\r\n"), *ClassNameCPP);
+	}
+
+	if (!(Class->ClassFlags & CLASS_Interface))
+	{
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassNameCPP);
-		GeneratedGlue += FString::Printf(TEXT("\t{ \"CreateDefaultSubobject\", %s_CreateDefaultSubobject },\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"FObjectFinder\", %s_FObjectFinder },\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"FClassFinder\", %s_FClassFinder },\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"LoadClass\", %s_LoadClass },\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"LoadObject\", %s_LoadObject },\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Class },\r\n"), *ClassNameCPP);
 	}
-	GeneratedGlue += FString::Printf(TEXT("\t{ \"FClassFinder\", %s_FClassFinder },\r\n"), *ClassNameCPP);
-
 	GeneratedGlue += FString::Printf(TEXT("\t{ \"Cast\", %s_Cast },\r\n"), *ClassNameCPP);
-	GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Class },\r\n"), *ClassNameCPP);
 	auto FunctionExports = ClassExportedFunctions.Find(Class);
 	if (FunctionExports)
 	{
 		for (auto& FunctionName : *FunctionExports)
 		{
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s_%s },\r\n"), *FunctionName.ToString(), *ClassNameCPP, *FunctionName.ToString());
+			if (auto SuperClassNameCpp = FuncSuperClassName.Find(FunctionName))
+				GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s_%s },\r\n"), *FunctionName.ToString(), **SuperClassNameCpp, *FunctionName.ToString());
+			else
+				GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %s_%s },\r\n"), *FunctionName.ToString(), *ClassNameCPP, *FunctionName.ToString());
 		}
 	}
 	auto PropertyExports = ClassExportedProperties.Find(Class);
@@ -1263,7 +1390,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		ExportTrait.AddUnique(namecpp);
 		StructNames.Add(namecpp);
 		const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".script.h"));
-		AllScriptHeaders.Add(ClassGlueFilename);
+		GameScriptHeaders.Add(ClassGlueFilename);
 		FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
 		int32 PropertyIndex = 0;
 		TArray<FString> allPropertyName;
@@ -1324,7 +1451,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 	}
 	for (auto &namecpp:ExportTrait)
 	{
-		TraitGlue += FString::Printf(TEXT("template<>\r\nclass traitstructclass<%s>{\r\npublic:\r\n"), *namecpp);
+		TraitGlue += FString::Printf(TEXT("struct %s;\r\ntemplate<>\r\nclass traitstructclass<%s>{\r\npublic:\r\n"), *namecpp, *namecpp);
 		TraitGlue += FString::Printf(TEXT("inline static const char * name() { return \"%s\"; }\r\n};\r\n\r\n"), *namecpp);
 	}
 	SaveHeaderIfChanged(TraitGlueFilename, TraitGlue);
@@ -1345,7 +1472,7 @@ void FLuaScriptCodeGenerator::ExportEnum()
 		GeneratedGlue += FString::Printf(TEXT("static const EnumItem %s_Enum[] =\r\n{\r\n"), *name);
 		for (int32 i = 0; i < e->GetMaxEnumValue(); ++i)
 		{
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *e->GetEnumName(i), i);
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *e->GetNameStringByIndex(i), i);
 		}
 		GeneratedGlue += TEXT("\t{ NULL, -1 }\r\n};\r\n\r\n");
 	}
@@ -1360,19 +1487,21 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 	{
 		return;
 	}
-
+	FuncSuperClassName.Reset();
+	// auto x = Class->ClassFlags & CLASS_Interface;
 	UE_LOG(LogScriptGenerator, Log, TEXT("Exporting class %s"), *Class->GetName());
 
 	ExportedClasses.Add(Class->GetFName());
-	LuaExportedClasses.Add(Class);
-	AllSourceClassHeaders.AddUnique(SourceHeaderFilename);
+	const FString ClassGlueFilename = GetScriptHeaderForClass(Class);
+	Class2ScriptName.Add(Class,ClassGlueFilename);
+	
 	ExportingClassSourcefile = SourceHeaderFilename;
 
-	const FString ClassGlueFilename = GetScriptHeaderForClass(Class);
-	AllScriptHeaders.Add(ClassGlueFilename);
 
 	const FString ClassNameCPP = GetClassNameCPP(Class);
+// 	auto x = ClassNameCPP == "IFontProviderInterface";
 	FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
+	GeneratedGlue += "PRAGMA_DISABLE_DEPRECATION_WARNINGS\r\n";
 	// 	auto x = Class->GetFName() == "AnimInstance";
 		// Export all functions
 	for (TFieldIterator<UFunction> FuncIt(Class /*, EFieldIteratorFlags::ExcludeSuper*/); FuncIt; ++FuncIt)
@@ -1397,8 +1526,21 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 		}
 	}
 
+	if (!IsGameClass(Class))
+	{
+		AllSourceClassHeaders.AddUnique(SourceHeaderFilename);
+		AllScriptHeaders.Add(ClassGlueFilename);
+		LuaExportedClasses.Add(Class);
+	}
+	else
+	{
+		GameExportedClasses.Add(Class);
+		GameSourceClassHeaders.AddUnique(SourceHeaderFilename);
+		GameScriptHeaders.Add(ClassGlueFilename);
+	}
 	GeneratedGlue += ExportAdditionalClassGlue(ClassNameCPP, Class);
-
+	GeneratedGlue += "PRAGMA_ENABLE_DEPRECATION_WARNINGS\r\n";
+	 
 	SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
 }
 
@@ -1458,7 +1600,9 @@ void FLuaScriptCodeGenerator::GenerateDelegateClass()
 	const FString ClassGlueFilename = IncludeBase / TEXT("DelegateLuaProxy.h");
 	FString GeneratedGlue = TEXT("#pragma once\r\n");
 	// GeneratedGlue += FString::Printf(TEXT("#include \"%s.h\"\r\n"), *GameModuleName);
-	GeneratedGlue += TEXT("#include \"TableUtil.h\"\r\n");
+	GeneratedGlue += TEXT("#include \"allheader.inl\"\r\n");
+	GeneratedGlue += TEXT("#include \"extraheader.h\"\r\n");
+	GeneratedGlue += TEXT("#include \"tableutil.h\"\r\n");
 	GeneratedGlue += TEXT("#include \"DelegateLuaProxy.generated.h\"\r\n");
 	for (auto &info:delegates)
 	{
@@ -1491,9 +1635,10 @@ void FLuaScriptCodeGenerator::GenerateDelegateClass()
 		GeneratedGlue += FString::Printf(TEXT("class %s : public UObject{\r\n\tGENERATED_BODY()\r\npublic:\r\n"), *className);
 		GeneratedGlue += FString::Printf(TEXT("\tTSet<int> LuaCallBacks;\r\n"));
 		GeneratedGlue += FString::Printf(TEXT("\t%s() {};\r\n"), *className);
-		GeneratedGlue += FString::Printf(TEXT("\tusing delegatetype = decltype(((%s*)0)->%s);\r\n"), *info.ClassNameCPP, *info.DelegateName);
+		// 		GeneratedGlue += FString::Printf(TEXT("\tusing delegatetype = decltype(((%s*)0)->%s);\r\n"), *info.ClassNameCPP, *info.DelegateName);
 
-		GeneratedGlue += FString::Printf(TEXT("\tvoid Init(delegatetype& theDelegate){\r\n"));
+		GeneratedGlue += FString::Printf(TEXT("\ttemplate<typename T>\n"), *info.ClassNameCPP, *info.DelegateName);
+		GeneratedGlue += FString::Printf(TEXT("\tvoid Init(T& theDelegate){\r\n"));
 		GeneratedGlue += FString::Printf(TEXT("\t\tUTableUtil::addgcref((UObject*)this);\r\n"));
 		GeneratedGlue += FString::Printf(TEXT("\t\ttheDelegate.AddDynamic(this, &%s::CallBack);\r\n"), *className);
 		GeneratedGlue += TEXT("\t}\r\n\r\n");
@@ -1548,14 +1693,38 @@ void FLuaScriptCodeGenerator::FinishExport()
 	RenameTempFiles();
 }
 
+
+bool FLuaScriptCodeGenerator::IsGameClass(UClass * Class)
+{
+	if (Class == nullptr)
+		return false;
+	FString luameta = Class->GetMetaData(TEXT("Lua"));
+	return !luameta.IsEmpty();
+}
+
 void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 {
 	// Generate inl library file
-	FString LibGlueFilename = GeneratedCodePath / TEXT("GeneratedScriptLibraries.inl");
+	FString LibGlueFilename = IncludeBase / TEXT("Luaload.cpp");
+	FString GameLibGlueFilename = IncludeBase / TEXT("Lualoadgame.cpp");
+// 	FString LibGlueFilename = IncludeBase / TEXT("GeneratedScriptLibraries.cpp");
 	FString LibGlue;
 	FString AllHeaderFilename = GeneratedCodePath / TEXT("allheader.inl");
+	FString GameHeaderFilename = GeneratedCodePath / TEXT("gameheader.inl");
+	FString GameHeaderGlue;
+	FString GameLoadCpp;
 	FString HeaderGlue;
+	LibGlue += FString::Printf(TEXT("#include \"%s.h\"\r\n"), *GameModuleName);
+	LibGlue += TEXT("#include \"luaload.h\"\r\n");
+	LibGlue += TEXT("#include \"tableutil.h\"\r\n");
+	LibGlue += TEXT("#include \"DelegateLuaProxy.h\"\r\n");
+	LibGlue += TEXT("#include \"allheader.inl\"\r\n");
 
+	GameLoadCpp += FString::Printf(TEXT("#include \"%s.h\"\r\n"), *GameModuleName);
+	GameLoadCpp += TEXT("#include \"lualoadgame.h\"\r\n");
+	GameLoadCpp += TEXT("#include \"tableutil.h\"\r\n");
+	GameLoadCpp += TEXT("#include \"gameheader.inl\"\r\n");
+	GameLoadCpp += TEXT("#include \"allweakclass.script.h\"\r\n");
 	// Include all source header files
 	for (auto& HeaderFilename : AllSourceClassHeaders)
 	{
@@ -1567,8 +1736,6 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 		}
 	}
 	HeaderGlue += FString::Printf(TEXT("#include \"%s.h\"\r\n"), *GameModuleName);
-
-
 	// LibGlue += TEXT("#include \"allheader.inl\"\r\n");
 	// Include all script glue headers
 	for (auto& HeaderFilename : AllScriptHeaders)
@@ -1576,17 +1743,39 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 		// Re-base to make sure we're including the right files on a remote machine
 		FString NewFilename(FPaths::GetCleanFilename(HeaderFilename));
 		LibGlue += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
+		if (GameScriptHeaders.Contains(HeaderFilename))
+		{
+			GameLoadCpp += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
+			GameScriptHeaders.Remove(HeaderFilename);
+		}
+// 		GameLoadCpp += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
 	}
 
-	LibGlue += TEXT("\r\nvoid LuaRegisterExportedClasses(lua_State* L)\r\n{\r\n");
+	for (auto& HeaderFilename : GameSourceClassHeaders)
+	{
+		FString NewFilename(RebaseToBuildPath(HeaderFilename));
+		GameHeaderGlue += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
+	}
+
+	for (auto& HeaderFilename : AllSourceClassHeaders)
+	{
+		FString NewFilename(RebaseToBuildPath(HeaderFilename));
+		GameHeaderGlue += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
+	}
+
+	for (auto& HeaderFilename : GameScriptHeaders)
+	{
+		// Re-base to make sure we're including the right files on a remote machine
+		FString NewFilename(FPaths::GetCleanFilename(HeaderFilename));
+		GameLoadCpp += FString::Printf(TEXT("#include \"%s\"\r\n"), *NewFilename);
+	}
+
+	LibGlue += TEXT("\r\nvoid ULuaLoad::LoadAll(lua_State* L)\r\n{\r\n");
 	for (auto Class : LuaExportedClasses)
 	{
 		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
 	}
-	for (auto Name : StructNames)
-	{
-		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Name, *Name);
-	}
+	
 	for (auto Name : EnumtNames)
 	{
 		LibGlue += FString::Printf(TEXT("\tUTableUtil::loadEnum(%s_Enum, \"%s\");\r\n"), *Name, *Name);
@@ -1597,6 +1786,19 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	}
 	LibGlue += TEXT("}\r\n\r\n");
 
+	GameLoadCpp += TEXT("\r\nvoid ULuaLoadGame::LoadAll(lua_State* L)\r\n{\r\n");
+	for (auto Class : GameExportedClasses)
+	{
+		GameLoadCpp += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+	}
+	for (auto Name : StructNames)
+	{
+		GameLoadCpp += FString::Printf(TEXT("\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Name, *Name);
+	}
+	GameLoadCpp += TEXT("}\r\n\r\n");
+
 	SaveHeaderIfChanged(LibGlueFilename, LibGlue);
 	SaveHeaderIfChanged(AllHeaderFilename, HeaderGlue);
+	SaveHeaderIfChanged(GameHeaderFilename, GameHeaderGlue);
+	SaveHeaderIfChanged(GameLibGlueFilename, GameLoadCpp);
 }

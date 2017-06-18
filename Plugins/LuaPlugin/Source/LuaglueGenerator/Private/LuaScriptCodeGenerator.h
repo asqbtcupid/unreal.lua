@@ -27,13 +27,18 @@ protected:
 	TArray<FString> AllScriptHeaders;
 	/** Source header filenames for all exported classes */
 	TArray<FString> AllSourceClassHeaders;
+	TArray<FString> GameSourceClassHeaders;
+	TArray<FString> GameScriptHeaders;
+	TMap<UClass*, FString> Class2ScriptName;
 	/** All exported classes */
 	TArray<UClass*> LuaExportedClasses;
+	TArray<UClass*> GameExportedClasses;
 	TArray<FString> LuaExportedTMPClasses;
 	TArray<FString> StructNames;
 	TArray<FString> EnumtNames;
 	/** Functions exported for a class */
 	TMap<UClass*, TArray<FName> > ClassExportedFunctions;
+	TMap<FName, FString> FuncSuperClassName;
 	/** Proprties exported for a class */
 	TMap<UClass*, TArray<FPropertyAccessor> > ClassExportedProperties;
 	TArray<FString> SupportedStruct;
@@ -41,6 +46,7 @@ protected:
 	TSet<FString> WeakPtrClass;
 
 	TArray<FDelegateExported> delegates;
+	bool IsGameClass(UClass * Class);
 	bool bExportDelegateProxy;
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();
@@ -67,13 +73,13 @@ protected:
 	FString GetPropertySetCastType(UProperty* Property);
 	bool isStructSupported(UScriptStruct* thestruct) const;
 	FString Push(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue, FString name, bool bConsiderArrayDim = true);
-	FString GetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
-	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* PropertySuper = nullptr);
-	FString FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper = nullptr);
+	FString GetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class = nullptr, UClass* PropertySuper = nullptr);
+	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class = nullptr, UClass* PropertySuper = nullptr);
+	FString FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper = nullptr, UClass* Class = nullptr);
 	void GenerateWeakClass();
 	void GenerateDelegateClass();
 	
-	virtual FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
+	FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false, bool bIsInterface = false);
 	FString GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
 	FString InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty = false, FString arrayName = "");
 	void ExportStruct();

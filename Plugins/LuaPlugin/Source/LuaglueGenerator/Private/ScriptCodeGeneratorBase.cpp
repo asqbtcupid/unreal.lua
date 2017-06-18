@@ -1,6 +1,6 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
-#include "LuaglueGeneratorPrivatePCH.h"
 #include "ScriptCodeGeneratorBase.h"
+#include "LuaglueGeneratorPrivatePCH.h"
 
 FScriptCodeGeneratorBase::FScriptCodeGeneratorBase(const FString& InRootLocalPath, const FString& InRootBuildPath, const FString& InOutputDirectory, const FString& InIncludeBase)
 {
@@ -62,7 +62,10 @@ FString FScriptCodeGeneratorBase::RebaseToBuildPath(const FString& FileName) con
 
 FString FScriptCodeGeneratorBase::GetClassNameCPP(UClass* Class)
 {
-	return FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+	if (Class->ClassFlags & CLASS_Interface)
+		return FString::Printf(TEXT("I%s"), *Class->GetName());
+	else
+		return FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
 }
 
 FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags /*= 0*/)

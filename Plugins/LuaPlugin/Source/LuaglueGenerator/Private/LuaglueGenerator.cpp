@@ -4,7 +4,7 @@
 #include "LuaScriptCodeGenerator.h"
 #include "IProjectManager.h"
 #include "Runtime/Core/Public/Features/IModularFeatures.h"
-
+#include "ProjectDescriptor.h"
 DEFINE_LOG_CATEGORY(LogScriptGenerator);
 
 FString GameModuleName;

@@ -8,9 +8,9 @@ end
 function GlobalEvent.ClearLastEventData()
 	GlobalEvent.LastEventData = {}
 end
-
+local weakmeta = {__mode = "v"}
 function MakeCallBack(callBack, ...)
-    local parameters = {...}
+    local parameters = setmetatable({...}, weakmeta)
     local handle = {}
     local len_p = table.maxn(parameters)
     local function f(...)
@@ -28,7 +28,7 @@ end
 
 local function CallBack(Callbackfunction, parameters, args)
 	args = args or {}
-	local par = {}
+	local par = setmetatable({}, weakmeta)
 	local len = table.maxn(parameters) 
 	for i = 1, len do
 		par[i] = parameters[i]
@@ -41,7 +41,7 @@ end
 
 function GlobalEvent.Subscribe(EventName, Callbackfunction, ...)
 	if type(Callbackfunction) ~= "function" then return end
-	local parameters = {...}
+	local parameters = setmetatable({...}, weakmeta)
 	local Subscriber = {Callbackfunction, parameters}
 	if type(EventName) ~= "table" then EventName = {EventName} end
 	for _, Event in pairs(EventName) do

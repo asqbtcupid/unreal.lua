@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{D83E9908-4860-C186-8BF6-17A018B9B160}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "CatchMe",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule",
+				"CoreUObject"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "LuaPlugin",
+			"Enabled": true
+		}
+	]
+}
