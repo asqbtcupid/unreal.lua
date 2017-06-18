@@ -57,4 +57,6 @@ The lua binding code is generate to the folder base on your visual studio projec
 
 2.All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
 
-3.It's an experimental project,If you has any good idea or advise, welcome to fallback.Contact:15244611841@163.com
+3.If you have any problem,you can leave message in https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4.
+
+4.It's an experimental project,If you has any good idea or advise, welcome to fallback.Contact:15244611841@163.com
