@@ -5,21 +5,10 @@ using System.Collections.Generic;
 
 public class CatchMeEditorTarget : TargetRules
 {
-	public CatchMeEditorTarget(TargetInfo Target)
-	{
+	public CatchMeEditorTarget(TargetInfo Target) : base(Target)
+    {
 		Type = TargetType.Editor;
-	}
+        ExtraModuleNames.Add("CatchMe");
+    }
 
-	//
-	// TargetRules interface.
-	//
-
-	public override void SetupBinaries(
-		TargetInfo Target,
-		ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
-		ref List<string> OutExtraModuleNames
-		)
-	{
-		OutExtraModuleNames.Add("CatchMe");
-	}
 }

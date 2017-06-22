@@ -9,8 +9,8 @@ public class CatchMe : ModuleRules
     {
         get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Lua/")); }
     }
-	public CatchMe(TargetInfo Target)
-	{
+	public CatchMe(ReadOnlyTargetRules Target) : base(Target)
+    {
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage" });
         PrivateDependencyModuleNames.AddRange(new string[] {"Slate", "SlateCore", "UMG" });
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));

@@ -6,8 +6,8 @@ namespace UnrealBuildTool.Rules
 {
 	public class LuaglueGenerator : ModuleRules
 	{
-		public LuaglueGenerator(TargetInfo Target)
-		{
+		public LuaglueGenerator(ReadOnlyTargetRules Target) : base(Target)
+        {
 			PublicIncludePaths.AddRange(
 				new string[] {				
 					"Programs/UnrealHeaderTool/Public",
