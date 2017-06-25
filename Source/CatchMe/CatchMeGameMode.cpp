@@ -8,3 +8,9 @@ ACatchMeGameMode::ACatchMeGameMode()
 {
 	LuaCtor("gameplay.gamemode.cmgamemode", this);
 }
+
+void ACatchMeGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	LuaCall("EndPlay", this, int(EndPlayReason));
+}

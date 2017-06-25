@@ -2,11 +2,19 @@ require "luaclass"
 CppObjectBase = Class(ObjectBase)
 CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
+local LevelActors = {}
+function CppObjectBase:EndPlay(Reason)
+	self:Release()
+end
 
 function CppObjectBase:Destroy()
-	if self.K2_DestroyActor then
-		self:K2_DestroyActor()
+	for v in pairs(self._gc_list) do
+		v:Release()
 	end
+	LevelActors[self] = nil
+	-- if self._cppinstance_ then
+	-- 	self._cppinstance_:Destroy()
+	-- end
 end
 
 function CppObjectBase:GetName()
@@ -24,10 +32,13 @@ CppObjectBase.New = CppObjectBase.NewCpp
 
 function CppObjectBase:Ctor()
 	self._gc_list = {}
+	LevelActors[self] = true
 end
 
 function CppObjectBase:GC(obj)
-	self._gc_list[obj] = true
+	if obj then
+		self._gc_list[obj] = true
+	end
 end
 
 function CppObjectBase:Property(property)

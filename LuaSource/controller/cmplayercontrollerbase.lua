@@ -2,7 +2,6 @@ local CMPlayerControllerBase = Inherit(CppObjectBase, ACMPlayerControllerBase)
 
 function CMPlayerControllerBase:Ctor( )
 	self.m_InputMgr = InputMgr:NewIns(self)
-	G_GameStatics.GameMode:AddPlayerController(self)
 end
 
 function CMPlayerControllerBase:BeginPlay()

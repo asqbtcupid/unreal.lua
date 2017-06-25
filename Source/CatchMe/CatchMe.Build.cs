@@ -5,13 +5,13 @@ using System.IO;
 
 public class CatchMe : ModuleRules
 {
-	private string LuaLibPath
+    private string LuaLibPath
     {
         get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Lua/")); }
     }
-	public CatchMe(ReadOnlyTargetRules Target) : base(Target)
+    public CatchMe(ReadOnlyTargetRules Target) : base(Target)
     {
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage" });
         PrivateDependencyModuleNames.AddRange(new string[] {"Slate", "SlateCore", "UMG" });
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
         if (Target.Platform == UnrealTargetPlatform.Win64)
@@ -22,5 +22,5 @@ public class CatchMe : ModuleRules
         {
             PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Mac", "Release", "lua.a"));
         }
-	}
+    }
 }

@@ -29,9 +29,9 @@ function A_( ... )
     for i = 1, table.maxn(temp) do
         str = str..tostring(temp[i]).."  "
     end
-    if G_GameStatics.GameMode then
-        UKismetSystemLibrary.PrintString(G_GameStatics.GameMode, str)
-    end
+    -- if G_GameStatics.GameMode then
+        UKismetSystemLibrary.PrintString(nil, str)
+    -- end
     str = "["..tostring(os.date()).."] "..str
     str = str.."\n"
     ULuautils.log(str)

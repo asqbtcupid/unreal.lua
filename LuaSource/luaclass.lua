@@ -31,10 +31,6 @@ function Object:Ctor(...)
 end
 
 function Object:Destroy()
-	if self._cppinstance_ then
-		_objectins2luatable[self._cppinstance_] = nil
-	end
-	self._has_destroy_ = true
 end
 
 function Object:IsChildOf(parent)
@@ -106,6 +102,7 @@ function Object:Release(...)
 		error("double Destroy")
 	end
 	InternDestroy(self._meta_, self, ...)
+	self._has_destroy_ = true
 end
 
 
@@ -177,7 +174,7 @@ function ObjectBase:Destroy()
 end
 
 function ObjectBase:Timer(...)
-	local handle = TimerMgr:Get():On(...)
+	local handle = TimerMgr:Get():On(...):Bound(true)
 	table.insert(self._timer_handles_, handle)
 	return handle
 end

@@ -10,6 +10,8 @@ class ACatchMeGameMode : public ACMGameModeBase
 
 public:
 	ACatchMeGameMode();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 };
 
 

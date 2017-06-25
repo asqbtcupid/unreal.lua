@@ -11,6 +11,7 @@ DEFINE_LOG_CATEGORY(LuaLog);
 lua_State* UTableUtil::L = nullptr;
 int32 UTableUtil::ManualInitCount = 0;
 bool UTableUtil::HasManualInit = false;
+bool UTableUtil::bIsInsCall = false;
 
 #ifdef LuaDebug
 TMap<FString, int> UTableUtil::countforgc;
@@ -104,6 +105,15 @@ void UTableUtil::init(bool IsManual)
 
 	}
 	HasManualInit = IsManual;
+}
+
+
+void UTableUtil::GC()
+{
+	if (L != nullptr)
+	{
+		lua_gc(L, LUA_GCCOLLECT, 0);
+	}
 }
 
 void UTableUtil::shutdown()
@@ -415,7 +425,7 @@ void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
 				countforgc.Add(classname, 1);
 #endif
 		}
-		if (bIsActorOrObject)
+		if (!bIsInsCall && bIsActorOrObject)
 			addgcref(static_cast<UObject*>(p));
 		setmeta(classname, -1);
 	}

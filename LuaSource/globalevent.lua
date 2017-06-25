@@ -12,6 +12,9 @@ local weakmeta = {__mode = "v"}
 function MakeCallBack(callBack, ...)
     local parameters = setmetatable({...}, weakmeta)
     local handle = {}
+    function handle:GetParam()
+    	return parameters
+    end
     local len_p = table.maxn(parameters)
     local function f(...)
         local args = {...}

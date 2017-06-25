@@ -20,6 +20,12 @@ void ACMCharacterBase::BeginPlay()
 	LuaCall("BeginPlay", this);
 }
 
+void ACMCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	LuaCall("EndPlay", this, int(EndPlayReason));
+}
+
 // Called every frame
 void ACMCharacterBase::Tick( float DeltaTime )
 {

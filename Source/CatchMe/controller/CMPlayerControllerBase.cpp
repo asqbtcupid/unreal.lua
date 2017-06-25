@@ -11,6 +11,12 @@ void ACMPlayerControllerBase::BeginPlay()
 	LuaCall("BeginPlay", this);
 }
 
+void ACMPlayerControllerBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	LuaCall("EndPlay", this, int(EndPlayReason));
+}
+
 void ACMPlayerControllerBase::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);

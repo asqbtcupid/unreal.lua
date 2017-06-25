@@ -67,10 +67,6 @@ function CatchMeCharacter:PostInitializeComponents()
 	self:InitBPComponents()
 end
 
-function CatchMeCharacter:BeginPlay()
-	self:Super().BeginPlay(self)
-end
-
 function CatchMeCharacter:CheckVisible()
 	if not self:IsAuth() then
 		local Controller = UGameplayStatics.GetPlayerController(self, 0)

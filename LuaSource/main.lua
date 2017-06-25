@@ -65,7 +65,7 @@ function Call(functionName, inscpp, ...)
     if type(inscpp) == "table" and not inscpp._has_destroy_ then
         return inscpp[functionName](inscpp, ...)
     elseif G_IsMannul then
-        error("error in Call, No Exist such lua ins, Must Call LuaCtor Before use this:"..functionName.." "..type(inscpp).." "..tostring(inscpp._has_destroy_))
+        -- error("error in Call, No Exist such lua ins, Must Call LuaCtor Before use this:"..functionName.." "..type(inscpp).." "..tostring(inscpp._has_destroy_))
     end
 end
 -- *******************************

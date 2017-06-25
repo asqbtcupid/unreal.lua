@@ -7,8 +7,12 @@
 #include "TableUtil.generated.h"
  
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
-#define LuaCall(functionname, ptr, ...) UTableUtil::call("Call", functionname, ptr, __VA_ARGS__);
-#define LuaCallr(ret, functionname, ptr,...) UTableUtil::callr<ret>("Call", functionname, ptr, __VA_ARGS__);
+#define LuaCall(functionname, ptr, ...) UTableUtil::bIsInsCall = true, \
+					UTableUtil::call("Call", functionname, ptr, __VA_ARGS__);
+
+#define LuaCallr(ret, functionname, ptr,...) UTableUtil::bIsInsCall = true, \
+					UTableUtil::callr<ret>("Call", functionname, ptr, __VA_ARGS__);
+
 #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, __VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
 
@@ -17,30 +21,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
 #define LuaDebug 0 
 using namespace std;
 using luafunc = int( struct lua_State* );
-
-class FLuaGcObj : public FGCObject
-{
-public:
-	TSet<UObject*> objs;
-	static FLuaGcObj* Get()
-	{
-		static FLuaGcObj* Singleton = nullptr;
-		if(Singleton == nullptr)
-			Singleton = new FLuaGcObj;
-		return Singleton;
-	}
-
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
-	{
-		Collector.AllowEliminatingReferences(false);
-		for (auto Object : objs)
-		{
-			Collector.AddReferencedObject(Object);
-		}
-		Collector.AllowEliminatingReferences(true);
-	}
-
-};
 
 void* tousertype(lua_State* L, const char* classname, int i);
 
@@ -130,6 +110,7 @@ public:
 // temporarily for multi gameinstance, later I will add Multi Lua_State
 	static int32 ManualInitCount;
 	static bool HasManualInit;
+	static bool bIsInsCall;
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
 #endif
@@ -137,7 +118,7 @@ public:
 	static void addmodule(const char* classname);
 
 	static void init(bool IsManual = false);
-
+	static void GC();
 	static void openmodule(const char* classname);
 	static void closemodule();
 	static void addfunc(const char* classname, luafunc f);
@@ -217,7 +198,9 @@ public:
 		if (L == nullptr)
 			init();
 		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
-		if (lua_pcall(L, push(Forward<T>(args)...), 1, 0))
+		int32 ParamCount = push(Forward<T>(args)...);
+		bIsInsCall = false;
+		if (lua_pcall(L, ParamCount, 1, 0))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -230,7 +213,9 @@ public:
 		if (L == nullptr)
 			init();
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
-		if (lua_pcall(L, push(Forward<T>(args)...), 1, 0))
+		int32 ParamCount = push(Forward<T>(args)...);
+		bIsInsCall = false;
+		if (lua_pcall(L, ParamCount, 1, 0))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -243,7 +228,9 @@ public:
 		if (L == nullptr)
 			init();
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 0))
+		int32 ParamCount = push(Forward<T>(args)...);
+		bIsInsCall = false;
+		if (lua_pcall(L, ParamCount, 0, 0))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -255,7 +242,9 @@ public:
 		if (L == nullptr)
 			init();
 		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 0))
+		int32 ParamCount = push(Forward<T>(args)...);
+		bIsInsCall = false;
+		if (lua_pcall(L, ParamCount, 0, 0))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -340,3 +329,29 @@ int UTableUtil::push(const TWeakObjectPtr<T>& value)
 	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)weakObj, true);
 	return 1;
 }
+
+
+class FLuaGcObj : public FGCObject
+{
+public:
+	TSet<UObject*> objs;
+	static FLuaGcObj* Get()
+	{
+		static FLuaGcObj* Singleton = nullptr;
+		if (Singleton == nullptr)
+			Singleton = new FLuaGcObj;
+		return Singleton;
+	}
+
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
+	{
+		UTableUtil::GC();
+		Collector.AllowEliminatingReferences(false);
+		for (auto Object : objs)
+		{
+			Collector.AddReferencedObject(Object);
+		}
+		Collector.AllowEliminatingReferences(true);
+	}
+
+};

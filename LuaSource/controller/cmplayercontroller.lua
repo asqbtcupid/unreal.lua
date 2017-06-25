@@ -13,8 +13,9 @@ function CMPlayerController:HandleInput(name, ...)
 end
 
 function CMPlayerController:BeginPlay( )
+	self:Super().BeginPlay(self)
 	if self:IsAuth() then
-		TimerMgr:Get():On(self.SpawnPlayer, self):Time(1):Num(1)
+		self:Timer(self.SpawnPlayer, self):Time(1):Num(1)
 	else
 	end
 	if self:IsLocalPlayerController() then
@@ -26,6 +27,7 @@ end
 
 function CMPlayerController:InitFogMgr()
 	self.m_FogMgr = UCMFogMgr.New(self, "FogMgr")
+	self:GC(self.m_FogMgr)
 	self.m_FogMgr:LuaInit(self)
 end
 
@@ -106,6 +108,7 @@ end
 
 function CMPlayerController:InputTap_Press(Pos)
 	-- A_(self.PlayCharacter.Owner, self)
+	-- A_(self.PlayCharacter)
 	self.m_Pawn:StartPress(Pos)
 end	
 

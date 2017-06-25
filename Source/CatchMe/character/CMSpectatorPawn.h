@@ -14,5 +14,6 @@ class CATCHME_API ACMSpectatorPawn : public ASpectatorPawn
 	GENERATED_BODY()
 public:
 	ACMSpectatorPawn();
-	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 };

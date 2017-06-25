@@ -54,4 +54,7 @@ public:
 
 	UFUNCTION()
 		static void UpdateNav(UActorComponent *Component);
+
+	UFUNCTION()
+		static void AddGCRef(UObject*p);
 };

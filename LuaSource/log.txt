@@ -1,15 +1,6 @@
-[Sun Jun 18 12:33:19 2017] <userdata 1>  
-[Sun Jun 18 12:33:40 2017] {
-  test = 2
-}  
-[Sun Jun 18 12:33:45 2017] lua VM shutdown  
-[Sun Jun 18 16:47:52 2017] lua VM shutdown  
-[Sun Jun 18 16:50:50 2017] lua VM shutdown  
-[Sun Jun 18 16:51:07 2017] lua VM shutdown  
-[Sun Jun 18 17:00:44 2017] lua VM shutdown  
-[Sun Jun 18 17:00:48 2017] lua VM shutdown  
-[Sun Jun 18 17:00:54 2017] lua VM shutdown  
-[Sun Jun 18 17:01:22 2017] lua VM shutdown  
-[Sun Jun 18 17:02:42 2017] lua VM shutdown  
-[Sun Jun 18 17:03:29 2017] lua VM shutdown  
-[Sun Jun 18 17:03:33 2017] lua VM shutdown  
+[Sun Jun 25 23:58:20 2017] lua VM shutdown  
+[Sun Jun 25 23:58:27 2017] lua VM shutdown  
+[Sun Jun 25 23:59:20 2017] lua VM shutdown  
+[Sun Jun 25 23:59:26 2017] lua VM shutdown  
+[Sun Jun 25 23:59:29 2017] lua VM shutdown  
+[Sun Jun 25 23:59:42 2017] lua VM shutdown  

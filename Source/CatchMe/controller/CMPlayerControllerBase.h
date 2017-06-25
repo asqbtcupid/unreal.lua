@@ -14,6 +14,7 @@ class CATCHME_API ACMPlayerControllerBase : public APlayerController
 	GENERATED_BODY()
 public:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void PlayerTick(float DeltaTime) override;
 

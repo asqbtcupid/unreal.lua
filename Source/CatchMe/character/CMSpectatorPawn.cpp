@@ -10,3 +10,10 @@ ACMSpectatorPawn::ACMSpectatorPawn()
 {
 	LuaCtor("character.cmspectatorpawn");
 }
+
+void ACMSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	LuaCall("EndPlay", this, int(EndPlayReason));
+
+}

@@ -6,6 +6,11 @@
 
 
 
+UCatchMeGameInstance::UCatchMeGameInstance()
+{
+	LuaCtor("gameplay.catchmegameinstance", this)
+}
+
 void UCatchMeGameInstance::Init()
 {
 	Super::Init();

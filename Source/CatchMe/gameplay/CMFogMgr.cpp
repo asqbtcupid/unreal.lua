@@ -124,9 +124,11 @@ void UCMFogMgr::UpdateFOV(FVector CharacterPos)
 	int32 len = EyeLen;
 	int32 Sqrt = len*len;
 	int32 FogMapFactor = MapSize / LandscapeSize;
-	int32 y = (CharacterPos.X / 100 + LandscapeSize/2)* FogMapFactor;
-	int32 x = (CharacterPos.Y / 100 + LandscapeSize/2)* FogMapFactor;
-
+// 	int32 y = (CharacterPos.X / 100 + LandscapeSize/2)* FogMapFactor;
+// 	int32 x = (CharacterPos.Y / 100 + LandscapeSize/2)* FogMapFactor;
+	
+	int32 y = CharacterPos.X / 100 * FogMapFactor;
+	int32 x = CharacterPos.Y / 100 * FogMapFactor;
 	int32 ArrSize = MapSize*MapSize;
 	UpdateLastTexture();
 	Data.Init(FogColor, ArrSize);
@@ -135,7 +137,7 @@ void UCMFogMgr::UpdateFOV(FVector CharacterPos)
 		for (int32 j = FMath::Max(y - len, 0); j <= FMath::Min(y + len, MapSize - 1); j++)
 		{
 			if ( FMath::Pow((i-x),2) + FMath::Pow((j - y), 2) <= Sqrt)
-				if (CanSee(CharacterPos, (float(i) / FogMapFactor - LandscapeSize / 2) * 100, (float(j) / FogMapFactor - LandscapeSize / 2) * 100))
+				if (CanSee(CharacterPos, float(i) / FogMapFactor * 100, float(j) / FogMapFactor * 100))
 				{
 					Data[i * MapSize + j] = ThroughColor;
 					CanSeeData[i * MapSize + j] = true;

@@ -1,0 +1,115 @@
+diff --git a/Config/DefaultEngine.ini b/Config/DefaultEngine.ini
+index 923eb46..cec361a 100644
+--- a/Config/DefaultEngine.ini
++++ b/Config/DefaultEngine.ini
+@@ -66,3 +66,4 @@ SyncSceneSmoothingFactor=0.000000
+ AsyncSceneSmoothingFactor=0.990000
+ InitialAverageFrameRate=0.016667
+ 
++
+diff --git a/LuaSource/log.txt b/LuaSource/log.txt
+index 08358bf..855465c 100644
+--- a/LuaSource/log.txt
++++ b/LuaSource/log.txt
+@@ -13,3 +13,9 @@
+ [Sun Jun 18 17:02:42 2017] lua VM shutdown  
+ [Sun Jun 18 17:03:29 2017] lua VM shutdown  
+ [Sun Jun 18 17:03:33 2017] lua VM shutdown  
++[Sun Jun 25 00:05:44 2017] lua VM shutdown  
++[Sun Jun 25 00:06:49 2017] lua VM shutdown  
++[Sun Jun 25 00:09:18 2017] lua VM shutdown  
++[Sun Jun 25 00:09:26 2017] lua VM shutdown  
++[Sun Jun 25 00:11:50 2017] lua VM shutdown  
++[Sun Jun 25 00:11:58 2017] lua VM shutdown  
+diff --git a/Source/CatchMe/TableUtil.cpp b/Source/CatchMe/TableUtil.cpp
+index 99c7c9a..39c7cca 100644
+--- a/Source/CatchMe/TableUtil.cpp
++++ b/Source/CatchMe/TableUtil.cpp
+@@ -11,6 +11,7 @@ DEFINE_LOG_CATEGORY(LuaLog);
+ lua_State* UTableUtil::L = nullptr;
+ int32 UTableUtil::ManualInitCount = 0;
+ bool UTableUtil::HasManualInit = false;
++bool UTableUtil::bIsInsCall = false;
+ 
+ #ifdef LuaDebug
+ TMap<FString, int> UTableUtil::countforgc;
+@@ -415,7 +416,7 @@ void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
+ 				countforgc.Add(classname, 1);
+ #endif
+ 		}
+-		if (bIsActorOrObject)
++		if (!bIsInsCall && bIsActorOrObject)
+ 			addgcref(static_cast<UObject*>(p));
+ 		setmeta(classname, -1);
+ 	}
+diff --git a/Source/CatchMe/TableUtil.h b/Source/CatchMe/TableUtil.h
+index 88e1e87..9369c74 100644
+--- a/Source/CatchMe/TableUtil.h
++++ b/Source/CatchMe/TableUtil.h
+@@ -7,8 +7,12 @@
+ #include "TableUtil.generated.h"
+  
+ #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
+-#define LuaCall(functionname, ptr, ...) UTableUtil::call("Call", functionname, ptr, __VA_ARGS__);
+-#define LuaCallr(ret, functionname, ptr,...) UTableUtil::callr<ret>("Call", functionname, ptr, __VA_ARGS__);
++#define LuaCall(functionname, ptr, ...) UTableUtil::bIsInsCall = true; \
++					UTableUtil::call("Call", functionname, ptr, __VA_ARGS__);
++
++#define LuaCallr(ret, functionname, ptr,...) UTableUtil::bIsInsCall = true; \
++					UTableUtil::callr<ret>("Call", functionname, ptr, __VA_ARGS__);
++
+ #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, __VA_ARGS__);
+ #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
+ 
+@@ -130,6 +134,7 @@ public:
+ // temporarily for multi gameinstance, later I will add Multi Lua_State
+ 	static int32 ManualInitCount;
+ 	static bool HasManualInit;
++	static bool bIsInsCall;
+ #ifdef LuaDebug
+ 	static TMap<FString, int> countforgc;
+ #endif
+@@ -217,7 +222,9 @@ public:
+ 		if (L == nullptr)
+ 			init();
+ 		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
+-		if (lua_pcall(L, push(Forward<T>(args)...), 1, 0))
++		int32 ParamCount = push(Forward<T>(args)...);
++		bIsInsCall = false;
++		if (lua_pcall(L, ParamCount, 1, 0))
+ 		{
+ 			log(lua_tostring(L, -1));
+ 		}
+@@ -230,7 +237,9 @@ public:
+ 		if (L == nullptr)
+ 			init();
+ 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
+-		if (lua_pcall(L, push(Forward<T>(args)...), 1, 0))
++		int32 ParamCount = push(Forward<T>(args)...);
++		bIsInsCall = false;
++		if (lua_pcall(L, ParamCount, 1, 0))
+ 		{
+ 			log(lua_tostring(L, -1));
+ 		}
+@@ -243,7 +252,9 @@ public:
+ 		if (L == nullptr)
+ 			init();
+ 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
+-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 0))
++		int32 ParamCount = push(Forward<T>(args)...);
++		bIsInsCall = false;
++		if (lua_pcall(L, ParamCount, 0, 0))
+ 		{
+ 			log(lua_tostring(L, -1));
+ 		}
+@@ -255,7 +266,9 @@ public:
+ 		if (L == nullptr)
+ 			init();
+ 		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
+-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 0))
++		int32 ParamCount = push(Forward<T>(args)...);
++		bIsInsCall = false;
++		if (lua_pcall(L, ParamCount, 0, 0))
+ 		{
+ 			log(lua_tostring(L, -1));
+ 		}

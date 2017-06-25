@@ -13,6 +13,7 @@ class CATCHME_API UCatchMeGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
+	UCatchMeGameInstance();
 	virtual void Init();
 	virtual void Shutdown();
 	

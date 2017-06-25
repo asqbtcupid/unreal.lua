@@ -1,7 +1,6 @@
 local CMFogMgr = Inherit(CppObjectBase, UCMFogMgr)
 
 function CMFogMgr:Ctor()
-	G_GameStatics[self] = true
 	self.m_MIDs = {}
 	self.m_UpdateInterval = 0.3
 	self.m_PastTime = self.m_UpdateInterval
@@ -10,8 +9,8 @@ end
 function CMFogMgr:LuaInit(Controller)
 	self.m_Controller = Controller
 	self.Controller = Controller
-	self.MapSize = 128
-	self.LandscapeSize = 128
+	self.MapSize = 127
+	self.LandscapeSize = 127
 	self.EyeLen = 10
 	self.ThroughColor = FColor.New(0,0,0,0)
 	self:Init(FColor.New(0,0,0,180))

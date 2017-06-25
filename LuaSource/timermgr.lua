@@ -1,11 +1,33 @@
 local Handle = Inherit(Object)
 
-function Handle:Ctor(mgr, callback)
+function Handle:Ctor(mgr, callback, EventHandle)
 	self.passtime = 0
 	self.num = 0
 	self.totalnum = 0
 	self.mgr = mgr
 	self.callback = callback
+	self.bIsBound = false
+	self.EventHandle = EventHandle
+end
+
+function Handle:CallBack( ... )
+	if self.bIsBound then
+		if self.EventHandle:GetParam()[1] == nil then
+			self:Destroy()
+			return
+		end
+	end
+	self.callback(...)
+	self.passtime = 0
+	self.num = self.num + 1
+	if self.totalnum and self.totalnum >= self.num then
+		self:Destroy()
+	end
+end
+
+function Handle:Bound(IsTrue)
+	self.bIsBound = IsTrue
+	return self
 end
 
 function Handle:Time(t)
@@ -43,12 +65,7 @@ function TimerMgr:Tick(delta)
 		if not self.deletes[h] then
 			h.passtime = h.passtime+delta
 			if h.passtime >= h.interval then
-				h.callback(h.passtime)
-				h.passtime = 0
-				h.num = h.num + 1
-				if h.totalnum and h.totalnum >= h.num then
-					h:Destroy()
-				end
+				h:CallBack(h.passtime)
 			end
 		end
 	end

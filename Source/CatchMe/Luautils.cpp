@@ -67,3 +67,8 @@ void ULuautils::UpdateNav(UActorComponent *Component)
 {
 	UNavigationSystem::UpdateComponentInNavOctree(*Component);
 }
+
+void ULuautils::AddGCRef(UObject*p)
+{
+	UTableUtil::addgcref(p);
+}
