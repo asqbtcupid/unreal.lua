@@ -3,7 +3,7 @@ local testUmg = Inherit(SimpleDlg, UUserWidget)
 testUmg:DynamicLoad("test")
 function testUmg:Ctor(controller)
 	self:Wnd("btn_clear"):Event("OnClicked", self.ClickClear, self)
-	self:Wnd("play"):Event("OnClicked", self.PlayAnim, self)
+	self:Wnd("Play"):Event("OnClicked", self.PlayAnim, self)
 	-- self.controller = controller
 	-- self.Anim = UAnimMontage.FObjectFinder("/Game/Mannequin/Animations/NewAnimMontage")
 	-- local anim = UAnimMontage.LoadObject(self, "/Game/Mannequin/Animations/NewAnimMontage")

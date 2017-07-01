@@ -17,7 +17,7 @@ function SimpleDlg:Ctor( ... )
 	local names, widgets, types = ULuautils.GetAllWidgets(self, {}, {}, {})
 	self.m_widgets = {}
 	for i, v in ipairs(widgets) do
-		self.m_widgets[names[i]] = {types[i], v}	
+		self.m_widgets[names[i]:lower()] = {types[i], v}	
 	end
 	self.m_luawidgets = {}
 end
@@ -51,6 +51,7 @@ function SimpleDlg:Load(obj, Path, controler)
 end
 
 function SimpleDlg:Wnd(name)
+	name = name:lower()
 	if not self.m_luawidgets[name] then
 		local wnd_info = self.m_widgets[name] 
 		local cpp_Type_str = wnd_info[1]

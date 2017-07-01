@@ -8,6 +8,7 @@
 #include "allenum.script.h"
 DEFINE_LOG_CATEGORY(LuaLog);
 
+LuaTickObject* UTableUtil::PtrTickObject = nullptr;
 lua_State* UTableUtil::L = nullptr;
 int32 UTableUtil::ManualInitCount = 0;
 bool UTableUtil::HasManualInit = false;
@@ -46,9 +47,7 @@ void UTableUtil::init(bool IsManual)
 	{
 		if (IsManual && !HasManualInit)
 		{
-// 			Call_void("Shutdown");
-			call("Shutdown");
-			lua_close(L);
+			shutdown_internal();
 		}
 		else
 			return;
@@ -59,7 +58,7 @@ void UTableUtil::init(bool IsManual)
 	luaL_openlibs(l);
 	L = l;
 	FString gameDir = FPaths::GameDir();
-	FString luaDir = gameDir /TEXT("LuaSource");
+	FString luaDir = FPaths::GameContentDir() /TEXT("LuaSource");
 	FString mainFilePath = luaDir / TEXT("main.lua");
 	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
 	{
@@ -99,6 +98,8 @@ void UTableUtil::init(bool IsManual)
 		ULuaLoad::LoadAll(L);
 		ULuaLoadGame::LoadAll(L);
 		call("Init", IsManual);
+		if (PtrTickObject ==nullptr)
+			PtrTickObject = new LuaTickObject();
 #ifdef LuaDebug
 		testtemplate();
 #endif // LuaDebug
@@ -121,11 +122,21 @@ void UTableUtil::shutdown()
 	--ManualInitCount;
 	if (L != nullptr && ManualInitCount == 0)
 	{
-		call("Shutdown");
-// 		Call_void("Shutdown");
-		lua_close(L);
-		L = nullptr;
+		shutdown_internal();
 	}
+}
+
+
+void UTableUtil::shutdown_internal()
+{
+	call("Shutdown");
+	if (PtrTickObject != nullptr)
+	{
+		delete PtrTickObject;
+		PtrTickObject = nullptr;
+	}
+	lua_close(L);
+	L = nullptr;
 }
 
 int32 indexFunc(lua_State* L)
@@ -321,6 +332,26 @@ void* tousertype(lua_State* L, const char* classname, int i)
 	}
 	else
 		return nullptr;
+}
+
+
+int ErrHandleFunc(lua_State*L)
+{
+	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+	lua_getfield(L, -1, "traceback");
+	lua_pushthread(L);
+	lua_pushvalue(L, 1);
+	lua_pushinteger(L, 2);
+	lua_call(L, 3, 1);
+	lua_getfield(L, LUA_GLOBALSINDEX, "ErrHandleInLua");
+	if (lua_isnil(L, -1))
+		lua_pop(L, 1);
+	else
+	{
+		lua_pushvalue(L, -2);
+		lua_call(L, 1, 0);
+	}
+	return 1;
 }
 
 void* UTableUtil::tousertype(const char* classname, int i)
@@ -652,3 +683,18 @@ void UTableUtil::testtemplate()
 		log("TArray");
 }
 #endif
+
+void LuaTickObject::Tick(float DeltaTime)
+{
+	LuaStaticCall("Tick", DeltaTime);
+}
+
+bool LuaTickObject::IsTickable() const
+{
+	return true;
+}
+
+TStatId LuaTickObject::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(LuaTickObject, STATGROUP_Tickables);
+}

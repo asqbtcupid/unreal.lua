@@ -9,7 +9,7 @@ struct FCharacterInfo {
 	GENERATED_BODY()
 	UPROPERTY()
 	int32 MaxHp;
-
+	 
 	UPROPERTY()
 	int32 Hp;
 

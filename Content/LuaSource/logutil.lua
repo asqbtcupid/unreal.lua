@@ -38,9 +38,13 @@ function A_( ... )
 end
 
 function errhandle(err)
-    local err = err..'\n'..debug.traceback()..'\n'
-    a_(err)
-    ULuautils.log(err)
+    -- local err = err..'\n'..debug.traceback()..'\n'
+    q_(err)
+    -- a_(err)
+end
+
+function ErrHandleInLua(err)
+    write(err)
 end
 
 function Xpcall(f)

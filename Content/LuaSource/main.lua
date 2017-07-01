@@ -66,6 +66,7 @@ function Call(functionName, inscpp, ...)
         return inscpp[functionName](inscpp, ...)
     elseif G_IsMannul then
         -- error("error in Call, No Exist such lua ins, Must Call LuaCtor Before use this:"..functionName.." "..type(inscpp).." "..tostring(inscpp._has_destroy_))
+        -- a_(functionName)
     end
 end
 -- *******************************

@@ -1,6 +1,0 @@
-[Sun Jun 25 23:58:20 2017] lua VM shutdown  
-[Sun Jun 25 23:58:27 2017] lua VM shutdown  
-[Sun Jun 25 23:59:20 2017] lua VM shutdown  
-[Sun Jun 25 23:59:26 2017] lua VM shutdown  
-[Sun Jun 25 23:59:29 2017] lua VM shutdown  
-[Sun Jun 25 23:59:42 2017] lua VM shutdown  

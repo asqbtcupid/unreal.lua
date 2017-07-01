@@ -9,7 +9,7 @@ function CMPlayerControllerBase:BeginPlay()
 end
 
 function CMPlayerControllerBase:PlayerTick(DeltaTime)
-
+	
 end
 
 function CMPlayerControllerBase:PreProcessInput(DeltaTime, bGamePaused)

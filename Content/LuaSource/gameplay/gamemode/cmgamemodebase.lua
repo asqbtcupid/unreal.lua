@@ -9,4 +9,7 @@ end
 function CMGameModeBase:SetDefaultPawn(defaultPawn)
 end
 
+function CMGameModeBase:Tick(Delta)
+end
+
 return CMGameModeBase

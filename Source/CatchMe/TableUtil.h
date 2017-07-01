@@ -8,12 +8,12 @@
  
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
 #define LuaCall(functionname, ptr, ...) UTableUtil::bIsInsCall = true, \
-					UTableUtil::call("Call", functionname, ptr, __VA_ARGS__);
+					UTableUtil::call("Call", functionname, ptr, ##__VA_ARGS__);
 
 #define LuaCallr(ret, functionname, ptr,...) UTableUtil::bIsInsCall = true, \
-					UTableUtil::callr<ret>("Call", functionname, ptr, __VA_ARGS__);
+					UTableUtil::callr<ret>("Call", functionname, ptr, ##__VA_ARGS__);
 
-#define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, __VA_ARGS__);
+#define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, ##__VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
 
 struct EnumItem;
@@ -23,7 +23,7 @@ using namespace std;
 using luafunc = int( struct lua_State* );
 
 void* tousertype(lua_State* L, const char* classname, int i);
-
+int ErrHandleFunc(lua_State*L);
 template<class T>
 class popiml{
 	public:
@@ -100,12 +100,21 @@ public:
 	static void pop(lua_State *L, int index) { lua_pop(L, 1); }
 };
 
+class LuaTickObject :public FTickableGameObject
+{
+public:
+	virtual void Tick(float DeltaTime) override;
+	virtual bool IsTickable() const override;
+	virtual TStatId GetStatId() const override;
+};
+
 UCLASS()
 class UTableUtil : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
+	static LuaTickObject* PtrTickObject;
 	static lua_State* L;
 // temporarily for multi gameinstance, later I will add Multi Lua_State
 	static int32 ManualInitCount;
@@ -138,6 +147,7 @@ public:
 	static void log(const FString& content);
 
 	static void shutdown();
+	static void shutdown_internal();
 	static bool existdata(void * p);
 	
 	static void rmgcref(UObject* p);
@@ -195,16 +205,7 @@ public:
 	template<class returnType, class... T>
 	static returnType callr(const FString& funcname, T&&... args)
 	{
-		if (L == nullptr)
-			init();
-		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
-		int32 ParamCount = push(Forward<T>(args)...);
-		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 1, 0))
-		{
-			log(lua_tostring(L, -1));
-		}
-		return pop<returnType>(-1);
+		return callr<returnType>(TCHAR_TO_ANSI(*funcname), Forward<T>(args)...);
 	}
 
 	template<class returnType, class... T>
@@ -212,10 +213,11 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 1, 0))
+		if (lua_pcall(L, ParamCount, 1, 1))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -227,10 +229,11 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 0, 0))
+		if (lua_pcall(L, ParamCount, 0, 1))
 		{
 			log(lua_tostring(L, -1));
 		}
@@ -239,15 +242,7 @@ public:
 	template<class... T>
 	static void call(const FString& funcname, T&&... args)
 	{
-		if (L == nullptr)
-			init();
-		lua_getfield(L, LUA_GLOBALSINDEX, TCHAR_TO_ANSI(*funcname));
-		int32 ParamCount = push(Forward<T>(args)...);
-		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 0, 0))
-		{
-			log(lua_tostring(L, -1));
-		}
+		call(TCHAR_TO_ANSI(*funcname), Forward<T>(args)...);
 	}
 
 	template<class... T>
@@ -255,8 +250,9 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, funcid);
-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 0))
+		if (lua_pcall(L, push(Forward<T>(args)...), 0, 1))
 		{
 			log(lua_tostring(L, -1));
 		}

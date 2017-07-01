@@ -9,7 +9,6 @@
 void ACMGameModeBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	LuaStaticCall("Tick", DeltaSeconds);
 }
 
 void ACMGameModeBase::BeginPlay()

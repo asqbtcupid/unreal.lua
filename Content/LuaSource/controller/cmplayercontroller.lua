@@ -107,8 +107,6 @@ function CMPlayerController:S_RemoveFoliage_Imp(FoliageIndex, Index)
 end
 
 function CMPlayerController:InputTap_Press(Pos)
-	-- A_(self.PlayCharacter.Owner, self)
-	-- A_(self.PlayCharacter)
 	self.m_Pawn:StartPress(Pos)
 end	
 
