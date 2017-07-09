@@ -72,3 +72,4 @@ void ULuautils::AddGCRef(UObject*p)
 {
 	UTableUtil::addgcref(p);
 }
+

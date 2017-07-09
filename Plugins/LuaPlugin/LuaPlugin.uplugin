@@ -18,10 +18,20 @@
 	
 	"Modules" :
 	[
-		{
-			"Name" : "LuaglueGenerator",
-			"Type" : "Program",
-			"LoadingPhase" : "PostConfigInit"
-		}
+    {
+      "Name": "LuaglueGenerator",
+      "Type": "Program",
+      "LoadingPhase": "PostConfigInit"
+    },
+    {
+		"Name" : "LuaPluginRuntime",
+		"Type" : "Runtime",
+		"LoadingPhase" : "PreDefault"
+	},
+    {
+      "Name": "LuaPluginEditor",
+      "Type":  "Editor",
+      "LoadingPhase": "PreDefault"
+    }
 	]
 }

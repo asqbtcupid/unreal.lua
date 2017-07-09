@@ -6,11 +6,12 @@ function Init(IsMannual)
         collectgarbage("collect")
         -- a_("lua memory: ", collectgarbage("count"))
     end
-    -- require ("util.csvtolua")(_gamedir.."/gameconfig") 
     TimerMgr:Get():On(ShowMem):Time(2)
     G_IsMannul = IsMannual
     if IsMannual then
-        InitLuahotupdate()
+         if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
+            InitLuahotupdate()
+        end
         -- require "util.sbcompletions".run()
     end
 end

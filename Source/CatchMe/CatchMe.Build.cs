@@ -11,9 +11,10 @@ public class CatchMe : ModuleRules
     }
     public CatchMe(ReadOnlyTargetRules Target) : base(Target)
     {
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage","LuaPluginRuntime" });
         PrivateDependencyModuleNames.AddRange(new string[] {"Slate", "SlateCore", "UMG" });
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
+
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Win64", "Release", "lua.lib"));

@@ -15,7 +15,7 @@
 
 #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, ##__VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
-
+ 
 struct EnumItem;
 DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
 #define LuaDebug 0 
@@ -125,7 +125,7 @@ public:
 #endif
 	 UTableUtil();
 	static void addmodule(const char* classname);
-
+	static void useCustomLoader();
 	static void init(bool IsManual = false);
 	static void GC();
 	static void openmodule(const char* classname);

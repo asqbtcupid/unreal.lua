@@ -19,12 +19,15 @@ function testUmg:Ctor(controller)
 	-- A_(MID)
 end
 function testUmg:PlayAnim()
-	UGameplayStatics.GetPlayerController(self, 0):ClientTravel("testlevel2", ETravelType.TRAVEL_Absolute, false, FGuid.New())
+	-- UGameplayStatics.GetPlayerController(self, 0):ClientTravel("testlevel2", ETravelType.TRAVEL_Absolute, false, FGuid.New())
+	-- ULuautils.TestPath("/Game")
+	-- A_(ULuaScript.NewObject(nil, "/Game/actormgr.actormgr"))
+	-- a_(ULuautils.TestCode("frame.initrequire"))
 end
 
 function testUmg:ClickClear( )
 	-- UGameplayStatics.OpenLevel(self, "testlevel2_2")
-	UGameplayStatics.GetPlayerController(self, 0):ClientTravel("testlevel2_2", ETravelType.TRAVEL_Absolute, false, FGuid.New())
+	-- UGameplayStatics.GetPlayerController(self, 0):ClientTravel("testlevel2_2", ETravelType.TRAVEL_Absolute, false, FGuid.New())
 end
 
 function testUmg:Txt1(content)

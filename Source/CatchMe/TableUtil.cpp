@@ -6,6 +6,7 @@
 #include "luaload.h"
 #include "lualoadgame.h"
 #include "allenum.script.h"
+#include "LuaScript.h"
 DEFINE_LOG_CATEGORY(LuaLog);
 
 LuaTickObject* UTableUtil::PtrTickObject = nullptr;
@@ -37,6 +38,52 @@ static int32 LuaPanic(lua_State *L)
 	return 0;
 }
 
+FString GetLuaCodeFromPath(FString FilePath)
+{
+	const static FString Prefix = "/Game/LuaSource/";
+	int32 IndexStart = 0;
+	FilePath.FindLastChar('.', IndexStart);
+	if (IndexStart != INDEX_NONE)
+	{
+		FString FileName = FilePath.Mid(IndexStart + 1, FilePath.Len() - IndexStart);
+		FilePath = FilePath.Replace(L".", L"/");
+		FilePath = FilePath + "." + FileName;
+	}
+	else
+	{
+		FilePath = FilePath + FString(".") + FilePath;
+	}
+	FilePath = Prefix + FilePath;
+	ULuaScript* CodeObject = LoadObject<ULuaScript>(nullptr, *FilePath);
+	if (CodeObject) {
+		return CodeObject->Code;
+	}
+	return "";
+}
+
+int CustomLuaLoader(lua_State* L)
+{
+	FString FilePath = lua_tostring(L, -1);
+	FString Code = GetLuaCodeFromPath(FilePath);
+	if(!Code.IsEmpty())
+	{
+		luaL_loadstring(L, TCHAR_TO_ANSI(*Code));
+		return 1;
+	}
+	return 0;
+}
+
+void UTableUtil::useCustomLoader()
+{
+	lua_getglobal(L, "package");
+	lua_getglobal(L, "table");
+	lua_getfield(L, -1, "insert");//table.insert
+	lua_getfield(L, -3, "loaders");//package.loaders  
+	lua_pushinteger(L, 2);
+	lua_pushcfunction(L, CustomLuaLoader);
+	lua_call(L, 3, 0);
+}
+
 void UTableUtil::init(bool IsManual)
 {
 	if (IsManual)
@@ -57,13 +104,26 @@ void UTableUtil::init(bool IsManual)
 	if (l) lua_atpanic(l, &LuaPanic);
 	luaL_openlibs(l);
 	L = l;
-	FString gameDir = FPaths::GameDir();
-	FString luaDir = FPaths::GameContentDir() /TEXT("LuaSource");
-	FString mainFilePath = luaDir / TEXT("main.lua");
+	FString gameDir = FPaths::ConvertRelativePathToFull(FPaths::GameDir());
+	FString luaDir = FPaths::ConvertRelativePathToFull(FPaths::GameDir() /TEXT("LuaSource"));
+
+#if  WITH_EDITOR
+ 	FString mainFilePath = luaDir / TEXT("main.lua");
 	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
 	{
 		UTableUtil::log(FString(lua_tostring(L, -1)));
+		checkf(0, L"Failed to Init Lua state %s");
 	}
+#else    
+	useCustomLoader();
+	FString MainCode = GetLuaCodeFromPath("main");
+	checkf(!MainCode.IsEmpty(), L"MainCode Is Empty");
+	if (luaL_dostring(L, TCHAR_TO_ANSI(*MainCode)))
+	{
+		UTableUtil::log(FString(lua_tostring(L, -1)));
+		checkf(0, L"Failed to Init Lua state %s");
+	}
+#endif
 	else
 	{
 		//set table for index exist userdata
@@ -93,7 +153,14 @@ void UTableUtil::init(bool IsManual)
 		lua_setfield(L, LUA_GLOBALSINDEX, "_luadir");
 		push(gameDir);
 		lua_setfield(L, LUA_GLOBALSINDEX, "_gamedir");
-
+#if PLATFORM_WINDOWS
+		push("PLATFORM_WINDOWS");
+		lua_setfield(L, LUA_GLOBALSINDEX, "_platform");
+#endif // PLATFORM_WINDOWS
+#if  WITH_EDITOR
+		push(true);
+		lua_setfield(L, LUA_GLOBALSINDEX, "_WITH_EDITOR");
+#endif
 		//register all function
 		ULuaLoad::LoadAll(L);
 		ULuaLoadGame::LoadAll(L);
@@ -581,7 +648,7 @@ bool UTableUtil::existdata(void * p)
 
 void UTableUtil::log(const FString& content)
 {
-	UE_LOG(LuaLog, Warning, TEXT("[lua error] %s"), *content);
+	UE_LOG(LuaLog, Display, TEXT("[lua error] %s"), *content);
 }
 
 UObject* UTableUtil::FObjectFinder( UClass* Class, FString PathName )
