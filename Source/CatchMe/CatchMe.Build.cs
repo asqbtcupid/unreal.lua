@@ -27,5 +27,9 @@ public class CatchMe : ModuleRules
         {
             PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Android", "Release", "lua.a"));
         }
+        else if(Target.Platform == UnrealTargetPlatform.IOS)
+        {
+            PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Ios", "Release", "lua.a"));
+        }
     }
 }
