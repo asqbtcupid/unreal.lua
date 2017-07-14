@@ -54,6 +54,15 @@ The lua binding code is generate to the folder base on your visual studio projec
 2.When lua call c++ function which contains default argument.you dont't have to pass all arguments.For an example,In c++,you declare _void example(int i, int j =1, int k = 2)_.When you call this function in lua,you can just pass one argument:example(0).
 
 3.When lua call c++ function which contains reference parameter, such as _void example(int &i, FVector &v)_,lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
+
+## FAQ
+Q1. Encounter "No filename provided for module LuaglueGenerator" during compile.
+
+A1. Use source code build ue4 engine,Or try to package the Plugins/LuaPlugin manually.There are another solution in 	 https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4
+
+Q2. Encounter lots of compile error in DelegateLuaProxy.h
+
+A2. In order to let the UHT run again.just make tiny modify in what ever a .h file in your project(such as add an empty line),Then compile the project again, the compile error will be disappear.
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
