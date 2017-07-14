@@ -4,7 +4,7 @@ This can be used to generate lua binding code for UE4 Engine.That means you can 
 ## Supported PlatForm
 Windows, Mac, Android(test with samsung edge s7),IOS(test with iphone 6)
 ## How to build
-This plugin can be used in UE4 4.16 version.
+This plugin can be used in UE4 4.16 version.Must be Source code compiled engine,Other wise you have to build the plugin by yourself.
 
 It's a demo,so right click CatchMe.uproject then Generate visual studio project.
 
