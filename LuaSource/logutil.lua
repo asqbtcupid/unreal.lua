@@ -1,5 +1,5 @@
 local function write(str)
-    local logfile = io.open(_luadir.."\\log.txt", "a")
+    local logfile = io.open(_luadir.."/log.txt", "a")
     logfile:write(str)
     logfile:flush()
     logfile:close()
