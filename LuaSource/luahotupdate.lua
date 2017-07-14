@@ -40,7 +40,7 @@ end
 function HU.InitFileMap(RootPath)
 	for _, rootpath in pairs(RootPath) do
 		rootpath = Normalize(rootpath)
-		local file = io.popen("dir /S/B /A:A "..rootpath)
+		local file = io.popen("dir /S/B /A:A \""..rootpath.."\"")
 		io.input(file)
 		for line in io.lines() do
 	   		local FileName = string.match(line,".*\\(.*)%.lua")
