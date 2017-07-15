@@ -18,7 +18,7 @@ end
 
 function addfunc(des_t, src_t)
 	for k,v in pairs(src_t) do
-		if type(v) == "function" and not des_t[k] then
+		if type(v) == "function" and k ~= "Ctor" and k ~= "Destroy" and not des_t[k] then
 			des_t[k] = v
 		end
 	end
@@ -108,17 +108,15 @@ end
 
 local function __indexcpp(t, k)
 	local class = getmetatable(t)
-	local cppclass = rawget(class, "_cppclass")
-	while class and not rawget(class, "__iscppclass") do
+	local classtemp = class
+	while class do
 		local v = rawget(class, k)
 		if v then return v end 
 		class = rawget(class, "_parentclass") 
 	end
 
-	v = cppclass[k] 
-	if v then return v end
-	v = cppclass["Get_"..k]
-	if v then return v(t) end
+	local getfunc = rawget(classtemp, "Get_"..k)
+	if getfunc then return getfunc(t) end
 end
 
 local function __newindexcpp(t, k, v)
@@ -144,8 +142,12 @@ function Inherit(parent, cppclass)
 		TheNewClass._cppclass = cppclass or parent._cppclass or parent
 		TheNewClass.__index = __indexcpp
 		TheNewClass.__newindex = __newindexcpp
+		addfunc(TheNewClass,cppclass)
 	else
 		TheNewClass.__index = TheNewClass
+	end
+	if not _WITH_EDITOR then
+		addfunc(TheNewClass, parent)
 	end
 	setmetatable(TheNewClass, parent)
 	rawset(TheNewClass, "_meta_", TheNewClass)

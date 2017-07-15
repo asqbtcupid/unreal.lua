@@ -5,7 +5,7 @@
 #include "CatchMePlayerController.generated.h"
 
 class UCMFogMgr;
-UCLASS(meta=(lua=1), minimalapi)
+UCLASS(meta=(lua=1))
 class ACatchMePlayerController : public ACMPlayerControllerBase
 {
 	GENERATED_BODY()
@@ -43,6 +43,7 @@ public:
 
 	UFUNCTION(reliable, client)
 	void C_RemoveFoliage(int32 FoliageComponentIndex, int32 Index);
+
 };
 
 
