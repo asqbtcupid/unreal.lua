@@ -43,6 +43,8 @@ protected:
 	TMap<UClass*, TArray<FPropertyAccessor> > ClassExportedProperties;
 	TArray<FString> SupportedStruct;
 	TArray<FString> NoexportPropertyStruct;
+	TArray<FString> NotSupportedClassFunction;
+	TArray<FString> NotSupportedClass;
 	TSet<FString> WeakPtrClass;
 
 	TArray<FDelegateExported> delegates;

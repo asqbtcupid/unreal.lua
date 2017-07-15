@@ -70,12 +70,7 @@ void FLuaglueGenerator::Initialize(const FString& RootLocalPath, const FString& 
 
 bool FLuaglueGenerator::ShouldExportClassesForModule(const FString& ModuleName, EBuildModuleType::Type ModuleType, const FString& ModuleGeneratedIncludeDirectory) const
 { 
-	bool bCanExport = (ModuleType == EBuildModuleType::EngineRuntime || ModuleType == EBuildModuleType::GameRuntime);
-	if (bCanExport)
-	{
-		bCanExport = SupportModules.Contains(ModuleName);
-	}
-	return bCanExport;
+	return SupportModules.Contains(ModuleName);
 }
 
 void FLuaglueGenerator::ExportClass(UClass* Class, const FString& SourceHeaderFilename, const FString& GeneratedHeaderFilename, bool bHasChanged)

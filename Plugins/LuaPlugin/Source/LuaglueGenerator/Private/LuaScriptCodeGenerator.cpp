@@ -6,7 +6,7 @@
 		typeName = typeName.Mid(FirstSpaceIndex + 1);\
 		typeName.RemoveAt(typeName.Len() - 1);\
 		FString returnname = FString::Printf(TEXT("TWeakObjectPtr_%s"), *typeName);
-		
+		 
 FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& InIncludeBase)
 	: FScriptCodeGeneratorBase(RootLocalPath, RootBuildPath, OutputDirectory, InIncludeBase)
 {
@@ -15,6 +15,9 @@ FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, c
 	IncludeBase = InIncludeBase;
 	GConfig->GetArray(TEXT("Lua"), TEXT("SupportedStruct"), SupportedStruct, configPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NoPropertyStruct"), NoexportPropertyStruct, configPath);
+	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClassFunction"), NotSupportedClassFunction, configPath);
+	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClass"), NotSupportedClass, configPath);
+
 	bExportDelegateProxy = false;
 	GConfig->GetBool(TEXT("Lua"), TEXT("ExportDelegateProxy"), bExportDelegateProxy, configPath);
 }
@@ -295,6 +298,8 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 	if (bCanExport)
 	{
 		const FString ClassNameCPP = GetClassNameCPP(Class);
+		if (NotSupportedClass.Contains(ClassNameCPP))
+			return false;
 		// No functions to export? Don't bother exporting the class.
 		bool bHasMembersToExport = false;
 		for (TFieldIterator<UFunction> FuncIt(Class); !bHasMembersToExport && FuncIt; ++FuncIt)
@@ -324,31 +329,11 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
+	if (NotSupportedClassFunction.Contains("*." + Function->GetName()) || NotSupportedClassFunction.Contains(ClassNameCPP + "." + Function->GetName()))
+		return false;
 	if (Function->GetName().Contains("DEPRECATED") || Function->HasMetaData("DeprecatedFunction"))
 		return false;
-	if (Function->GetName() == "Blueprint_GetSizeX" ||
-		Function->GetName() == "Blueprint_GetSizeY" ||
-		Function->GetName() == "ContainsEmitterType" ||
-		Function->GetName() == "StackTrace" ||
-		Function->GetName() == "SetInnerConeAngle" ||
-		Function->GetName() == "SetOuterConeAngle" ||
-		Function->GetName() == "OnInterpToggle" ||
-		Function->GetName() == "StartPrecompute" ||
-		Function->GetName() == "OnRep_Timeline" ||
-		(Function->GetName() == "CreateInstance" && (ClassNameCPP == "ULevelStreaming" || ClassNameCPP == "ULevelStreamingAlwaysLoaded" || ClassNameCPP == "ULevelStreamingKismet")) ||
-		Function->GetName() == "SetAreaClass" ||
-		Function->GetName() == "PaintVerticesSingleColor" ||
-		Function->GetName() == "RemovePaintedVertices" ||
-		Function->GetName() == "LogText" ||
-		Function->GetName() == "LogLocation" ||
-		(ClassNameCPP == "UVisualLoggerKismetLibrary" && Function->GetName() == "LogBox") ||
-		(ClassNameCPP == "UMeshVertexPainterKismetLibrary" && Function->GetName() == "PaintVerticesLerpAlongAxis") ||
-		(Function->GetName() == "MakeStringAssetReference") ||
-		(ClassNameCPP == "ULevelStreamingKismet" && Function->GetName() == "LoadLevelInstance")
-		)
-	{
-		return false;
-	}
+	
 	if (Class->ClassFlags & CLASS_Interface && Function->GetName() == "ExecuteUbergraph")
 		return false;
 

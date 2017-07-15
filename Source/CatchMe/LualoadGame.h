@@ -7,7 +7,8 @@ UCLASS()
 class ULuaLoadGame : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-public:
+public: 
 	 
 	static void LoadAll(lua_State* L);
 };
+  

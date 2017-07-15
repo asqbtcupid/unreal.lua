@@ -209,8 +209,4 @@ function CMPlayerController:Visible(character)
 	end
 end
 
-function CMPlayerController:LuaTest( )
-	
-end
-
 return CMPlayerController

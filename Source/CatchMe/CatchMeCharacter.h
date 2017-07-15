@@ -3,13 +3,13 @@
 #include "GameFramework/Character.h"
 #include "character/CMCharacterBase.h"
 #include "CatchMeCharacter.generated.h"
-  
+    
 USTRUCT(meta = (Lua=1))
 struct FCharacterInfo {
 	GENERATED_BODY()
 	UPROPERTY()
 	int32 MaxHp;
-	 
+	  
 	UPROPERTY()
 	int32 Hp;
 
