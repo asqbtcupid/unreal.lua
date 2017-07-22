@@ -213,7 +213,6 @@ public:
 	{
 		if (L == nullptr)
 			init();
-		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
@@ -229,7 +228,6 @@ public:
 	{
 		if (L == nullptr)
 			init();
-		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
@@ -250,7 +248,6 @@ public:
 	{
 		if (L == nullptr)
 			init();
-		lua_pushcfunction(L, ErrHandleFunc);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, funcid);
 		if (lua_pcall(L, push(Forward<T>(args)...), 0, 1))
 		{

@@ -40,6 +40,8 @@ static int32 LuaPanic(lua_State *L)
 
 FString GetLuaCodeFromPath(FString FilePath)
 {
+		FString FirstLine = FString("--") + FilePath + FString("\n");
+
 	const static FString Prefix = "/Game/LuaSource/";
 	int32 IndexStart = 0;
 	FilePath.FindLastChar('.', IndexStart);
@@ -56,7 +58,7 @@ FString GetLuaCodeFromPath(FString FilePath)
 	FilePath = Prefix + FilePath;
 	ULuaScript* CodeObject = LoadObject<ULuaScript>(nullptr, *FilePath);
 	if (CodeObject) {
-		return CodeObject->Code;
+		return FirstLine+CodeObject->Code;
 	}
 	return "";
 }
@@ -82,6 +84,7 @@ void UTableUtil::useCustomLoader()
 	lua_pushinteger(L, 2);
 	lua_pushcfunction(L, CustomLuaLoader);
 	lua_call(L, 3, 0);
+	lua_pop(L, lua_gettop(L));
 }
 
 void UTableUtil::init(bool IsManual)
@@ -164,9 +167,10 @@ void UTableUtil::init(bool IsManual)
 		//register all function
 		ULuaLoad::LoadAll(L);
 		ULuaLoadGame::LoadAll(L);
-		call("Init", IsManual);
 		if (PtrTickObject ==nullptr)
 			PtrTickObject = new LuaTickObject();
+		lua_pushcfunction(L, ErrHandleFunc);
+		call("Init", IsManual);
 #ifdef LuaDebug
 		testtemplate();
 #endif // LuaDebug
