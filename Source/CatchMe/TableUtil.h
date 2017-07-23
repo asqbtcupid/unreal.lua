@@ -213,13 +213,15 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 1, 1))
+		if (lua_pcall(L, ParamCount, 1, -(ParamCount + 2)))
 		{
 			log(lua_tostring(L, -1));
 		}
+		lua_remove(L, -2);
 		return pop<returnType>(-1);
 	}
 
@@ -228,13 +230,15 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
 		bIsInsCall = false;
-		if (lua_pcall(L, ParamCount, 0, 1))
+		if (lua_pcall(L, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(lua_tostring(L, -1));
 		}
+		lua_pop(L, 1);
 	}
 
 	template<class... T>
@@ -248,11 +252,14 @@ public:
 	{
 		if (L == nullptr)
 			init();
+		lua_pushcfunction(L, ErrHandleFunc);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, funcid);
-		if (lua_pcall(L, push(Forward<T>(args)...), 0, 1))
+		int32 ParamCount = push(Forward<T>(args)...);
+		if (lua_pcall(L, ParamCount, 0, -(ParamCount+2)))
 		{
 			log(lua_tostring(L, -1));
 		}
+		lua_pop(L, 1);
 	}
 };
 

@@ -169,12 +169,10 @@ void UTableUtil::init(bool IsManual)
 		ULuaLoadGame::LoadAll(L);
 		if (PtrTickObject ==nullptr)
 			PtrTickObject = new LuaTickObject();
-		lua_pushcfunction(L, ErrHandleFunc);
 		call("Init", IsManual);
 #ifdef LuaDebug
 		testtemplate();
 #endif // LuaDebug
-
 	}
 	HasManualInit = IsManual;
 }
@@ -414,9 +412,13 @@ int ErrHandleFunc(lua_State*L)
 	lua_pushvalue(L, 1);
 	lua_pushinteger(L, 2);
 	lua_call(L, 3, 1);
+	lua_remove(L, -2);
+	lua_concat(L, 2);
 	lua_getfield(L, LUA_GLOBALSINDEX, "ErrHandleInLua");
 	if (lua_isnil(L, -1))
+	{
 		lua_pop(L, 1);
+	}
 	else
 	{
 		lua_pushvalue(L, -2);

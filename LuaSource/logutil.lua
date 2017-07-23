@@ -1,9 +1,11 @@
 local function write(str)
     local logfile = io.open(_luadir.."/log.txt", "a")
-    logfile:write(str)
-    logfile:flush()
-    logfile:close()
-    print(str)
+    if logfile then
+        logfile:write(str)
+        logfile:flush()
+        logfile:close()
+        print(str)
+    end
 end
 function Q_(t)
     a_(require "inspect"(t))    
@@ -38,12 +40,11 @@ function A_( ... )
 end
 
 function errhandle(err)
-    -- local err = err..'\n'..debug.traceback()..'\n'
     q_(err)
-    -- a_(err)
 end
 
 function ErrHandleInLua(err)
+    ULuautils.log(err)
     write(err)
 end
 
