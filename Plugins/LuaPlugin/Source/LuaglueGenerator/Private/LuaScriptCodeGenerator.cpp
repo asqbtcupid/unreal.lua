@@ -50,7 +50,11 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		// In Lua, the first param index on the stack is 1 and it's the object we're invoking the function on
 		ParamIndex += 2;
 
-		if (Param->IsA(UIntProperty::StaticClass()))
+		if (Param->IsA(UIntProperty::StaticClass()) || 
+			Param->IsA(UUInt32Property::StaticClass())|| 
+			Param->IsA(UInt64Property::StaticClass()) ||
+			Param->IsA(UUInt16Property::StaticClass())
+			)
 		{
 			Initializer = TEXT("(luaL_checkint");
 		}
@@ -177,7 +181,11 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 		CreateTableCode += "\t\tlua_rawset(L, -3);\r\n\t}\r\n";
 		Initializer = CreateTableCode;
 	}
-	else if (ReturnValue->IsA(UIntProperty::StaticClass()) || ReturnValue->IsA(UInt8Property::StaticClass()))
+	else if (ReturnValue->IsA(UIntProperty::StaticClass()) || 
+		ReturnValue->IsA(UInt8Property::StaticClass()) || 
+		ReturnValue->IsA(UUInt32Property::StaticClass()) ||
+		ReturnValue->IsA(UUInt16Property::StaticClass()) ||
+		ReturnValue->IsA(UInt64Property::StaticClass()))
 	{
 		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
 	}
@@ -730,6 +738,9 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 	else if (Property->IsA(UByteProperty::StaticClass()))
 		bSupported = true;
 	else if (!Property->IsA(UIntProperty::StaticClass()) &&
+		!Property->IsA(UInt64Property::StaticClass()) &&
+		!Property->IsA(UUInt32Property::StaticClass()) &&
+		!Property->IsA(UUInt16Property::StaticClass()) &&
 		!Property->IsA(UFloatProperty::StaticClass()) &&
 		!Property->IsA(UTextProperty::StaticClass()) &&
 		!Property->IsA(UStrProperty::StaticClass()) &&
@@ -742,6 +753,17 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 		!Property->IsA(UClassProperty::StaticClass()))
 	{
 		bSupported = false;
+	}
+	if (auto p = Cast<UMulticastDelegateProperty>(Property))
+	{
+		for (TFieldIterator<UProperty> ParamIt(p->SignatureFunction); ParamIt; ++ParamIt)
+		{
+			if (!IsPropertyTypeSupported(*ParamIt))
+			{
+				bSupported = false;
+				break;
+			}
+		}
 	}
 
 	return bSupported;
@@ -832,6 +854,18 @@ FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
 	else if (Property->IsA(UByteProperty::StaticClass()))
 	{
 		return FString("UByteProperty");
+	}
+	else if (Property->IsA(UUInt32Property::StaticClass()))
+	{
+		return FString("UUInt32Property");
+	}
+	else if (Property->IsA(UInt64Property::StaticClass()))
+	{
+		return FString("UInt64Property");
+	}
+	else if (Property->IsA(UUInt16Property::StaticClass()))
+	{
+		return FString("UUInt16Property");
 	}
 	else
 	{
@@ -1371,6 +1405,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		FString name = *It->GetName();
 		if (!isStructSupported(*It))
 			continue;
+		auto x = name == "AIRequestID";
 		FString namecpp = "F" + name;
 		ExportTrait.AddUnique(namecpp);
 		StructNames.Add(namecpp);
