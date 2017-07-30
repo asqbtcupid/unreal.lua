@@ -302,7 +302,7 @@ int32 gcfunc(lua_State *L)
 			lua_getmetatable(L, 1);
 			lua_getfield(L, -1, "classname");
 			FString classname = lua_tostring(L, -1);
-			if (classname == "UClass")
+			if (classname == "UClass" || classname == "UObject")
 			{
 #ifdef LuaDebug
 				UTableUtil::countforgc[classname]--;
