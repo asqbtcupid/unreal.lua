@@ -8,13 +8,13 @@
 
 UCatchMeGameInstance::UCatchMeGameInstance()
 {
+	UTableUtil::init(!HasAnyFlags(RF_ClassDefaultObject));
 	LuaCtor("gameplay.catchmegameinstance", this)
 }
 
 void UCatchMeGameInstance::Init()
 {
 	Super::Init();
-	UTableUtil::init(true);
 }
 
 void UCatchMeGameInstance::Shutdown()
