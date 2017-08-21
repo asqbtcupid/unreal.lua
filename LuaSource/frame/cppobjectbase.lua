@@ -32,7 +32,9 @@ CppObjectBase.New = CppObjectBase.NewCpp
 
 function CppObjectBase:Ctor()
 	self._gc_list = {}
-	LevelActors[self] = true
+	if AActor.Cast(self) then
+		LevelActors[self] = true
+	end
 end
 
 function CppObjectBase:GC(obj)
