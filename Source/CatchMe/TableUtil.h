@@ -134,7 +134,7 @@ public:
 	static void initmeta();
 	static void setmeta(const char* classname, int index);
 
-	static void* tousertype(const char* classname, int i);
+	static void* tousertype(lua_State* InL, const char* classname, int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
 	static void addutil(const luaL_Reg funclist[], const char* tablename);

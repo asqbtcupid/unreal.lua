@@ -307,7 +307,7 @@ int32 gcfunc(lua_State *L)
 #ifdef LuaDebug
 				UTableUtil::countforgc[classname]--;
 #endif			
-				UTableUtil::rmgcref(static_cast<UObject*>(UTableUtil::tousertype(TCHAR_TO_ANSI(*classname), 1)));
+				UTableUtil::rmgcref(static_cast<UObject*>(UTableUtil::tousertype(L, TCHAR_TO_ANSI(*classname), 1)));
 			}
 		}
 	}
@@ -427,9 +427,9 @@ int ErrHandleFunc(lua_State*L)
 	return 1;
 }
 
-void* UTableUtil::tousertype(const char* classname, int i)
+void* UTableUtil::tousertype(lua_State* InL, const char* classname, int i)
 {
-	return ::tousertype(L, classname, i);
+	return ::tousertype(InL, classname, i);
 }
 
 void UTableUtil::setmeta(const char* classname, int index)

@@ -22,6 +22,7 @@ protected:
 		FString ClassNameCPP;
 		FString DelegateName;
 		UFunction* SignatureFunction;
+		bool bIsGameDelegate;
 	};
 	/** All generated script header filenames */
 	TArray<FString> AllScriptHeaders;
@@ -34,7 +35,8 @@ protected:
 	TArray<UClass*> LuaExportedClasses;
 	TArray<UClass*> GameExportedClasses;
 	TArray<FString> LuaExportedTMPClasses;
-	TArray<FString> StructNames;
+	TArray<FString> StructNamesInGame;
+	TArray<FString> StructNamesInEngine;
 	TArray<FString> EnumtNames;
 	/** Functions exported for a class */
 	TMap<UClass*, TArray<FName> > ClassExportedFunctions;
@@ -49,6 +51,7 @@ protected:
 
 	TArray<FDelegateExported> delegates;
 	bool IsGameClass(UClass * Class);
+	bool IsChangebleClass(UStruct * Class);
 	bool bExportDelegateProxy;
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();

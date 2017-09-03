@@ -3,7 +3,7 @@
 #include "extraheader.h"
 #include "tableutil.h"
 #include "DelegateLuaProxy.generated.h"
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnTakeAnyDamage : public UObject{
 	GENERATED_BODY()
 public:
@@ -42,7 +42,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnTakePointDamage : public UObject{
 	GENERATED_BODY()
 public:
@@ -81,7 +81,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnActorBeginOverlap : public UObject{
 	GENERATED_BODY()
 public:
@@ -120,7 +120,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnActorEndOverlap : public UObject{
 	GENERATED_BODY()
 public:
@@ -159,7 +159,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnBeginCursorOver : public UObject{
 	GENERATED_BODY()
 public:
@@ -198,7 +198,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnEndCursorOver : public UObject{
 	GENERATED_BODY()
 public:
@@ -237,7 +237,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnClicked : public UObject{
 	GENERATED_BODY()
 public:
@@ -276,7 +276,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnReleased : public UObject{
 	GENERATED_BODY()
 public:
@@ -315,7 +315,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnInputTouchBegin : public UObject{
 	GENERATED_BODY()
 public:
@@ -354,7 +354,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnInputTouchEnd : public UObject{
 	GENERATED_BODY()
 public:
@@ -393,7 +393,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnInputTouchEnter : public UObject{
 	GENERATED_BODY()
 public:
@@ -432,7 +432,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnInputTouchLeave : public UObject{
 	GENERATED_BODY()
 public:
@@ -471,7 +471,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnActorHit : public UObject{
 	GENERATED_BODY()
 public:
@@ -510,7 +510,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnDestroyed : public UObject{
 	GENERATED_BODY()
 public:
@@ -549,7 +549,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AActor_OnEndPlay : public UObject{
 	GENERATED_BODY()
 public:
@@ -588,7 +588,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UActorComponent_OnComponentActivated : public UObject{
 	GENERATED_BODY()
 public:
@@ -627,7 +627,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UActorComponent_OnComponentDeactivated : public UObject{
 	GENERATED_BODY()
 public:
@@ -666,7 +666,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAnimInstance_OnMontageBlendingOut : public UObject{
 	GENERATED_BODY()
 public:
@@ -705,7 +705,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAnimInstance_OnMontageStarted : public UObject{
 	GENERATED_BODY()
 public:
@@ -744,7 +744,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAnimInstance_OnMontageEnded : public UObject{
 	GENERATED_BODY()
 public:
@@ -783,7 +783,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAnimInstance_OnAllMontageInstancesEnded : public UObject{
 	GENERATED_BODY()
 public:
@@ -822,7 +822,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ULevelStreaming_OnLevelLoaded : public UObject{
 	GENERATED_BODY()
 public:
@@ -861,7 +861,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ULevelStreaming_OnLevelUnloaded : public UObject{
 	GENERATED_BODY()
 public:
@@ -900,7 +900,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ULevelStreaming_OnLevelShown : public UObject{
 	GENERATED_BODY()
 public:
@@ -939,7 +939,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ULevelStreaming_OnLevelHidden : public UObject{
 	GENERATED_BODY()
 public:
@@ -978,7 +978,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ADestructibleActor_OnActorFracture : public UObject{
 	GENERATED_BODY()
 public:
@@ -1017,7 +1017,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AEmitter_OnParticleSpawn : public UObject{
 	GENERATED_BODY()
 public:
@@ -1056,7 +1056,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AEmitter_OnParticleBurst : public UObject{
 	GENERATED_BODY()
 public:
@@ -1095,7 +1095,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AEmitter_OnParticleDeath : public UObject{
 	GENERATED_BODY()
 public:
@@ -1134,7 +1134,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AEmitter_OnParticleCollide : public UObject{
 	GENERATED_BODY()
 public:
@@ -1173,7 +1173,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AMatineeActor_OnPlay : public UObject{
 	GENERATED_BODY()
 public:
@@ -1212,7 +1212,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AMatineeActor_OnStop : public UObject{
 	GENERATED_BODY()
 public:
@@ -1251,7 +1251,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_AMatineeActor_OnPause : public UObject{
 	GENERATED_BODY()
 public:
@@ -1290,7 +1290,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ACharacter_OnReachedJumpApex : public UObject{
 	GENERATED_BODY()
 public:
@@ -1329,7 +1329,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ACharacter_MovementModeChangedDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1368,7 +1368,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_ACharacter_OnCharacterMovementUpdated : public UObject{
 	GENERATED_BODY()
 public:
@@ -1407,7 +1407,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UApplicationLifecycleComponent_ApplicationWillDeactivateDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1446,7 +1446,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UApplicationLifecycleComponent_ApplicationHasReactivatedDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1485,7 +1485,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UApplicationLifecycleComponent_ApplicationWillEnterBackgroundDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1524,7 +1524,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UApplicationLifecycleComponent_ApplicationHasEnteredForegroundDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1563,7 +1563,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UApplicationLifecycleComponent_ApplicationWillTerminateDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1602,7 +1602,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformEventsComponent_PlatformChangedToLaptopModeDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1641,7 +1641,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformEventsComponent_PlatformChangedToTabletModeDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1680,7 +1680,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USceneComponent_PhysicsVolumeChangedDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1719,7 +1719,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInterpToMovementComponent_OnInterpToReverse : public UObject{
 	GENERATED_BODY()
 public:
@@ -1758,7 +1758,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInterpToMovementComponent_OnInterpToStop : public UObject{
 	GENERATED_BODY()
 public:
@@ -1797,7 +1797,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInterpToMovementComponent_OnWaitBeginDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1836,7 +1836,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInterpToMovementComponent_OnWaitEndDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1875,7 +1875,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInterpToMovementComponent_OnResetDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -1914,7 +1914,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UProjectileMovementComponent_OnProjectileBounce : public UObject{
 	GENERATED_BODY()
 public:
@@ -1953,7 +1953,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UProjectileMovementComponent_OnProjectileStop : public UObject{
 	GENERATED_BODY()
 public:
@@ -1992,7 +1992,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAudioComponent_OnAudioFinished : public UObject{
 	GENERATED_BODY()
 public:
@@ -2031,7 +2031,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAudioComponent_OnAudioPlaybackPercent : public UObject{
 	GENERATED_BODY()
 public:
@@ -2070,7 +2070,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UForceFeedbackComponent_OnForceFeedbackFinished : public UObject{
 	GENERATED_BODY()
 public:
@@ -2109,7 +2109,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPhysicsConstraintComponent_OnConstraintBroken : public UObject{
 	GENERATED_BODY()
 public:
@@ -2148,7 +2148,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnComponentHit : public UObject{
 	GENERATED_BODY()
 public:
@@ -2187,7 +2187,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnComponentBeginOverlap : public UObject{
 	GENERATED_BODY()
 public:
@@ -2226,7 +2226,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnComponentEndOverlap : public UObject{
 	GENERATED_BODY()
 public:
@@ -2265,7 +2265,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnComponentWake : public UObject{
 	GENERATED_BODY()
 public:
@@ -2304,7 +2304,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnComponentSleep : public UObject{
 	GENERATED_BODY()
 public:
@@ -2343,7 +2343,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnBeginCursorOver : public UObject{
 	GENERATED_BODY()
 public:
@@ -2382,7 +2382,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnEndCursorOver : public UObject{
 	GENERATED_BODY()
 public:
@@ -2421,7 +2421,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnClicked : public UObject{
 	GENERATED_BODY()
 public:
@@ -2460,7 +2460,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnReleased : public UObject{
 	GENERATED_BODY()
 public:
@@ -2499,7 +2499,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnInputTouchBegin : public UObject{
 	GENERATED_BODY()
 public:
@@ -2538,7 +2538,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnInputTouchEnd : public UObject{
 	GENERATED_BODY()
 public:
@@ -2577,7 +2577,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnInputTouchEnter : public UObject{
 	GENERATED_BODY()
 public:
@@ -2616,7 +2616,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPrimitiveComponent_OnInputTouchLeave : public UObject{
 	GENERATED_BODY()
 public:
@@ -2655,7 +2655,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UParticleSystemComponent_OnParticleSpawn : public UObject{
 	GENERATED_BODY()
 public:
@@ -2694,7 +2694,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UParticleSystemComponent_OnParticleBurst : public UObject{
 	GENERATED_BODY()
 public:
@@ -2733,7 +2733,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UParticleSystemComponent_OnParticleDeath : public UObject{
 	GENERATED_BODY()
 public:
@@ -2772,7 +2772,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UParticleSystemComponent_OnParticleCollide : public UObject{
 	GENERATED_BODY()
 public:
@@ -2811,7 +2811,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UParticleSystemComponent_OnSystemFinished : public UObject{
 	GENERATED_BODY()
 public:
@@ -2850,7 +2850,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UDestructibleComponent_OnComponentFracture : public UObject{
 	GENERATED_BODY()
 public:
@@ -2889,7 +2889,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USkeletalMeshComponent_OnConstraintBroken : public UObject{
 	GENERATED_BODY()
 public:
@@ -2928,7 +2928,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UNavigationSystem_OnNavDataRegisteredEvent : public UObject{
 	GENERATED_BODY()
 public:
@@ -2967,7 +2967,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UNavigationSystem_OnNavigationGenerationFinishedDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3006,7 +3006,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationWillDeactivateDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3045,7 +3045,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationHasReactivatedDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3084,7 +3084,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationWillEnterBackgroundDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3123,7 +3123,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationHasEnteredForegroundDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3162,7 +3162,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationWillTerminateDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3201,7 +3201,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationRegisteredForRemoteNotificationsDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3240,7 +3240,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationRegisteredForUserNotificationsDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3279,7 +3279,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationFailedToRegisterForRemoteNotificationsDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3318,7 +3318,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationReceivedRemoteNotificationDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3357,7 +3357,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationReceivedLocalNotificationDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3396,7 +3396,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UPlatformGameInstance_ApplicationReceivedScreenOrientationChangedNotificationDelegate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3435,7 +3435,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UCanvasRenderTarget2D_OnCanvasRenderTargetUpdate : public UObject{
 	GENERATED_BODY()
 public:
@@ -3474,7 +3474,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAsyncTaskDownloadImage_OnSuccess : public UObject{
 	GENERATED_BODY()
 public:
@@ -3513,7 +3513,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UAsyncTaskDownloadImage_OnFail : public UObject{
 	GENERATED_BODY()
 public:
@@ -3552,7 +3552,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UDragDropOperation_OnDrop : public UObject{
 	GENERATED_BODY()
 public:
@@ -3591,7 +3591,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UDragDropOperation_OnDragCancelled : public UObject{
 	GENERATED_BODY()
 public:
@@ -3630,7 +3630,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UDragDropOperation_OnDragged : public UObject{
 	GENERATED_BODY()
 public:
@@ -3669,7 +3669,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UWidgetAnimation_OnAnimationStarted : public UObject{
 	GENERATED_BODY()
 public:
@@ -3708,7 +3708,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UWidgetAnimation_OnAnimationFinished : public UObject{
 	GENERATED_BODY()
 public:
@@ -3747,7 +3747,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UWidgetInteractionComponent_OnHoveredWidgetChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -3786,7 +3786,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UComboBoxString_OnSelectionChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -3825,7 +3825,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UComboBoxString_OnOpening : public UObject{
 	GENERATED_BODY()
 public:
@@ -3864,7 +3864,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UEditableText_OnTextChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -3903,7 +3903,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UEditableText_OnTextCommitted : public UObject{
 	GENERATED_BODY()
 public:
@@ -3942,7 +3942,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UEditableTextBox_OnTextChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -3981,7 +3981,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UEditableTextBox_OnTextCommitted : public UObject{
 	GENERATED_BODY()
 public:
@@ -4020,7 +4020,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UExpandableArea_OnExpansionChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4059,7 +4059,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInputKeySelector_OnKeySelected : public UObject{
 	GENERATED_BODY()
 public:
@@ -4098,7 +4098,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UInputKeySelector_OnIsSelectingKeyChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4137,7 +4137,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USlider_OnMouseCaptureBegin : public UObject{
 	GENERATED_BODY()
 public:
@@ -4176,7 +4176,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USlider_OnMouseCaptureEnd : public UObject{
 	GENERATED_BODY()
 public:
@@ -4215,7 +4215,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USlider_OnControllerCaptureBegin : public UObject{
 	GENERATED_BODY()
 public:
@@ -4254,7 +4254,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USlider_OnControllerCaptureEnd : public UObject{
 	GENERATED_BODY()
 public:
@@ -4293,7 +4293,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USlider_OnValueChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4332,7 +4332,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USpinBox_OnValueChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4371,7 +4371,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USpinBox_OnValueCommitted : public UObject{
 	GENERATED_BODY()
 public:
@@ -4410,7 +4410,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USpinBox_OnBeginSliderMovement : public UObject{
 	GENERATED_BODY()
 public:
@@ -4449,7 +4449,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_USpinBox_OnEndSliderMovement : public UObject{
 	GENERATED_BODY()
 public:
@@ -4488,7 +4488,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UButton_OnClicked : public UObject{
 	GENERATED_BODY()
 public:
@@ -4527,7 +4527,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UButton_OnPressed : public UObject{
 	GENERATED_BODY()
 public:
@@ -4566,7 +4566,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UButton_OnReleased : public UObject{
 	GENERATED_BODY()
 public:
@@ -4605,7 +4605,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UButton_OnHovered : public UObject{
 	GENERATED_BODY()
 public:
@@ -4644,7 +4644,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UButton_OnUnhovered : public UObject{
 	GENERATED_BODY()
 public:
@@ -4683,7 +4683,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UCheckBox_OnCheckStateChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4722,7 +4722,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UMenuAnchor_OnMenuOpenChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4761,7 +4761,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UMultiLineEditableText_OnTextChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4800,7 +4800,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UMultiLineEditableText_OnTextCommitted : public UObject{
 	GENERATED_BODY()
 public:
@@ -4839,7 +4839,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UMultiLineEditableTextBox_OnTextChanged : public UObject{
 	GENERATED_BODY()
 public:
@@ -4878,7 +4878,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UMultiLineEditableTextBox_OnTextCommitted : public UObject{
 	GENERATED_BODY()
 public:
@@ -4917,7 +4917,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UFoliageInstancedStaticMeshComponent_OnInstanceTakePointDamage : public UObject{
 	GENERATED_BODY()
 public:
@@ -4956,7 +4956,7 @@ public:
 	}
 };
 
-UCLASS(meta=(Lua=1))
+UCLASS(meta=(Lua=2))
 class UDelegate_UFoliageInstancedStaticMeshComponent_OnInstanceTakeRadialDamage : public UObject{
 	GENERATED_BODY()
 public:
