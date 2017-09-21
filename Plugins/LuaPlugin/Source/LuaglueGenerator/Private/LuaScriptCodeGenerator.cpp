@@ -336,7 +336,7 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 	}
 	return bCanExport;
 }
-
+ 
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
 	if (NotSupportedClassFunction.Contains("*." + Function->GetName()) || NotSupportedClassFunction.Contains(ClassNameCPP + "." + Function->GetName()))
@@ -345,6 +345,9 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 		return false;
 	
 	if (Class->ClassFlags & CLASS_Interface && Function->GetName() == "ExecuteUbergraph")
+		return false;
+
+	if (Function->HasAnyFunctionFlags(FUNC_EditorOnly))
 		return false;
 
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
@@ -816,6 +819,15 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 			FString name = p->GetName();
 			if (name == "PathUpdatedNotifier")
 				return false;
+			for (TFieldIterator<UProperty> ParamIt(p->SignatureFunction); ParamIt; ++ParamIt)
+			{
+				UProperty* Param = *ParamIt;
+				if (!CanExportProperty("", nullptr, Param))
+				{
+					return false;
+				}
+			}
+
 		}
 		return IsPropertyTypeSupported(Property);
 	}

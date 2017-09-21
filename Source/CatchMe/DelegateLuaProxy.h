@@ -2929,6 +2929,45 @@ public:
 };
 
 UCLASS(meta=(Lua=2))
+class UDelegate_USkeletalMeshComponent_OnAnimInitialized : public UObject{
+	GENERATED_BODY()
+public:
+	TSet<int> LuaCallBacks;
+	UDelegate_USkeletalMeshComponent_OnAnimInitialized() {};
+	template<typename T>
+	void Init(T& theDelegate){
+		UTableUtil::addgcref((UObject*)this);
+		theDelegate.AddDynamic(this, &UDelegate_USkeletalMeshComponent_OnAnimInitialized::CallBack);
+	}
+
+	UFUNCTION()
+	void CallBack(){
+		for (auto v : LuaCallBacks){
+			UTableUtil::call(v);
+		}
+	}
+
+	UFUNCTION()
+	int Add() {int r = UTableUtil::pushluafunc(2);LuaCallBacks.Add(r);return r;}
+	UFUNCTION()
+	void Remove(int32 r)
+	{
+		if(LuaCallBacks.Contains(r)){
+			UTableUtil::unref(r);
+			LuaCallBacks.Remove(r);
+		}
+	}
+	UFUNCTION()
+	void Destroy() {
+		for(auto v : LuaCallBacks){
+			UTableUtil::unref(v);
+		}
+		LuaCallBacks.Reset();
+		UTableUtil::rmgcref(this);
+	}
+};
+
+UCLASS(meta=(Lua=2))
 class UDelegate_UNavigationSystem_OnNavDataRegisteredEvent : public UObject{
 	GENERATED_BODY()
 public:
@@ -3331,9 +3370,9 @@ public:
 	}
 
 	UFUNCTION()
-	void CallBack( FString inString){
+	void CallBack( FString inString, EApplicationState::Type inAppState){
 		for (auto v : LuaCallBacks){
-			UTableUtil::call(v,  inString);
+			UTableUtil::call(v,  inString, (int)(inAppState));
 		}
 	}
 
@@ -3370,9 +3409,9 @@ public:
 	}
 
 	UFUNCTION()
-	void CallBack( FString inString, int32 inInt){
+	void CallBack( FString inString, int32 inInt, EApplicationState::Type inAppState){
 		for (auto v : LuaCallBacks){
-			UTableUtil::call(v,  inString, inInt);
+			UTableUtil::call(v,  inString, inInt, (int)(inAppState));
 		}
 	}
 
@@ -4465,6 +4504,45 @@ public:
 	void CallBack( float InValue){
 		for (auto v : LuaCallBacks){
 			UTableUtil::call(v,  InValue);
+		}
+	}
+
+	UFUNCTION()
+	int Add() {int r = UTableUtil::pushluafunc(2);LuaCallBacks.Add(r);return r;}
+	UFUNCTION()
+	void Remove(int32 r)
+	{
+		if(LuaCallBacks.Contains(r)){
+			UTableUtil::unref(r);
+			LuaCallBacks.Remove(r);
+		}
+	}
+	UFUNCTION()
+	void Destroy() {
+		for(auto v : LuaCallBacks){
+			UTableUtil::unref(v);
+		}
+		LuaCallBacks.Reset();
+		UTableUtil::rmgcref(this);
+	}
+};
+
+UCLASS(meta=(Lua=2))
+class UDelegate_UScrollBox_OnUserScrolled : public UObject{
+	GENERATED_BODY()
+public:
+	TSet<int> LuaCallBacks;
+	UDelegate_UScrollBox_OnUserScrolled() {};
+	template<typename T>
+	void Init(T& theDelegate){
+		UTableUtil::addgcref((UObject*)this);
+		theDelegate.AddDynamic(this, &UDelegate_UScrollBox_OnUserScrolled::CallBack);
+	}
+
+	UFUNCTION()
+	void CallBack( float CurrentOffset){
+		for (auto v : LuaCallBacks){
+			UTableUtil::call(v,  CurrentOffset);
 		}
 	}
 
