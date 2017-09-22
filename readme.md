@@ -65,6 +65,7 @@ Q2. Encounter lots of compile error in DelegateLuaProxy.h
 A2. In order to let the UHT run again.just make tiny modify in what ever a .h file in your project(such as add an empty line),Then compile the project again, the compile error will be disappear.
 
 Q3.Add module to luaconfig.ini,Then encouter linker error.
+
 A3.add module name to PublicDependencyModuleNames or PrivateDependencyModuleNames in project.build.cs.If error still exist,Config luaconfig.ini to stop exporting relevant class or function.
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
