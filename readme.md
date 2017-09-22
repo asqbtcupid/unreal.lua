@@ -4,7 +4,7 @@ This can be used to generate lua binding code for UE4 Engine.That means you can 
 ## Supported PlatForm
 Windows, Mac, Android(test with samsung edge s7),IOS(test with iphone 6)
 ## How to build
-This plugin can be used in UE4 4.16 version（4.17.1 is ok too, But needed to compile twice at beginning, see FAQ.Q2 below）.Must be Source code compiled engine,Other wise you have to build the plugin by yourself.
+This plugin can be used in UE4 4.17 version.Must be Source code compiled engine,Other wise you have to build the plugin by yourself.
 
 It's a demo,so right click CatchMe.uproject then Generate visual studio project.
 
@@ -63,6 +63,9 @@ A1. Use source code build ue4 engine,Or try to package the Plugins/LuaPlugin man
 Q2. Encounter lots of compile error in DelegateLuaProxy.h
 
 A2. In order to let the UHT run again.just make tiny modify in what ever a .h file in your project(such as add an empty line),Then compile the project again, the compile error will be disappear.
+
+Q3.Add module to luaconfig.ini,Then encouter linker error.
+A3.add module name to PublicDependencyModuleNames or PrivateDependencyModuleNames in project.build.cs.If error still exist,Config luaconfig.ini to stop exporting relevant class or function.
 ## Finally
 1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
 
