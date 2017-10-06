@@ -13,15 +13,12 @@ function testUmg:Ctor(controller)
 	self:Wnd("img_fog"):SetBrushFromTexture(controller.m_FogMgr.Tx_Fog)
 
 end
-local hehe
 function testUmg:PlayAnim()
-	hehe = self.Controller.PlayCharacter.OnEndPlay
-	hehe:Add(MakeCallBack(A_, "fuck you"))
+	A_("you click button")
 end
 
 function testUmg:ClickClear( )
-	self.Controller.PlayCharacter:K2_DestroyActor()
-	-- self.Controller:SpawnPlayer()
+	A_("you click button")
 end
 
 function testUmg:Txt1(content)
