@@ -5,32 +5,30 @@
 #include "traitweakclass.h"
 #include "traitstructclass.h"
 #include "TableUtil.generated.h"
- 
-#define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
-#define LuaCall(functionname, ptr, ...) UTableUtil::bIsInsCall = true, \
-					UTableUtil::call("Call", functionname, ptr, ##__VA_ARGS__);
 
-#define LuaCallr(ret, functionname, ptr,...) UTableUtil::bIsInsCall = true, \
-					UTableUtil::callr<ret>("Call", functionname, ptr, ##__VA_ARGS__);
+#define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
+#define LuaCall(functionname, ptr, ...) UTableUtil::inscall("Call", functionname, ptr, ##__VA_ARGS__);
+
+#define LuaCallr(ret, functionname, ptr,...) UTableUtil::inscallr<ret>("Call", functionname, ptr, ##__VA_ARGS__);
 
 #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, ##__VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
- 
+
 struct EnumItem;
 DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
 #define LuaDebug 0 
 using namespace std;
-using luafunc = int( struct lua_State* );
+using luafunc = int(struct lua_State*);
 
 void* tousertype(lua_State* L, const char* classname, int i);
 int ErrHandleFunc(lua_State*L);
 template<class T>
-class popiml{
-	public:
-		static T pop(lua_State *L, int index)
-		{
-			return *(T*)tousertype(L, "", index);
-		}
+class popiml {
+public:
+	static T pop(lua_State *L, int index)
+	{
+		return *(T*)tousertype(L, "", index);
+	}
 };
 template<class T>
 class popiml<T*> {
@@ -64,15 +62,15 @@ public:
 	}
 };
 
-	
-template<> class popiml<int>{
+
+template<> class popiml<int> {
 public:
-	static int pop(lua_State *L, int index){return (int)lua_tointeger(L, index);}
+	static int pop(lua_State *L, int index) { return (int)lua_tointeger(L, index); }
 };
 
 template<> class popiml<bool> {
 public:
-	static bool pop(lua_State *L, int index){return !!(lua_toboolean(L, index));}
+	static bool pop(lua_State *L, int index) { return !!(lua_toboolean(L, index)); }
 };
 
 template<> class popiml<FName> {
@@ -85,7 +83,7 @@ public:
 };
 template<> class popiml<FString> {
 public:
-	static FString pop(lua_State *L, int index) { return ANSI_TO_TCHAR(luaL_checkstring(L, index));}
+	static FString pop(lua_State *L, int index) { return ANSI_TO_TCHAR(luaL_checkstring(L, index)); }
 };
 template<> class popiml<float> {
 public:
@@ -116,14 +114,14 @@ class UTableUtil : public UBlueprintFunctionLibrary
 public:
 	static LuaTickObject* PtrTickObject;
 	static lua_State* L;
-// temporarily for multi gameinstance, later I will add Multi Lua_State
+	// temporarily for multi gameinstance, later I will add Multi Lua_State
 	static int32 ManualInitCount;
 	static bool HasManualInit;
-	static bool bIsInsCall;
+	// static bool bIsInsCall;
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
 #endif
-	 UTableUtil();
+	UTableUtil();
 	static void addmodule(const char* classname);
 	static void useCustomLoader();
 	static void init(bool IsManual = false);
@@ -142,14 +140,15 @@ public:
 	static int popluafunc(int index = -1);
 	static void unref(int r);
 
-	static UObject* FObjectFinder( UClass* Class, FString PathName );
+	static UObject* FObjectFinder(UClass* Class, FString PathName);
 
 	static void log(const FString& content);
 
 	static void shutdown();
 	static void shutdown_internal();
 	static bool existdata(void * p);
-	
+	static bool existluains(void * p);
+
 	static void rmgcref(UObject* p);
 	static void addgcref(UObject* p);
 
@@ -160,7 +159,8 @@ public:
 	template<typename T>
 	static int push(T* value);
 
-	static void pushclass(const char* classname, void* p, bool bgcrecord = false);
+	static void pushuobject(lua_State *inL, void* p, bool bgcrecord = false);
+	static void pushstruct(lua_State *inL, const char* structname, void* p, bool bgcrecord = false);
 	static int push(int value);
 	static int push(uint8 value);
 	static int push(float value);
@@ -173,7 +173,7 @@ public:
 #ifdef LuaDebug
 	static void testtemplate();
 #endif
-	template<class T> 
+	template<class T>
 	static int push(const TArray<T>& value);
 
 	template<class T>
@@ -185,10 +185,8 @@ public:
 	template<class T>
 	static int push(const TWeakObjectPtr<T>& value);
 
-	
-
 	template<typename T>
-	static T pop(int index) 
+	static T pop(int index)
 	{
 		auto result = popiml<T>::pop(L, index);
 		lua_pop(L, 1);
@@ -216,7 +214,7 @@ public:
 		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
-		bIsInsCall = false;
+		// 		bIsInsCall = false;
 		if (lua_pcall(L, ParamCount, 1, -(ParamCount + 2)))
 		{
 			log(lua_tostring(L, -1));
@@ -233,7 +231,7 @@ public:
 		lua_pushcfunction(L, ErrHandleFunc);
 		lua_getfield(L, LUA_GLOBALSINDEX, funcname);
 		int32 ParamCount = push(Forward<T>(args)...);
-		bIsInsCall = false;
+		// 		bIsInsCall = false;
 		if (lua_pcall(L, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(lua_tostring(L, -1));
@@ -255,37 +253,66 @@ public:
 		lua_pushcfunction(L, ErrHandleFunc);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, funcid);
 		int32 ParamCount = push(Forward<T>(args)...);
-		if (lua_pcall(L, ParamCount, 0, -(ParamCount+2)))
+		if (lua_pcall(L, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(lua_tostring(L, -1));
 		}
 		lua_pop(L, 1);
 	}
+
+	template<class ReturnType, class UObjectPtrType, class... T>
+	static ReturnType inscallr(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
+	{
+		if (L == nullptr)
+			init();
+
+		if (ptr == nullptr)
+			return ReturnType();
+
+		if (!existluains((void*)(ptr)))
+			return ReturnType();
+		return callr<ReturnType>(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
+	}
+
+	template<class UObjectPtrType, class... T>
+	static void inscall(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
+	{
+		if (L == nullptr)
+			init();
+
+		if (ptr == nullptr)
+			return;
+
+		if (!existluains((void*)(ptr)))
+			return;
+		call(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
+	}
 };
 
+//only for UObject
 template<typename T>
 int UTableUtil::push(T* value)
 {
-	UClass* Class = T::StaticClass();
-	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
-	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)value);
+	// 	UClass* Class = T::StaticClass();
+	// 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
+	pushuobject(L, (void*)value);
 	return 1;
 }
 
 template<typename T>
 int UTableUtil::push(const T& value)
 {
-	pushclass(traitstructclass<T>::name(), (void*)(&value));
+	pushstruct(L, traitstructclass<T>::name(), (void*)(&value));
 	return 1;
 }
 
-template<class T> 
+template<class T>
 int UTableUtil::push(const TArray<T>& value)
 {
 	lua_newtable(L);
 	for (int i = 0; i < value.Num(); i++)
 	{
-		push(i+1);
+		push(i + 1);
 		push(value[i]);
 		lua_rawset(L, -3);
 	}
@@ -296,7 +323,7 @@ template<class T>
 int UTableUtil::push(const TSet<T>& value)
 {
 	lua_newtable(L);
-	for (auto& ele:value)
+	for (auto& ele : value)
 	{
 		push(ele);
 		push(true);
@@ -326,7 +353,7 @@ int UTableUtil::push(const TWeakObjectPtr<T>& value)
 	UClass* Class = T::StaticClass();
 	FString namecpp = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
 	namecpp = "TWeakObjectPtr_" + namecpp;
-	pushclass(TCHAR_TO_ANSI(*namecpp), (void*)weakObj, true);
+	pushstruct(L, TCHAR_TO_ANSI(*namecpp), (void*)weakObj, true);
 	return 1;
 }
 

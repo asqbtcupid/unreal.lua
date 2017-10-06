@@ -72,3 +72,14 @@ void ULuautils::AddGCRef(UObject*p)
 {
 	UTableUtil::addgcref(p);
 }
+
+void ULuautils::Ctor(const UObject* WorldContextObject, const FString& LuaClassName)
+{
+	UTableUtil::call("Ctor", LuaClassName, WorldContextObject);
+}
+
+void ULuautils::Call(const UObject* WorldContextObject, const FString& FunctionName)
+{
+	UTableUtil::inscall("Call", TCHAR_TO_ANSI(*FunctionName), WorldContextObject);
+}
+

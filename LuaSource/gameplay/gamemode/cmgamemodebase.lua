@@ -4,6 +4,7 @@ function CMGameModeBase:Ctor()
 end
 
 function CMGameModeBase:BeginPlay()
+	CppObjectBase.BeginPlay(self)
 end
 
 function CMGameModeBase:SetDefaultPawn(defaultPawn)

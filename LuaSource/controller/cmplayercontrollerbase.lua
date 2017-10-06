@@ -5,7 +5,7 @@ function CMPlayerControllerBase:Ctor( )
 end
 
 function CMPlayerControllerBase:BeginPlay()
-
+	CppObjectBase.BeginPlay(self)
 end
 
 function CMPlayerControllerBase:PlayerTick(DeltaTime)

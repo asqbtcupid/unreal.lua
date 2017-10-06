@@ -57,4 +57,9 @@ public:
 
 	UFUNCTION()
 		static void AddGCRef(UObject*p);
+
+	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (WorldContext = "WorldContextObject"))
+		static void Ctor(const UObject* WorldContextObject, const FString& LuaClassName);
+	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (WorldContext = "WorldContextObject"))
+		static void Call(const UObject* WorldContextObject, const FString& FunctionName);
 };

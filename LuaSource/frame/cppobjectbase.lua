@@ -4,17 +4,29 @@ CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
 local LevelActors = {}
 function CppObjectBase:EndPlay(Reason)
-	self:Release()
+	if not self.m_HasEndPlay then
+		self.m_HasEndPlay = true
+		LevelActors[self] = nil
+		self:Release()
+	end
 end
 
 function CppObjectBase:Destroy()
 	for v in pairs(self._gc_list) do
-		v:Release()
+		if v.Release then
+			v:Release()
+		end
 	end
-	LevelActors[self] = nil
-	-- if self._cppinstance_ then
-	-- 	self._cppinstance_:Destroy()
-	-- end
+end
+
+function CppObjectBase:BeginPlay()
+	if not self.m_HasBeginPlay then
+		self.m_HasBeginPlay = true
+		local OnEndPlayDelegate = self.OnEndPlay
+		self:GC(OnEndPlayDelegate)
+		OnEndPlayDelegate:Add(self.EndPlay)
+		LevelActors[self] = true
+	end
 end
 
 function CppObjectBase:GetName()
@@ -32,9 +44,9 @@ CppObjectBase.New = CppObjectBase.NewCpp
 
 function CppObjectBase:Ctor()
 	self._gc_list = {}
-	if AActor.Cast(self) then
-		LevelActors[self] = true
-	end
+	-- if AActor.Cast(self) then
+	-- 	LevelActors[self] = true
+	-- end
 end
 
 function CppObjectBase:GC(obj)

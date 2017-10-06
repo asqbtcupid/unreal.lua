@@ -5,6 +5,7 @@ function CatchMeAIController:Ctor()
 end
 
 function CatchMeAIController:BeginPlay()
+	CppObjectBase.BeginPlay(self)
 	if self.Pawn then
 		self.Pawn:GC(self)
 	end

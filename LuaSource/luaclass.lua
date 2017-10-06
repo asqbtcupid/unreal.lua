@@ -48,7 +48,8 @@ function Object:IsChildOf(parent)
 end
 
 function Object:Super()
-	return self._parentclass
+	local meta = self._meta_
+	return meta and meta._parentclass
 end
 
 function Object:Ins()
@@ -99,7 +100,8 @@ function Object:Release(...)
 		error("not ins")
 	end
 	if self._has_destroy_ then
-		error("double Destroy")
+		-- error("double Destroy "..tostring(self).." "..tostring(self.classname).." "..tostring(self.m_HasEndPlay))
+		return
 	end
 	InternDestroy(self._meta_, self, ...)
 	self._has_destroy_ = true
@@ -109,11 +111,14 @@ end
 local function __indexcpp(t, k)
 	local class = getmetatable(t)
 	local classtemp = class
+	local cppclass = class._cppclass
 	while class do
 		local v = rawget(class, k)
 		if v then return v end 
 		class = rawget(class, "_parentclass") 
 	end
+	local cppattr = cppclass[k]
+	if cppattr then return cppattr end
 
 	local getfunc = rawget(classtemp, "Get_"..k)
 	if getfunc then return getfunc(t) end

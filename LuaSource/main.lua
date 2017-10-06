@@ -1,6 +1,6 @@
 function Init(IsMannual)
     package.path = package.path .. ";".._luadir.."/?.lua"
-    package.cpath = package.cpath .. ";".._luadir.."/?.dll"
+    -- package.cpath = package.cpath .. ";".._luadir.."/?.dll"
     require "frame.initrequire"
     local function ShowMem()
         collectgarbage("collect")
@@ -25,8 +25,12 @@ function InitLuahotupdate()
     HU.Init("hotupdatelist", {_luadir}, A_)
     TimerMgr:Get():On(HU.Update):Time(1):Fire()
 end
-
+local IsDebug
 function Tick(delta)
+    if IsDebug then
+        for i = 1, 10000000 do
+        end
+    end
     local function f()
         TimerMgr:Get():Tick(delta)
     end

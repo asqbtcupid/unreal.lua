@@ -13,7 +13,7 @@ function CMPlayerController:HandleInput(name, ...)
 end
 
 function CMPlayerController:BeginPlay( )
-	self:Super().BeginPlay(self)
+	CMPlayerControllerBase.BeginPlay(self)
 	if self:IsAuth() then
 		self:Timer(self.SpawnPlayer, self):Time(1):Num(1)
 	else

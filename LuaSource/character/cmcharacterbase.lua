@@ -22,7 +22,7 @@ function CMCharacterBase:SkillFsm(name)
 end
 
 function CMCharacterBase:BeginPlay()
-	
+	CppObjectBase.BeginPlay(self)
 end
 
 function CMCharacterBase:PostInitializeComponents()

@@ -8,7 +8,7 @@ function CMGameMode:Ctor()
 end
 
 function CMGameMode:BeginPlay()
-
+	CMGameModeBase.BeginPlay(self)
 end
 
 return CMGameMode

@@ -13,7 +13,7 @@ LuaTickObject* UTableUtil::PtrTickObject = nullptr;
 lua_State* UTableUtil::L = nullptr;
 int32 UTableUtil::ManualInitCount = 0;
 bool UTableUtil::HasManualInit = false;
-bool UTableUtil::bIsInsCall = false;
+// bool UTableUtil::bIsInsCall = false;
 
 #ifdef LuaDebug
 TMap<FString, int> UTableUtil::countforgc;
@@ -40,7 +40,7 @@ static int32 LuaPanic(lua_State *L)
 
 FString GetLuaCodeFromPath(FString FilePath)
 {
-		FString FirstLine = FString("--") + FilePath + FString("\n");
+	FString FirstLine = FString("--") + FilePath + FString("\n");
 
 	const static FString Prefix = "/Game/LuaSource/";
 	int32 IndexStart = 0;
@@ -58,7 +58,7 @@ FString GetLuaCodeFromPath(FString FilePath)
 	FilePath = Prefix + FilePath;
 	ULuaScript* CodeObject = LoadObject<ULuaScript>(nullptr, *FilePath);
 	if (CodeObject) {
-		return FirstLine+CodeObject->Code;
+		return FirstLine + CodeObject->Code;
 	}
 	return "";
 }
@@ -67,7 +67,7 @@ int CustomLuaLoader(lua_State* L)
 {
 	FString FilePath = lua_tostring(L, -1);
 	FString Code = GetLuaCodeFromPath(FilePath);
-	if(!Code.IsEmpty())
+	if (!Code.IsEmpty())
 	{
 		luaL_loadstring(L, TCHAR_TO_ANSI(*Code));
 		return 1;
@@ -102,16 +102,16 @@ void UTableUtil::init(bool IsManual)
 		else
 			return;
 	}
-// 	InitClassMap();
+	// 	InitClassMap();
 	auto l = lua_newstate(LuaAlloc, nullptr);
 	if (l) lua_atpanic(l, &LuaPanic);
 	luaL_openlibs(l);
 	L = l;
 	FString gameDir = FPaths::ConvertRelativePathToFull(FPaths::GameDir());
-	FString luaDir = FPaths::ConvertRelativePathToFull(FPaths::GameDir() /TEXT("LuaSource"));
+	FString luaDir = FPaths::ConvertRelativePathToFull(FPaths::GameDir() / TEXT("LuaSource"));
 
 #if  WITH_EDITOR
- 	FString mainFilePath = luaDir / TEXT("main.lua");
+	FString mainFilePath = luaDir / TEXT("main.lua");
 	if (luaL_dofile(l, TCHAR_TO_ANSI(*mainFilePath)))
 	{
 		UTableUtil::log(FString(lua_tostring(L, -1)));
@@ -139,7 +139,10 @@ void UTableUtil::init(bool IsManual)
 
 		//set table for need Destroy data
 		lua_newtable(L);
-		lua_setfield(L, LUA_REGISTRYINDEX, "_needgcdata");
+		lua_setfield(L, LUA_REGISTRYINDEX, "_needgcobject");
+
+		lua_newtable(L);
+		lua_setfield(L, LUA_REGISTRYINDEX, "_needgcstruct");
 
 		lua_newtable(L);
 		lua_setfield(L, LUA_REGISTRYINDEX, "_luacallback");
@@ -167,7 +170,7 @@ void UTableUtil::init(bool IsManual)
 		//register all function
 		ULuaLoad::LoadAll(L);
 		ULuaLoadGame::LoadAll(L);
-		if (PtrTickObject ==nullptr)
+		if (PtrTickObject == nullptr)
 			PtrTickObject = new LuaTickObject();
 		call("Init", IsManual);
 #ifdef LuaDebug
@@ -212,7 +215,7 @@ int32 indexFunc(lua_State* L)
 {
 	lua_getmetatable(L, 1);
 	lua_pushvalue(L, 2);
-	lua_rawget(L,-2);
+	lua_rawget(L, -2);
 	if (lua_isnil(L, -1))
 	{
 		FString property = FString(lua_tostring(L, 2));
@@ -270,10 +273,10 @@ int32 cast(lua_State* L)
 int32 gcfunc(lua_State *L)
 {
 	auto u = (void**)lua_touserdata(L, -1);
-	lua_getfield(L, LUA_REGISTRYINDEX, "_needgcdata");
+	lua_getfield(L, LUA_REGISTRYINDEX, "_needgcobject");
 	lua_pushlightuserdata(L, *u);
 	lua_rawget(L, -2);
-	if ( !lua_isnil(L, -1) )
+	if (!lua_isnil(L, -1))
 	{
 		lua_pop(L, 1);
 		lua_pushlightuserdata(L, *u);
@@ -283,32 +286,49 @@ int32 gcfunc(lua_State *L)
 		lua_getfield(L, -1, "Destroy");
 		if (lua_iscfunction(L, -1))
 		{
-			lua_getmetatable(L, 1);
-			lua_getfield(L, -1, "classname");
-			FString n = lua_tostring(L, -1);
-			lua_pop(L, 2);
-#ifdef LuaDebug
-			UTableUtil::countforgc[n]--;
-#endif
 			lua_pushvalue(L, 1);
 			if (lua_pcall(L, 1, 0, 0))
 			{
 				UTableUtil::log(FString(lua_tostring(L, -1)));
 			}
 		}
-		else
+#ifdef LuaDebug
+		lua_getmetatable(L, 1);
+		lua_getfield(L, -1, "classname");
+		FString n = lua_tostring(L, -1);
+		lua_pop(L, 2);
+		UTableUtil::countforgc[n]--;
+#endif
+		UTableUtil::rmgcref(static_cast<UObject*>(*u));
+	}
+	else
+	{
+		lua_getfield(L, LUA_REGISTRYINDEX, "_needgcstruct");
+		lua_pushlightuserdata(L, *u);
+		lua_rawget(L, -2);
+		if (!lua_isnil(L, -1))
 		{
 			lua_pop(L, 1);
+			lua_pushlightuserdata(L, *u);
+			lua_pushnil(L);
+			lua_rawset(L, -3);
+			lua_getmetatable(L, 1);
+			lua_getfield(L, -1, "Destroy");
+			if (lua_iscfunction(L, -1))
+			{
+				lua_pushvalue(L, 1);
+				if (lua_pcall(L, 1, 0, 0))
+				{
+					UTableUtil::log(FString(lua_tostring(L, -1)));
+				}
+			}
+#ifdef LuaDebug
 			lua_getmetatable(L, 1);
 			lua_getfield(L, -1, "classname");
-			FString classname = lua_tostring(L, -1);
-			if (classname == "UClass" || classname == "UObject")
-			{
-#ifdef LuaDebug
-				UTableUtil::countforgc[classname]--;
-#endif			
-				UTableUtil::rmgcref(static_cast<UObject*>(UTableUtil::tousertype(L, TCHAR_TO_ANSI(*classname), 1)));
-			}
+			FString n = lua_tostring(L, -1);
+			lua_pop(L, 2);
+			UTableUtil::countforgc[n]--;
+#endif
 		}
 	}
 	return 0;
@@ -379,8 +399,8 @@ void* tousertype(lua_State* L, const char* classname, int i)
 	else if (lua_istable(L, i))
 	{
 		if (i < 0)
-			i = lua_gettop(L) + i+1;
-		lua_pushstring(L,  "_cppinstance_");
+			i = lua_gettop(L) + i + 1;
+		lua_pushstring(L, "_cppinstance_");
 		lua_rawget(L, i);
 		if (lua_isnil(L, -1))
 		{
@@ -437,14 +457,14 @@ void UTableUtil::setmeta(const char* classname, int index)
 	luaL_getmetatable(L, classname);
 	if (lua_istable(L, -1))
 	{
-		lua_setmetatable(L, index-1);
+		lua_setmetatable(L, index - 1);
 	}
 	else
 	{
 		lua_pop(L, 1);
 		UTableUtil::addmodule(classname);
 		luaL_getmetatable(L, classname);
-		lua_setmetatable(L, index-1);
+		lua_setmetatable(L, index - 1);
 	}
 }
 int UTableUtil::push(uint8 value)
@@ -497,43 +517,46 @@ int UTableUtil::push(const char* value)
 	return 1;
 }
 
-void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
+void UTableUtil::pushuobject(lua_State *inL, void* p, bool bgcrecord)
 {
 	if (p == nullptr)
 	{
-		lua_pushnil(L);
+		lua_pushnil(inL);
 		return;
 	}
-// should do in glue code , later
-	bool bIsActorOrObject = (classname[0] == 'U' || classname[0] == 'A');
 	if (!existdata(p))
 	{
-		*(void**)lua_newuserdata(L, sizeof(void *)) = p;
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
 
-		lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
-		lua_pushlightuserdata(L, p);
-		lua_pushvalue(L, -3);
-		lua_rawset(L, -3);
-		lua_pop(L, 1);
-		if (bgcrecord || bIsActorOrObject)
-		{
-			lua_getfield(L, LUA_REGISTRYINDEX, "_needgcdata");
-			lua_pushlightuserdata(L, p);
-			lua_pushboolean(L, true);
-			lua_rawset(L, -3);
-			lua_pop(L, 1);
+		lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+		lua_pushlightuserdata(inL, p);
+		lua_pushvalue(inL, -3);
+		lua_rawset(inL, -3);
+		lua_pop(inL, 1);
+
+
+		lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcobject");
+		lua_pushlightuserdata(inL, p);
+		lua_pushboolean(inL, true);
+		lua_rawset(inL, -3);
+		lua_pop(inL, 1);
+
+
+		UObject* UObject_p = static_cast<UObject*>(p);
+		UClass* Class = UObject_p->GetClass();
+		while (!Class->HasAnyClassFlags(CLASS_Native))
+			Class = Class->GetSuperClass();
+		const char* classname = TCHAR_TO_ANSI(*FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName()));
 #ifdef LuaDebug
-			if (countforgc.Contains(classname))  
-				countforgc[classname]++;
-			else
-				countforgc.Add(classname, 1);
+		if (countforgc.Contains(classname))
+			countforgc[classname]++;
+		else
+			countforgc.Add(classname, 1);
 #endif
-		}
-		if (!bIsInsCall && bIsActorOrObject)
-			addgcref(static_cast<UObject*>(p));
+		addgcref(static_cast<UObject*>(p));
 		setmeta(classname, -1);
 	}
-	else if (bIsActorOrObject)
+	else
 	{
 		lua_getfield(L, LUA_GLOBALSINDEX, "_objectins2luatable");
 		lua_pushvalue(L, -2);
@@ -541,18 +564,6 @@ void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
 		if (lua_isnil(L, -1))
 		{
 			lua_pop(L, 2);
-#ifdef LuaDebug
-			lua_getfield(L, -1, "classname");
-			FString oldname = lua_tostring(L, -1);
-			countforgc[oldname]--;
-			if (countforgc.Contains(classname))
-				countforgc[classname]++;
-			else
-				countforgc.Add(classname, 1);
-			lua_pop(L, 1);
-
-#endif
-			setmeta(classname, -1);
 		}
 		else
 		{
@@ -560,16 +571,46 @@ void UTableUtil::pushclass(const char* classname, void* p, bool bgcrecord)
 			lua_remove(L, -2);
 		}
 	}
-	else
-	{
-		setmeta(classname, -1);
-	}
+}
 
+
+void UTableUtil::pushstruct(lua_State *inL, const char* structname, void* p, bool bgcrecord /*= false*/)
+{
+	if (p == nullptr)
+	{
+		lua_pushnil(inL);
+		return;
+	}
+	if (!existdata(p))
+	{
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
+
+		lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+		lua_pushlightuserdata(inL, p);
+		lua_pushvalue(inL, -3);
+		lua_rawset(inL, -3);
+		lua_pop(inL, 1);
+		if (bgcrecord)
+		{
+			lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcstruct");
+			lua_pushlightuserdata(inL, p);
+			lua_pushboolean(inL, true);
+			lua_rawset(inL, -3);
+			lua_pop(inL, 1);
+#ifdef LuaDebug
+			if (countforgc.Contains(structname))
+				countforgc[structname]++;
+			else
+				countforgc.Add(structname, 1);
+#endif
+		}
+		setmeta(structname, -1);
+	}
 }
 
 UTableUtil::UTableUtil()
 {
-	
+
 }
 
 void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname)
@@ -652,12 +693,41 @@ bool UTableUtil::existdata(void * p)
 	}
 }
 
+
+bool UTableUtil::existluains(void * p)
+{
+	lua_getfield(L, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_pushlightuserdata(L, p);
+	lua_rawget(L, -2);
+	if (lua_isnil(L, -1))
+	{
+		lua_pop(L, 2);
+		return false;
+	}
+	else
+	{
+		lua_getfield(L, LUA_GLOBALSINDEX, "_objectins2luatable");
+		lua_pushvalue(L, -2);
+		lua_rawget(L, -2);
+		if (lua_isnil(L, -1))
+		{
+			lua_pop(L, 3);
+			return false;
+		}
+		else
+		{
+			lua_pop(L, 3);
+			return true;
+		}
+	}
+}
+
 void UTableUtil::log(const FString& content)
 {
 	UE_LOG(LuaLog, Display, TEXT("[lua error] %s"), *content);
 }
 
-UObject* UTableUtil::FObjectFinder( UClass* Class, FString PathName )
+UObject* UTableUtil::FObjectFinder(UClass* Class, FString PathName)
 {
 	auto& ThreadContext = FUObjectThreadContext::Get();
 	UE_CLOG(!ThreadContext.IsInConstructor, LogUObjectGlobals, Fatal, TEXT("FObjectFinders can't be used outside of constructors to find %s"), *PathName);
@@ -739,12 +809,12 @@ void UTableUtil::testtemplate()
 	FVector f;
 	AActor *p = nullptr;
 	TArray<FVector> t;
-	call("testtemplate_call", f, 1,"test", p, 2.0, true, t);
+	call("testtemplate_call", f, 1, "test", p, 2.0, true, t);
 	if (callr<int>("testtemplate_r_int") != 1)
 		log("int");
-	if ( callr<float>("testtemplate_r_float") != 1.0 )
+	if (callr<float>("testtemplate_r_float") != 1.0)
 		log("float");
-	if ( callr<double>("testtemplate_r_double") != 1.0 )
+	if (callr<double>("testtemplate_r_double") != 1.0)
 		log("double");
 	if (callr<AActor*>("testtemplate_r_AActor") != nullptr)
 		log("AActor");
