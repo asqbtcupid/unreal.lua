@@ -80,8 +80,19 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		}
 		else if (Param->IsA(UClassProperty::StaticClass()))
 		{
-			//FString typeName = GetPropertyTypeCPP(Param, CPPF_Implementation);
-			Initializer = TEXT("(UClass*)(UTableUtil::tousertype(L,\"UClass\",");
+			FString typeName = GetPropertyTypeCPP(Param, CPPF_Implementation);
+			
+			if (typeName.StartsWith("TSubclass"))
+				Initializer = TEXT("(UClass*)(UTableUtil::tousertype(L,\"UClass\",");
+			else
+			{
+				(Cast<UObjectProperty>(Param))->UObjectProperty::GetCPPMacroType(typeName);
+				if (typeName.Contains("AnimBlueprintGeneratedClass"))
+					Initializer = FString::Printf(TEXT("(%s*)(UTableUtil::tousertype(L,\"UClass\","), *typeName);
+				else
+					Initializer = TEXT("(UClass*)(UTableUtil::tousertype(L,\"UClass\",");
+			}
+			
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
 		else if (Param->IsA(UArrayProperty::StaticClass()))
@@ -1117,10 +1128,10 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 			if (Property->PropertyFlags & CPF_NativeAccessSpecifierPublic)
 			{
 				FString typecpp = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
-				auto exceptionOne = Property->GetName() == "AnimBlueprintGeneratedClass";
-				if (exceptionOne)
-					FunctionBody += TEXT("\tObj->AnimBlueprintGeneratedClass = (UAnimBlueprintGeneratedClass*)(UTableUtil::tousertype(L,\"UClass\", 2));\r\n");
-				else if (!Property->IsA(UArrayProperty::StaticClass()))
+// 				auto exceptionOne = Property->GetName() == "AnimBlueprintGeneratedClass";
+// 				if (exceptionOne)
+// 					FunctionBody += TEXT("\tObj->AnimBlueprintGeneratedClass = (UAnimBlueprintGeneratedClass*)(UTableUtil::tousertype(L,\"UClass\", 2));\r\n");
+				if (!Property->IsA(UArrayProperty::StaticClass()))
 				{
 					if (Property->IsA(UStructProperty::StaticClass()))
 						FunctionBody += FString::Printf(TEXT("\tObj->%s = *%s;\r\n"), *Property->GetName(), *InitializeParam(Property, 0));
