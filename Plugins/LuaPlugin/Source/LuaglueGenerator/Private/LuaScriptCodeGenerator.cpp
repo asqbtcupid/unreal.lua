@@ -16,6 +16,7 @@ FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, c
 	GConfig->GetArray(TEXT("Lua"), TEXT("SupportedStruct"), SupportedStruct, configPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NoPropertyStruct"), NoexportPropertyStruct, configPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClassFunction"), NotSupportedClassFunction, configPath);
+	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClassProperty"), NotSupportedClassProperty, configPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClass"), NotSupportedClass, configPath);
 
 	bExportDelegateProxy = false;
@@ -808,8 +809,7 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property) const
 
 bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property)
 {
-
-	if (Property->GetName() == "BookMarks" || Property->GetName() == "ClothingSimulationFactory")
+	if (NotSupportedClassProperty.Contains("*." + Property->GetName()) || NotSupportedClassProperty.Contains(ClassNameCPP + "." + Property->GetName()))
 		return false;
 
 	if ((Property->PropertyFlags & CPF_Deprecated))
@@ -827,9 +827,6 @@ bool FLuaScriptCodeGenerator::CanExportProperty(const FString& ClassNameCPP, UCl
 			return false;
 		if (auto p = Cast<UMulticastDelegateProperty>(Property))
 		{
-			FString name = p->GetName();
-			if (name == "PathUpdatedNotifier")
-				return false;
 			for (TFieldIterator<UProperty> ParamIt(p->SignatureFunction); ParamIt; ++ParamIt)
 			{
 				UProperty* Param = *ParamIt;
@@ -1037,7 +1034,11 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 			}
 			else
 			{
-				FunctionBody += FString::Printf(TEXT("\tconst auto& result = Obj->%s;\r\n"), *Property->GetName());
+				//for TSubclass<>
+				if (Property->IsA(UClassProperty::StaticClass()) && Property->HasAnyPropertyFlags(CPF_UObjectWrapper))
+					FunctionBody += FString::Printf(TEXT("\tconst auto& result = (Obj->%s).Get();\r\n"), *Property->GetName());
+				else
+					FunctionBody += FString::Printf(TEXT("\tconst auto& result = Obj->%s;\r\n"), *Property->GetName());
 			}
 		}
 		else
@@ -1061,6 +1062,11 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 					{
 						if (Property->IsA(UStructProperty::StaticClass()))
 							FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecast, *typecast, *GetPropertyGetFunc(Property));
+						//for TSubclass<>
+						else if (Property->IsA(UClassProperty::StaticClass()) && Property->HasAnyPropertyFlags(CPF_UObjectWrapper))
+						{
+							FunctionBody += FString::Printf(TEXT("\t%s result = ((%s*)p->%s(Obj))->Get();\r\n"), *typecast, *typecpp, *GetPropertyGetFunc(Property));
+						}
 						else
 							FunctionBody += FString::Printf(TEXT("\t%s result = (%s)p->%s(Obj);\r\n"), *typecpp, *typecast, *GetPropertyGetFunc(Property));
 					}
@@ -1686,7 +1692,7 @@ void FLuaScriptCodeGenerator::GenerateDelegateClass()
 		for (TFieldIterator<UProperty> ParamIt(info.SignatureFunction); ParamIt; ++ParamIt)
 		{
 			UProperty* Param = *ParamIt;
-			FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+			FString nameCpp = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue, true);
 			FString ParamName = Param->GetName();
 			if (Param->GetPropertyFlags() & CPF_ConstParm)
 				nameCpp = "const " + nameCpp;
@@ -1694,7 +1700,7 @@ void FLuaScriptCodeGenerator::GenerateDelegateClass()
 				nameCpp = nameCpp + "&";
 			// Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) == (CPF_OutParm | CPF_ReturnParm)
 			paramlist += FString::Printf(TEXT(" %s %s,"), *nameCpp, *ParamName);
-			if (nameCpp[0] == 'E')
+			if (nameCpp[0] == 'E' || nameCpp.StartsWith("TEnumAsByte"))
 				ParamName = FString::Printf(TEXT("(int)(%s)"), *ParamName);
 			paramNames += FString::Printf(TEXT(" %s,"), *ParamName);
 		}

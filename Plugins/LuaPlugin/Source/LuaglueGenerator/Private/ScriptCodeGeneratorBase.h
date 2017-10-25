@@ -36,7 +36,7 @@ protected:
 	/** Converts a UClass name to C++ class name (with U/A prefix) */
 	FString GetClassNameCPP(UClass* Class);
 	/** Gets C++ friendly property type name. */
-	FString GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags = 0);
+	FString GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags = 0, bool bIsKeepTEnumAsByte = false);
 
 	FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
 	virtual FString InitializeFunctionDispatchParam(UFunction* Function, UProperty* Param, int32 ParamIndex);

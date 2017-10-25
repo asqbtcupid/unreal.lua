@@ -46,6 +46,7 @@ protected:
 	TArray<FString> SupportedStruct;
 	TArray<FString> NoexportPropertyStruct;
 	TArray<FString> NotSupportedClassFunction;
+	TArray<FString> NotSupportedClassProperty;
 	TArray<FString> NotSupportedClass;
 	TSet<FString> WeakPtrClass;
 

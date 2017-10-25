@@ -68,7 +68,7 @@ FString FScriptCodeGeneratorBase::GetClassNameCPP(UClass* Class)
 		return FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
 }
 
-FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags /*= 0*/)
+FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags /*= 0*/, bool bIsKeepTEnumAsByte)
 {
 	static FString EnumDecl(TEXT("enum "));
 	static FString StructDecl(TEXT("struct "));
@@ -91,7 +91,7 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 		int FirstSpaceIndex = PropertyType.Find(TEXT(" "));
 		PropertyType = PropertyType.Mid(FirstSpaceIndex + 1);
 	}
-	else if (PropertyType.StartsWith(TEnumAsByteDecl))
+	else if (!bIsKeepTEnumAsByte && PropertyType.StartsWith(TEnumAsByteDecl))
 	{
 		int FirstSpaceIndex = PropertyType.Find(TEXT(" "));
 		PropertyType = TEXT("TEnumAsByte<") + PropertyType.Mid(FirstSpaceIndex + 1);
