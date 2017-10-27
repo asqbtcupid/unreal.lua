@@ -120,7 +120,7 @@ local function __indexcpp(t, k)
 	local cppattr = cppclass[k]
 	if cppattr then return cppattr end
 
-	local getfunc = rawget(classtemp, "Get_"..k)
+	local getfunc = rawget(classtemp, "Get_"..tostring(k))
 	if getfunc then return getfunc(t) end
 end
 

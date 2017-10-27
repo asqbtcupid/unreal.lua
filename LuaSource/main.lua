@@ -77,5 +77,6 @@ end
 -- *******************************
 
 function Shutdown()
+    GlobalEvent.Fire("LuaShutdown")
     a_("lua VM shutdown")
 end

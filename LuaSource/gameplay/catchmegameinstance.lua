@@ -1,7 +1,7 @@
 local CatchMeGameInstance = Inherit(CppObjectBase, UCatchMeGameInstance)
 
 function CatchMeGameInstance:Ctor()
-	-- A_("hahaha")
+	GameInstance = self
 end
 
 return CatchMeGameInstance

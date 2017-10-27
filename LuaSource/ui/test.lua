@@ -15,6 +15,7 @@ function testUmg:Ctor(controller)
 end
 function testUmg:PlayAnim()
 	A_("you click button")
+	LuaVarWatcher:Get():AddNode("test", _G)
 end
 
 function testUmg:ClickClear( )
