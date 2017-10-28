@@ -17,17 +17,24 @@
 struct EnumItem;
 DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
 #define LuaDebug 0 
-using namespace std;
+
 using luafunc = int(struct lua_State*);
 
 void* tousertype(lua_State* L, const char* classname, int i);
+void* touobject(lua_State* L, int i);
+void* tostruct(lua_State* L, int i);
 int ErrHandleFunc(lua_State*L);
 template<class T>
 class popiml {
 public:
 	static T pop(lua_State *L, int index)
 	{
-		return *(T*)tousertype(L, "", index);
+		T* p = (T*)tostruct(L, index);
+		if (p == nullptr)
+		{
+			return T();
+		}
+		return *p;
 	}
 };
 template<class T>
@@ -35,7 +42,7 @@ class popiml<T*> {
 public:
 	static T* pop(lua_State *L, int index)
 	{
-		return (T*)tousertype(L, "", index);
+		return (T*)touobject(L, index);
 	}
 };
 

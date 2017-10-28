@@ -14,6 +14,7 @@
 #include "GameMode.script.h"
 #include "Character.script.h"
 #include "DefaultPawn.script.h"
+#include "VarNode.script.h"
 #include "CatchMeAIController.script.h"
 #include "CatchMeGameInstance.script.h"
 #include "CMCharacterBase.script.h"
@@ -33,6 +34,7 @@
 
 void ULuaLoadGame::LoadAll(lua_State* L)
 {
+	UTableUtil::loadlib(VarNode_Lib, "UVarNode");
 	UTableUtil::loadlib(CatchMeAIController_Lib, "ACatchMeAIController");
 	UTableUtil::loadlib(CatchMeGameInstance_Lib, "UCatchMeGameInstance");
 	UTableUtil::loadlib(CMCharacterBase_Lib, "ACMCharacterBase");

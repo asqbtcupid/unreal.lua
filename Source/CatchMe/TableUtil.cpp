@@ -392,11 +392,9 @@ void UTableUtil::closemodule()
 	lua_pop(L, 2);
 }
 
-void* tousertype(lua_State* L, const char* classname, int i)
+inline void* tovoid(lua_State* L, int i)
 {
-	if (lua_isnil(L, i))
-		return nullptr;
-	else if (lua_istable(L, i))
+	if (lua_istable(L, i))
 	{
 		if (i < 0)
 			i = lua_gettop(L) + i + 1;
@@ -411,7 +409,7 @@ void* tousertype(lua_State* L, const char* classname, int i)
 		else
 		{
 			lua_replace(L, i);
-			return tousertype(L, classname, i);
+			return tovoid(L, i);
 		}
 	}
 	else if (lua_isuserdata(L, i))
@@ -421,6 +419,24 @@ void* tousertype(lua_State* L, const char* classname, int i)
 	}
 	else
 		return nullptr;
+}
+
+void* touobject(lua_State* L, int i)
+{
+	if (lua_isnil(L, i))
+		return nullptr;
+	return tovoid(L, i);
+}
+
+void* tostruct(lua_State* L, int i)
+{
+	if (lua_isnil(L, i))
+	{
+		lua_pushstring(L, "struct can't be nil");
+		lua_error(L);
+		return nullptr;
+	}
+	return tovoid(L, i);
 }
 
 
@@ -449,7 +465,7 @@ int ErrHandleFunc(lua_State*L)
 
 void* UTableUtil::tousertype(lua_State* InL, const char* classname, int i)
 {
-	return ::tousertype(InL, classname, i);
+	return touobject(InL, i);
 }
 
 void UTableUtil::setmeta(const char* classname, int index)

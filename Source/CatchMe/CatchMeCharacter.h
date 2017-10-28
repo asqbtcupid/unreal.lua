@@ -108,7 +108,7 @@ public:
 
 	UFUNCTION()
 	virtual void OnRep_HPPercent();
-	 
+	
 
 	UFUNCTION()
 	virtual void OnRep_MP();
