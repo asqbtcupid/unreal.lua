@@ -98,7 +98,7 @@ void FVarWatcherModule::ShutdownModule()
 TSharedRef<SDockTab> FVarWatcherModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
 	bNeedTickTreeView = true;
-
+	bShowFunction = false;
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
@@ -122,6 +122,24 @@ TSharedRef<SDockTab> FVarWatcherModule::OnSpawnPluginTab(const FSpawnTabArgs& Sp
 						[
 							SNew(STextBlock)
 							.Text(LOCTEXT("VarWatcherNeedTick", "NeedTick"))
+						]
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SCheckBox)
+					.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+					.IsChecked_Lambda([&]() {return bShowFunction ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					.OnCheckStateChanged_Lambda([&](const ECheckBoxState NewState) { bShowFunction = (NewState == ECheckBoxState::Checked) ? true : false; })
+					[
+						SNew(SBox)
+						.VAlign(VAlign_Center)
+						.HAlign(HAlign_Center)
+						.Padding(FMargin(4.0, 2.0))
+						[
+							SNew(STextBlock)
+							.Text(LOCTEXT("VarWatcherShowFunction", "ShowFunction"))
 						]
 					]
 				]

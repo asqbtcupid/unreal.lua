@@ -44,6 +44,7 @@ public:
 	TWeakPtr<SVarsTree> VarTreePtr;
 	bool bNeedTickTreeView;
 	bool bNeedUpdateData;
+	bool bShowFunction;
 
 	TSharedRef<ITableRow> HandleVarTreeGenerateRow(TSharedRef<FVarNode> InVarNode, const TSharedRef<STableViewBase>& OwnerTable);
 	void HandleVarTreeGetChildren(TSharedRef<FVarNode> InVarNode, TArray<TSharedRef<FVarNode>>& OutChildren);

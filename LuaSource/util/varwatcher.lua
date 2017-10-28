@@ -10,6 +10,7 @@ function LuaVarWatcher:Ctor()
 	self.m_MaxRegistryIndex = 1
 	self.m_IndexGUID = 0
 	self.m_Root = {}
+	self.m_NeedShowFunction = false
 	self:Timer(self.Tick, self):Time(0.00001)
 	GlobalEvent.On("LuaShutdown", self.Release, self)
 end
@@ -25,17 +26,27 @@ function LuaVarWatcher:GetUNodeNewName( )
 	return "UNode"..tostring(self.m_IndexGUID)
 end
 
+function LuaVarWatcher:GetClassName(VarValue)
+	if type(VarValue) == "table" or type(VarValue) == "userdata" then
+		if VarValue.classname then
+			return "("..VarValue.classname..")"
+		end
+	end
+	return ""
+end
+
 
 function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 	if UNode:bIsExpanding() or (UNode.HasExpand and not UNode:HasChild()) then
 		local function TravelVar(ChildrenMap, key, v, KeyName, bTravelKey)
+			local ValueStr = tostring(v)..self:GetClassName(v)
 			local ChildNode = ChildrenMap[key]
 			if ChildNode then
-				ChildNode.Value = tostring(v)
+				ChildNode.Value = ValueStr
 			else
 				local Index = self:AddToIndexMap(key)
 				ChildNode = UVarNode.New(GameInstance, self:GetUNodeNewName())
-				ChildNode:Init(KeyName, tostring(v), Index)
+				ChildNode:Init(KeyName, ValueStr, Index)
 				UNode:AddChild(ChildNode, bIsKey)
 			end
 
@@ -59,18 +70,23 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 			for i, Node in ipairs(ChildrenArr) do
 				local Key = self.m_WeakRegistry[Node.LuaIndex]
 				if (Key and VarValue[Key]) or getmetatable(VarValue) == Key then
-					ChildrenMap[Key] = Node
+					if not self.m_NeedShowFunction and type(VarValue[Key]) == "function" then
+						Node:Release()
+					else
+						ChildrenMap[Key] = Node
+					end
 				else
 					Node:Release()
 				end
 			end
 
 			for key, v in pairs(VarValue) do
-				if type(v) ~= "function" then
+				if self.m_NeedShowFunction or type(v) ~= "function" then
 					local KeyName = tostring(key)
 					if bIsKey then
 						KeyName = "$Key$ "..KeyName
 					end
+					KeyName=KeyName..self:GetClassName(key)
 					TravelVar(ChildrenMap, key, v, KeyName, true)
 				end
 			end
@@ -104,6 +120,7 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 						if bIsKey then
 							KeyName = "$Key$ "..KeyName
 						end
+						KeyName=KeyName..self:GetClassName(key)
 						TravelVar(ChildrenMap, key, value, KeyName, false)
 					end
 				end
@@ -120,6 +137,7 @@ end
 
 function LuaVarWatcher:Tick( )
 	if UVarNode.NeedUpdate() then
+		self.m_NeedShowFunction = UVarNode.NeedShowFunction()
 		local RootToClean = {}
 		for UNode, RootNodeIndex in pairs(self.m_Root) do
 			local VarValue = self.m_WeakRegistry[RootNodeIndex]

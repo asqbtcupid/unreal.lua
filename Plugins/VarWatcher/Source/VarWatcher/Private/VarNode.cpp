@@ -121,3 +121,8 @@ bool UVarNode::NeedUpdate()
 	return false;
 }
 
+bool UVarNode::NeedShowFunction()
+{
+	return FVarWatcherModule::Get()->bShowFunction;
+}
+

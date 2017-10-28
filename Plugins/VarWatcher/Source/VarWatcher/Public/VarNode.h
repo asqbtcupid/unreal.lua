@@ -71,7 +71,11 @@ public:
 
 	UFUNCTION()
 		bool bIsExpanding();
+
 	UFUNCTION()
 		static bool NeedUpdate();
+
+	UFUNCTION()
+		static bool NeedShowFunction();
 	
 };
