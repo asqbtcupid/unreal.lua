@@ -31,3 +31,18 @@ function CppType(t)
     return getmetatable(t).classname
 end
 
+function LoadObject(outer, path)
+    local ObjectClass = "U"..path:match(".-(%a+).-'.-'")
+    if ObjectClass:find("Blueprint") then
+        local Object = _G[ObjectClass].LoadObject(outer, path)
+        return Object.GeneratedClass
+    else
+        local Object = _G[ObjectClass].LoadObject(outer, path)
+        return Object
+    end
+end
+
+function LoadClass(outer, path)
+    local ObjectClass = path:match(".-(%a+).-'.-'")
+    return _G[ObjectClass].LoadClass(outer, path:gsub("'$","_C'"))
+end

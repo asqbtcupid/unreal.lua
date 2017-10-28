@@ -8,7 +8,30 @@ end
 function GlobalEvent.ClearLastEventData()
 	GlobalEvent.LastEventData = {}
 end
+
 local weakmeta = {__mode = "v"}
+function SafeCallBack(callBack, ...)
+	local parameters = setmetatable({...}, weakmeta)
+    local handle = {}
+    function handle:GetParam()
+    	return parameters
+    end
+    local len_p = table.maxn(parameters)
+    local function f(...)
+        local args = {...}
+        local len_a = table.maxn(args)
+        for i = 1, len_a do
+            parameters[i+len_p] = args[i]
+        end
+        if parameters[1] == nil then
+        	return
+        end
+        handle.result = callBack(unpack(parameters, 1, len_p+len_a))
+        return handle.result
+    end
+    return f, handle
+end
+
 function MakeCallBack(callBack, ...)
     local parameters = setmetatable({...}, weakmeta)
     local handle = {}
