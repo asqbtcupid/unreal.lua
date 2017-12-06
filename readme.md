@@ -1,4 +1,4 @@
-
+### New version is coming soon.
 ## Lua5.1 Plugin
 This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
 ## Supported PlatForm
