@@ -181,8 +181,9 @@ function CatchMeCharacter:InitBaseInfo(CharacterId, Level)
 	local BaseSkill = FSkillInfo.New()
 	BaseSkill.SkillId = 1
 	BaseSkill.Level = 1
-	local SkillInfo = {BaseSkill}
-	self.SkillInfo = SkillInfo
+	-- local SkillInfo = {BaseSkill}
+	-- self.SkillInfo = SkillInfo
+	self.SkillInfo:Add(BaseSkill)
 	self:OnRep_SkillInfo()
 end
 
@@ -204,7 +205,7 @@ function CatchMeCharacter:OnRep_SkillInfo()
 	self.m_AllSkillInfo = self.SkillInfo
 	self.m_AllSkillInfoMap = {}
 	-- A_(self.m_AllSkillInfo[1].Level)
-	for k, v in ipairs(self.m_AllSkillInfo) do
+	for k, v in ipairs(self.m_AllSkillInfo:Table()) do
 		self.m_AllSkillInfoMap[v.SkillId] = v
 	end
 end

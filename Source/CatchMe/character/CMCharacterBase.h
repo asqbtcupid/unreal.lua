@@ -5,7 +5,7 @@
 #include "GameFramework/Character.h"
 #include "CMCharacterBase.generated.h"
 
-UCLASS(meta = (lua=1))
+UCLASS()
 class CATCHME_API ACMCharacterBase : public ACharacter
 {
 	GENERATED_BODY()

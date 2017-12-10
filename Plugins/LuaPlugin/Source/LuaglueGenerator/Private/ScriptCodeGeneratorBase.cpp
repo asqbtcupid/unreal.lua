@@ -85,6 +85,17 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 			inerTypeCpp = "TEnumAsByte<EObjectTypeQuery> ";
 		PropertyType = FString::Printf(TEXT("TArray<%s>"), *inerTypeCpp);
 	}
+	else if (auto p = Cast<UMapProperty>(Property))
+	{
+		FString keytype = GetPropertyTypeCPP(p->KeyProp, CPPF_ArgumentOrReturnValue);
+		FString valuetype = GetPropertyTypeCPP(p->ValueProp, CPPF_ArgumentOrReturnValue);
+		PropertyType = FString::Printf(L"TMap<%s, %s>", *keytype, *valuetype);
+	}
+	else if (auto p = Cast<USetProperty>(Property))
+	{
+		FString keytype = GetPropertyTypeCPP(p->ElementProp, CPPF_ArgumentOrReturnValue);
+		PropertyType = FString::Printf(L"TSet<%s>", *keytype);
+	}
 	// Strip any forward declaration keywords
 	if (PropertyType.StartsWith(EnumDecl) || PropertyType.StartsWith(StructDecl) || PropertyType.StartsWith(ClassDecl))
 	{
@@ -125,7 +136,7 @@ FString FScriptCodeGeneratorBase::InitializeFunctionDispatchParam(UFunction* Fun
 
 FString FScriptCodeGeneratorBase::GetScriptHeaderForClass(UClass* Class)
 {
-	return GeneratedCodePath / (Class->GetName() + TEXT(".script.h"));
+	return GeneratedCodePath / (Class->GetName() + TEXT(".lua.h"));
 }
 
 bool FScriptCodeGeneratorBase::CanExportClass(UClass* Class)

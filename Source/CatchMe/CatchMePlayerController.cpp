@@ -1,12 +1,12 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "CatchMe.h"
 #include "CatchMePlayerController.h"
 #include "AI/Navigation/NavigationSystem.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "TableUtil.h"
 #include "luautils.h"
+#include "all_struct.lua.h"
 
 ACatchMePlayerController::ACatchMePlayerController()
 {
@@ -97,7 +97,7 @@ bool ACatchMePlayerController::S_PlaySkill_Validate(int32 SkillId, AActor* Targe
 
 void ACatchMePlayerController::S_MoveToLocation_Implementation(FVector Location)
 {
-	LuaCall("MoveToPos", this, Location);
+	LuaCall("MoveToPos", this, &Location);
 }
 
 bool ACatchMePlayerController::S_MoveToLocation_Validate(FVector Location)

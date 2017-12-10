@@ -2,11 +2,16 @@ require "luaclass"
 CppObjectBase = Class(ObjectBase)
 CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
+
 local LevelActors = {}
+local function GcActors()
+	LevelActors = ULuautils.GCThisSet(LevelActors)
+end
+GlobalEvent.On("GC", GcActors)
+
 function CppObjectBase:EndPlay(Reason)
 	if not self.m_HasEndPlay then
 		self.m_HasEndPlay = true
-		LevelActors[self] = nil
 		self:Release()
 	end
 end
@@ -25,7 +30,6 @@ function CppObjectBase:BeginPlay()
 		local OnEndPlayDelegate = self.OnEndPlay
 		self:GC(OnEndPlayDelegate)
 		OnEndPlayDelegate:Add(self.EndPlay)
-		LevelActors[self] = true
 	end
 end
 
@@ -44,9 +48,9 @@ CppObjectBase.New = CppObjectBase.NewCpp
 
 function CppObjectBase:Ctor()
 	self._gc_list = {}
-	-- if AActor.Cast(self) then
-	-- 	LevelActors[self] = true
-	-- end
+	if AActor.Cast(self) then
+		LevelActors[self] = true
+	end
 end
 
 function CppObjectBase:GC(obj)
@@ -58,10 +62,32 @@ end
 function CppObjectBase:Property(property)
 	return rawget(self._meta_, property)	
 end
+-- param:userdata, return:table, table
+local BpFunctionAndPropertyMapCache={}
+local function GetBpFunctionAndPropertyMap(inscpp)
+	local cppclass = ULuautils.GetPrivateClass(inscpp)
+	local cache = BpFunctionAndPropertyMapCache[cppclass]
+
+	if not cache then
+		if not UBPAndLuaBridge.IsBpIns(inscpp) then
+			cache = {{}, {}}
+		else
+			cache = {}
+			cache[1] = UBPAndLuaBridge.GetClassBPFunctions(inscpp)
+			cache[2] = UBPAndLuaBridge.GetClassBPPropertys(inscpp)
+		end
+		BpFunctionAndPropertyMapCache[cppclass] = cache		
+	end
+
+	return cache[1], cache[2]
+end
 
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
-	ins._cppinstance_ = inscpp
+	local BlueprintFuncMap, BlueprintPropMap = GetBpFunctionAndPropertyMap(inscpp)
+	rawset(ins, "_cppinstance_", inscpp)
+	rawset(ins, "_BlueprintFuncMap_", BlueprintFuncMap)
+	rawset(ins, "_BlueprintPropMap_", BlueprintPropMap)
 	_objectins2luatable[inscpp] = ins
 	ins:Initialize(...)
 	return ins

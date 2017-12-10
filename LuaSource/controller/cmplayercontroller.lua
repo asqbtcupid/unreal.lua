@@ -114,24 +114,24 @@ function CMPlayerController:InputTap_Release(Pos, HoldTime)
 	if not self.m_bHasMoveScreen then
 		local Hit = FHitResult.New()
 		if self:GetHitResult(Pos[1], Pos[2], Hit, ECollisionEnabled.QueryOnly) then
-			local actor = Hit.Actor:Get()
+			local actor = Hit.Actor
 			if actor and actor.m_CanAttacked and actor.m_Visible then
 				self:S_TapActor(actor)
 			else
 				if ULuautils.GetName(actor):find("Foliage") then
-					-- Hit.Component:Get()
+					-- Hit.Component
 					-- A_(self.m_FoliageComponents[FoliageComponent ])
 					-- FoliageComponent = UInstancedStaticMeshComponent.Cast(FoliageComponent)
 					-- A_(FoliageComponent.StaticMesh)
 					-- A_(UStaticMesh.LoadObject(self, "StaticMesh'/Game/StarterContent/Shapes/Shape_Cylinder.Shape_Cylinder'"))
 					-- A_(ULuautils.GetName(actor))
 
-					-- self:RemoveFoliage(Hit.Component:Get(), Hit.Item)
+					-- self:RemoveFoliage(Hit.Component, Hit.Item)
 
 					-- A_(Hit.Distance)
 					-- self:S_TapFloor(Hit.ImpactPoint)
 					
-					self:S_TapFoliage(Hit.Component:Get(), Hit.Item)
+					self:S_TapFoliage(Hit.Component, Hit.Item)
 				else
 					self:S_TapFloor(Hit.ImpactPoint)
 					-- self:S_TapFloor_Imp(Hit.ImpactPoint)
@@ -200,7 +200,7 @@ function CMPlayerController:Visible(character)
 		local EndPos = character:K2_GetActorLocation() 
 		local Hit = FHitResult.New()
 		if UKismetSystemLibrary.LineTraceSingle(self.PlayCharacter, StartPos, EndPos, ETraceTypeQuery.TraceTypeQuery1, true, {}, EDrawDebugTrace.None, Hit, true) then
-			if Hit.Actor:Get() == character then
+			if Hit.Actor == character then
 				return true
 			else
 				return false

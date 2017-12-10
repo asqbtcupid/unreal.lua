@@ -1,9 +1,11 @@
 #pragma once
 
 #include "UObject/NoExportTypes.h"
+#include "RHI.h"
 #include "CMFogMgr.generated.h"
 
-UCLASS(meta=(lua=1))
+class UTexture2D;
+UCLASS()
 class CATCHME_API UCMFogMgr : public UObject
 {
 	GENERATED_BODY()

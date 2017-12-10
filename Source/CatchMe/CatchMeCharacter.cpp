@@ -1,12 +1,12 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "CatchMe.h"
 #include "CatchMeCharacter.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 // #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "TableUtil.h"
 #include "luautils.h"
+#include "all_struct.lua.h"
 
 ACatchMeCharacter::ACatchMeCharacter()
 {
@@ -61,6 +61,25 @@ void ACatchMeCharacter::OnRep_Level()
 void ACatchMeCharacter::OnRep_CharacterId()
 {
 	LuaCall("OnRep_CharacterId", this);
+}
+
+
+void ACatchMeCharacter::TestDouble(double haha)
+{
+
+}
+
+
+bool ACatchMeCharacter::hehe(TArray<int32>& i)
+{
+	return true;
+}
+
+
+
+bool ACatchMeCharacter::jiji(TArray<int32>& i)
+{
+	return true;
 }
 
 void ACatchMeCharacter::OnRep_HP()

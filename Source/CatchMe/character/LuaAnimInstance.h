@@ -8,7 +8,7 @@
 /**
  * 
  */
-UCLASS(meta=(Lua=1))
+UCLASS()
 class CATCHME_API ULuaAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CatchMe.h"
 #include "CMFogMgr.h"
 #include "TableUtil.h"
 #include "catchmeplayercontroller.h"
+#include "Kismet/KismetSystemLibrary.h"
 UCMFogMgr::UCMFogMgr()
 {
 	LuaCtor("gameplay.cmfogmgr", this);
@@ -85,7 +85,7 @@ bool UCMFogMgr::CanSee(FVector& Pos, int32 Targetx, int32 Targety)
 	FVector TargetPos(Targety, Targetx, Pos.Z);
 	FHitResult Hit;
 	TArray<AActor*> Ignore;
-	Ignore.Add(Cast<ACatchMePlayerController>(Controller)->PlayCharacter);
+	Ignore.Add((AActor*)(Cast<ACatchMePlayerController>(Controller)->PlayCharacter));
 	if (UKismetSystemLibrary::LineTraceSingle(Controller, Pos, TargetPos, ETraceTypeQuery::TraceTypeQuery1, true, Ignore, EDrawDebugTrace::None, Hit, true))
 	{
 		FVector_NetQuantize GridPos = TargetPos;

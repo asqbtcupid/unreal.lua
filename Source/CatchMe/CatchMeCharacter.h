@@ -3,13 +3,15 @@
 #include "GameFramework/Character.h"
 #include "character/CMCharacterBase.h"
 #include "CatchMeCharacter.generated.h"
-      
-USTRUCT(meta = (Lua=1))
-struct FCharacterInfo {
+                
+USTRUCT()
+struct CATCHME_API FCharacterInfo {
+
 	GENERATED_BODY()
+		 
 	UPROPERTY()
 	int32 MaxHp;
-	   
+	    
 	UPROPERTY()
 	int32 Hp;
 
@@ -25,8 +27,8 @@ struct FCharacterInfo {
 	UPROPERTY()
 	int32 MoveSpeed;
 };
-USTRUCT(meta = (lua=1))
-struct FSkillInfo {
+USTRUCT()
+struct CATCHME_API FSkillInfo {
 
 	GENERATED_BODY()
 
@@ -40,18 +42,25 @@ struct FSkillInfo {
 	float LastTime;
 };
 
-UCLASS(Blueprintable, meta=(lua=1))
-class ACatchMeCharacter : public ACMCharacterBase
+UENUM()
+enum class Ehehe
+{
+	lala,
+	jiji
+};
+
+UCLASS(Blueprintable)
+class CATCHME_API ACatchMeCharacter : public ACMCharacterBase
 {
 	GENERATED_BODY()
-
+ 
 public:
 	ACatchMeCharacter();
 
 	UPROPERTY(EditAnywhere)
 		UTexture2D *TestTexture;
 
-
+	 
 	UPROPERTY(replicated)
 	FCharacterInfo BaseInfo;
 
@@ -121,5 +130,30 @@ public:
 
 	UFUNCTION()
 	virtual void OnRep_CharacterId();
-};
 
+	UFUNCTION(BlueprintImplementableEvent, Category="Test")
+		void test(const TArray<int32>& hehe, const TMap<FString, int32>& jiji);
+
+	UFUNCTION()
+		void TestDouble(double haha);
+
+	
+	UFUNCTION()
+		bool hehe(TArray<int32>& ii);
+
+	UPROPERTY()
+		TArray<int32> publicarr;
+
+private:
+
+	UFUNCTION()
+		bool jiji(TArray<int32>& ii);
+
+	UPROPERTY()
+		TMap<FString, int32> mmp;
+	UPROPERTY()
+		TSet<int32> Sucks;
+	UPROPERTY()
+		TArray<int32> Arrrr;
+};
+ 

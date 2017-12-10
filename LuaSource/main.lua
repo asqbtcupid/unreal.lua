@@ -4,7 +4,7 @@ function Init(IsMannual)
     require "frame.initrequire"
     local function ShowMem()
         collectgarbage("collect")
-        -- a_("lua memory: ", collectgarbage("count"))
+        a_("lua memory: ", collectgarbage("count"))
     end
     TimerMgr:Get():On(ShowMem):Time(2)
     G_IsMannul = IsMannual
@@ -75,6 +75,10 @@ function Call(functionName, inscpp, ...)
     end
 end
 -- *******************************
+
+function GC()
+    GlobalEvent.Fire("GC")
+end
 
 function Shutdown()
     GlobalEvent.Fire("LuaShutdown")

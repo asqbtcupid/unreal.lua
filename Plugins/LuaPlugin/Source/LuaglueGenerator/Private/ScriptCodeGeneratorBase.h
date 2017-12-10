@@ -52,6 +52,7 @@ protected:
 
 public:
 	FString GameModuleName;
+	FString LuaConfigIniPath;
 	virtual ~FScriptCodeGeneratorBase() {}
 
 	// IScriptGeneratorPlugin interface

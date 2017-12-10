@@ -4,6 +4,7 @@
 #define __CATCHME_H__
 #include "UMG.h"
 #include "EngineMinimal.h"
+#include "tableutil.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCatchMe, Log, All);
 

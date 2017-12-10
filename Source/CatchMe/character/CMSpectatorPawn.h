@@ -8,7 +8,7 @@
 /**
  * 
  */
-UCLASS(meta=(lua=1))
+UCLASS()
 class CATCHME_API ACMSpectatorPawn : public ASpectatorPawn
 {
 	GENERATED_BODY()

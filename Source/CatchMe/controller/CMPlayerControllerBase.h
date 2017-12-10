@@ -5,10 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CMPlayerControllerBase.generated.h"
 
-/**
- * 
- */
-UCLASS(meta=(lua=1))
+UCLASS()
 class CATCHME_API ACMPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()

@@ -114,9 +114,9 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 				end
 
 				for key, v in pairs(meta) do
-					if key:find("^Get_") and type(v) == "function" then
+					if key:find("^LuaGet_") and type(v) == "function" then
 						local value = v(VarValue)
-						local KeyName = key:match("^Get_(.*)")
+						local KeyName = key:match("^LuaGet_(.*)")
 						if bIsKey then
 							KeyName = "$Key$ "..KeyName
 						end

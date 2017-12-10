@@ -66,13 +66,14 @@ function Object:NewIns(...)
 	return ins
 end
 
+local CtorStr = "Ctor"
 local function CtorRecursively(theclass, ins, ...)
 	if theclass == nil then return end
 	local super = theclass:Super()
 	if super then
 		CtorRecursively(super, ins, ...)
 	end
-	local Ctor = rawget(theclass, "Ctor")
+	local Ctor = rawget(theclass, CtorStr)
 	if Ctor then Ctor(ins, ...) end
 end
 
@@ -107,28 +108,80 @@ function Object:Release(...)
 	self._has_destroy_ = true
 end
 
+local _parentclass = "_parentclass"
+local GetPrefix = "LuaGet_"
 
 local function __indexcpp(t, k)
+	local GetFuncKey = GetPrefix..tostring(k)
+	local getfunc = rawget(t, GetFuncKey)
+	if getfunc then return getfunc(t) end
+
 	local class = getmetatable(t)
 	local classtemp = class
 	local cppclass = class._cppclass
 	while class do
 		local v = rawget(class, k)
 		if v then return v end 
-		class = rawget(class, "_parentclass") 
+		class = rawget(class, _parentclass) 
 	end
 	local cppattr = cppclass[k]
 	if cppattr then return cppattr end
 
-	local getfunc = rawget(classtemp, "Get_"..tostring(k))
-	if getfunc then return getfunc(t) end
+	local getfunc = rawget(classtemp, GetFuncKey)
+	if getfunc then 
+		rawset(t, GetFuncKey, getfunc)
+		return getfunc(t) 
+	end
+
+	local FunSig = t._BlueprintFuncMap_[k]
+	if FunSig then
+		local function CallBlueprintFunc(ins, ...)
+			return UBPAndLuaBridge.CallBlueprintFunction(FunSig, ins, ...)
+		end
+		rawset(t, k, CallBlueprintFunc)
+		return CallBlueprintFunc
+	else
+		local BPProperty = t._BlueprintPropMap_[k]
+		if BPProperty then
+			local function BpGetFunc(ins)
+				return UBPAndLuaBridge.GetBlueprintProperty(BPProperty, ins)
+			end
+			rawset(t, GetFuncKey, BpGetFunc)
+			return BpGetFunc(t)
+		end
+	end
 end
 
+local _cppclass = "_cppclass"
+local SetPrefix = "LuaSet_"
 local function __newindexcpp(t, k, v)
-	local class = getmetatable(t)
-	local cppclass = rawget(class, "_cppclass")
-	local f = cppclass["Set_"..k]
+	local SetFuncKey = SetPrefix..tostring(k)
+	local f = rawget(t, SetFuncKey)
 	if f then f(t, v); return end
+
+	local class = getmetatable(t)
+
+	local cppclass = rawget(class, _cppclass)
+	f = cppclass[SetFuncKey]
+	if f then f(t, v); return end
+
+	f = rawget(class, SetFuncKey)
+	if f then f(t, v); return end
+
+
+	local BlueprintPropMap = rawget(t, "_BlueprintPropMap_")
+	if BlueprintPropMap then
+		local BPProperty = BlueprintPropMap[k]
+		if BPProperty then
+			local function SetValueFunc(ins,value)
+				UBPAndLuaBridge.SetBlueprintProperty(BPProperty, ins, value)
+			end
+			SetValueFunc(t, v)
+			rawset(t, SetFuncKey, SetValueFunc)
+			return
+		end
+	end
+
 	rawset(t, k, v)
 end
 

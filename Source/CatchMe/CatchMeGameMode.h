@@ -4,10 +4,10 @@
 #include "CatchMeGameMode.generated.h"
 
 UCLASS(meta = (Lua = 1))
-class ACatchMeGameMode : public ACMGameModeBase
+class CATCHME_API ACatchMeGameMode : public ACMGameModeBase
 {
 	GENERATED_BODY()
-
+   
 public:
 	ACatchMeGameMode();
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

@@ -8,7 +8,7 @@
 /**
  * 
  */
-UCLASS(meta=(lua=1))
+UCLASS()
 class CATCHME_API UCatchMeGameInstance : public UGameInstance
 {
 	GENERATED_BODY()

@@ -5,8 +5,8 @@
 #include "CatchMePlayerController.generated.h"
 
 class UCMFogMgr;
-UCLASS(meta=(lua=1))
-class ACatchMePlayerController : public ACMPlayerControllerBase
+UCLASS()
+class CATCHME_API ACatchMePlayerController : public ACMPlayerControllerBase
 {
 	GENERATED_BODY()
 

@@ -6,15 +6,23 @@ public class LuaPluginEditor : ModuleRules
 {
 	public LuaPluginEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivateIncludePaths.Add("LuaPluginEditor/Private");
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PrivateDependencyModuleNames.AddRange(
+		PrivateIncludePaths.Add("LuaPluginEditor/Private");
+        PrivateDependencyModuleNames.AddRange(
 			new string[] {
 				"Core",
 				"CoreUObject",
                 "UnrealEd", // for FAssetEditorManager
-				"LuaPluginRuntime"
-			}
+				"LuaPluginRuntime",
+                "Projects",
+                "InputCore",
+                "LevelEditor",
+                "Engine",
+                "Slate",
+                "SlateCore",
+                "BlueprintGraph",
+            }
 			);
 	}
 }

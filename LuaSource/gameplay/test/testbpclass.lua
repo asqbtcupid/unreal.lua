@@ -1,5 +1,4 @@
 local TestBpClass = Inherit(CppObjectBase, AStaticMeshActor)
-
 function TestBpClass:EndPlay(Reason)
 	CppObjectBase.EndPlay(self)
 end

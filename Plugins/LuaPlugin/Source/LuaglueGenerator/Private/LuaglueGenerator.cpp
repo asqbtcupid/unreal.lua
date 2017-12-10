@@ -5,13 +5,15 @@
 #include "IProjectManager.h"
 #include "Runtime/Core/Public/Features/IModularFeatures.h"
 #include "ProjectDescriptor.h"
+#include "ModulePath.h"
 DEFINE_LOG_CATEGORY(LogScriptGenerator);
 
 FString GameModuleName;
+FString luaconfiginiPath;
 class FLuaglueGenerator : public ILuaglueGenerator
 {
 	/** Specialized script code generator */
-	TAutoPtr<FScriptCodeGeneratorBase> CodeGenerator;
+	TAutoPtr<FLuaScriptCodeGenerator> CodeGenerator;
 
 	TArray<FString> SupportModules;
 	/** IModuleInterface implementation */
@@ -19,6 +21,7 @@ class FLuaglueGenerator : public ILuaglueGenerator
 	virtual void ShutdownModule() override;
 
 	/** ILuaglueGenerator interface */
+	// 	virtual FString GetGeneratedCodeModuleName() const override { return GameModuleName; }
 	virtual FString GetGeneratedCodeModuleName() const override { return GameModuleName; }
 	virtual bool ShouldExportClassesForModule(const FString& ModuleName, EBuildModuleType::Type ModuleType, const FString& ModuleGeneratedIncludeDirectory) const override;
 	virtual bool SupportsTarget(const FString& TargetName) const override;
@@ -53,19 +56,10 @@ FString FLuaglueGenerator::GetGeneratorName() const
 void FLuaglueGenerator::Initialize(const FString& RootLocalPath, const FString& RootBuildPath, const FString& OutputDirectory, const FString& IncludeBase)
 {
 	UE_LOG(LogScriptGenerator, Log, TEXT("Using Lua Script Generator."));
-	CodeGenerator = new FLuaScriptCodeGenerator(RootLocalPath, RootBuildPath, OutputDirectory, IncludeBase);
+	GConfig->GetArray(TEXT("Lua"), TEXT("SupportedModules"), SupportModules, luaconfiginiPath);
+	CodeGenerator = new FLuaScriptCodeGenerator(RootLocalPath, RootBuildPath, OutputDirectory, IncludeBase, luaconfiginiPath);
 	CodeGenerator->GameModuleName = GameModuleName;
-	FString configPath = IncludeBase / ".." / ".." / "Config" / "luaconfig.ini";
-	
-	GConfig->GetArray(TEXT("Lua"), TEXT("SupportedModules"), SupportModules, configPath);
-	FProjectDescriptor ProjectDescriptor;
-	FText OutError;
-
-	ProjectDescriptor.Load(FPaths::GetProjectFilePath(), OutError);
-	for (auto &module : ProjectDescriptor.Modules)
-	{
-		SupportModules.Add(module.Name.ToString());
-	}
+	CodeGenerator->SupportModules = SupportModules;
 }
 
 bool FLuaglueGenerator::ShouldExportClassesForModule(const FString& ModuleName, EBuildModuleType::Type ModuleType, const FString& ModuleGeneratedIncludeDirectory) const
@@ -87,15 +81,25 @@ bool FLuaglueGenerator::SupportsTarget(const FString& TargetName) const
 {
 	if (FPaths::IsProjectFilePathSet())
 	{
-		FString ConfigDir = FPaths::GetPath(FPaths::GetProjectFilePath()) / "Config";
-		FString configPath = ConfigDir / "luaconfig.ini";
-		FConfigFile* File = GConfig->Find(configPath, false);
+		luaconfiginiPath = FPaths::GetPath(FPaths::GetProjectFilePath()) /"Config"/ "luaconfig.ini";
+		FConfigFile* File = GConfig->Find(luaconfiginiPath, false);
+		if (File == nullptr)
+		{
+			luaconfiginiPath = FPaths::GetPath(FPaths::GetProjectFilePath()) /"Plugins"/ "LuaPlugin" / "Config" / "luaconfig.ini";
+			File = GConfig->Find(luaconfiginiPath, false);
+		}
+
 		if (File != nullptr)
 		{
-			FProjectDescriptor ProjectDescriptor;
-			FText OutError;
-			ProjectDescriptor.Load(FPaths::GetProjectFilePath(), OutError);
-			GameModuleName = ProjectDescriptor.Modules[0].Name.ToString();
+			FModulePath::Get().Init();
+			GConfig->GetString(TEXT("Lua"), TEXT("GameModuleName"), GameModuleName, luaconfiginiPath);
+			if (GameModuleName.IsEmpty())
+			{
+				FProjectDescriptor ProjectDescriptor;
+				FText OutError;
+				ProjectDescriptor.Load(FPaths::GetProjectFilePath(), OutError);
+				GameModuleName = ProjectDescriptor.Modules[0].Name.ToString();
+			}
 			return true;
 		}
 	}

@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "CatchMeAIController.generated.h"
 
-UCLASS(meta = (lua=1))
+UCLASS()
 class CATCHME_API ACatchMeAIController : public AAIController
 {
 	GENERATED_BODY()
