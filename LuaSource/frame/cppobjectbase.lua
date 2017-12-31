@@ -47,7 +47,7 @@ end
 CppObjectBase.New = CppObjectBase.NewCpp
 
 function CppObjectBase:Ctor()
-	self._gc_list = {}
+	rawset(self, "_gc_list", {})
 	if AActor.Cast(self) then
 		LevelActors[self] = true
 	end

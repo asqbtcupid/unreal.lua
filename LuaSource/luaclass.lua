@@ -216,9 +216,9 @@ Class = Inherit
 ObjectBase = Inherit(Object)
 ObjectBase.New = Object.NewIns
 function ObjectBase:Ctor()
-	self._timer_handles_ = {}
-	self._event_handles_ = {}
-	self._childs_ = {}
+	rawset(self, "_timer_handles_", {})
+	rawset(self, "_event_handles_", {})
+	rawset(self, "_childs_", {})
 end
 
 function ObjectBase:Destroy()

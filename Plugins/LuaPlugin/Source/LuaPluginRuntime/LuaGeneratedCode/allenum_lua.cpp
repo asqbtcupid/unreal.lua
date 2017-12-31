@@ -377,11 +377,6 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(EWidgetBlendMode_Enum, "EWidgetBlendMode");
 		UTableUtil::loadEnum(EWidgetGeometryMode_Enum, "EWidgetGeometryMode");
 		UTableUtil::loadEnum(EWidgetInteractionSource_Enum, "EWidgetInteractionSource");
-		UTableUtil::loadEnum(FoliageVertexColorMask_Enum, "FoliageVertexColorMask");
-		UTableUtil::loadEnum(EVertexColorMaskChannel_Enum, "EVertexColorMaskChannel");
-		UTableUtil::loadEnum(EFoliageScaling_Enum, "EFoliageScaling");
-		UTableUtil::loadEnum(ESimulationOverlap_Enum, "ESimulationOverlap");
-		UTableUtil::loadEnum(ESimulationQuery_Enum, "ESimulationQuery");
 		UTableUtil::loadEnum(EAIOptionFlag_Enum, "EAIOptionFlag");
 		UTableUtil::loadEnum(FAIDistanceType_Enum, "FAIDistanceType");
 		UTableUtil::loadEnum(EPawnActionAbortState_Enum, "EPawnActionAbortState");
@@ -433,7 +428,11 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(EEnvTestDot_Enum, "EEnvTestDot");
 		UTableUtil::loadEnum(EEnvTestPathfinding_Enum, "EEnvTestPathfinding");
 		UTableUtil::loadEnum(EAISenseNotifyType_Enum, "EAISenseNotifyType");
-		UTableUtil::loadEnum(Ehehe_Enum, "Ehehe");
+		UTableUtil::loadEnum(FoliageVertexColorMask_Enum, "FoliageVertexColorMask");
+		UTableUtil::loadEnum(EVertexColorMaskChannel_Enum, "EVertexColorMaskChannel");
+		UTableUtil::loadEnum(EFoliageScaling_Enum, "EFoliageScaling");
+		UTableUtil::loadEnum(ESimulationOverlap_Enum, "ESimulationOverlap");
+		UTableUtil::loadEnum(ESimulationQuery_Enum, "ESimulationQuery");
 	}
 	lua_static_load_allenum_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}
 };

@@ -93,6 +93,11 @@ void  ue_lua_rawset(lua_State *L, int idx)
 {
 	return lua_rawset(L, idx);
 }
+
+void  ue_lua_rawseti(lua_State *L, int idx, int i)
+{
+	return lua_rawseti(L, idx, i);
+}
 int   ue_lua_setmetatable(lua_State *L, int objindex)
 {
 	return lua_setmetatable(L, objindex);

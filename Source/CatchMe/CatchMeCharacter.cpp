@@ -63,25 +63,6 @@ void ACatchMeCharacter::OnRep_CharacterId()
 	LuaCall("OnRep_CharacterId", this);
 }
 
-
-void ACatchMeCharacter::TestDouble(double haha)
-{
-
-}
-
-
-bool ACatchMeCharacter::hehe(TArray<int32>& i)
-{
-	return true;
-}
-
-
-
-bool ACatchMeCharacter::jiji(TArray<int32>& i)
-{
-	return true;
-}
-
 void ACatchMeCharacter::OnRep_HP()
 {
 	LuaCall("OnRep_HP", this);

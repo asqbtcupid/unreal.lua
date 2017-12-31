@@ -4,7 +4,7 @@ struct lua_static_load_SkillInfo_struct
 {
 	static void load()
 	{
-		UTableUtil::loadlib(FSkillInfo_Lib, "FSkillInfo");
+		UTableUtil::loadstruct(FSkillInfo_Lib, "FSkillInfo");
 	}
 	lua_static_load_SkillInfo_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}
 };

@@ -42,13 +42,6 @@ struct CATCHME_API FSkillInfo {
 	float LastTime;
 };
 
-UENUM()
-enum class Ehehe
-{
-	lala,
-	jiji
-};
-
 UCLASS(Blueprintable)
 class CATCHME_API ACatchMeCharacter : public ACMCharacterBase
 {
@@ -130,30 +123,5 @@ public:
 
 	UFUNCTION()
 	virtual void OnRep_CharacterId();
-
-	UFUNCTION(BlueprintImplementableEvent, Category="Test")
-		void test(const TArray<int32>& hehe, const TMap<FString, int32>& jiji);
-
-	UFUNCTION()
-		void TestDouble(double haha);
-
-	
-	UFUNCTION()
-		bool hehe(TArray<int32>& ii);
-
-	UPROPERTY()
-		TArray<int32> publicarr;
-
-private:
-
-	UFUNCTION()
-		bool jiji(TArray<int32>& ii);
-
-	UPROPERTY()
-		TMap<FString, int32> mmp;
-	UPROPERTY()
-		TSet<int32> Sucks;
-	UPROPERTY()
-		TArray<int32> Arrrr;
 };
  

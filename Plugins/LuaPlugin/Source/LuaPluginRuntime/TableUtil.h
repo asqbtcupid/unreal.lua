@@ -8,6 +8,8 @@
 #include "SubclassOf.h"
 #include "Class.h"
 #include "LuaArrayHelper.h"
+#include "LuaMapHelper.h"
+#include "LuaSetHelper.h"
 #include "TableUtil.generated.h"
 
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
@@ -161,7 +163,7 @@ public:
 
 template<> class popiml<FName> {
 public:
-	static FName pop(lua_State *L, int index) { return FName(ue_lua_tolstring(L, index, NULL)); }
+	static FName pop(lua_State *L, int index) { return FName(UTF8_TO_TCHAR(ue_lua_tolstring(L, index, NULL))); }
 };
 template<> class popiml<FText> {
 public:
@@ -169,7 +171,7 @@ public:
 };
 template<> class popiml<FString> {
 public:
-	static FString pop(lua_State *L, int index) { return ANSI_TO_TCHAR(ue_lua_tolstring(L, index, NULL)); }
+	static FString pop(lua_State *L, int index) { return UTF8_TO_TCHAR(ue_lua_tolstring(L, index, NULL)); }
 };
 template<> class popiml<float> {
 public:
@@ -211,7 +213,7 @@ public:
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
 #endif
-	static void addmodule(const char* classname);
+	static void addmodule(const char* classname, bool bIsStruct);
 	static void useCustomLoader();
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 		static void init(bool IsManual = false);
@@ -219,11 +221,11 @@ public:
 	static void openmodule(const char* classname);
 	static void closemodule();
 	static void addfunc(const char* classname, luafunc f);
-	static void initmeta();
-	static void setmeta(lua_State *inL, const char* classname, int index);
+	static void initmeta(bool bIsStruct);
+	static void setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct = false);
 
 	static void* tousertype(lua_State* InL, const char* classname, int i);
-	static void loadlib(const luaL_Reg funclist[], const char* classname);
+	static void loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct = false);
 	static void loadstruct(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
 	static luavalue_ref ref_luavalue(lua_State*inL, int index);
@@ -264,7 +266,7 @@ public:
 	}
 
 	template<class T>
-	int UTableUtil::push(lua_State*inL, const TSubclassOf<T>& value)
+	static int push(lua_State*inL, const TSubclassOf<T>& value)
 	{
 		pushuobject(inL, value.Get());
 		return 1;
@@ -273,10 +275,20 @@ public:
 
 	inline static int push(lua_State *inL, uint8 value)
 	{
-		ue_lua_pushboolean(inL, !!value);
+		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
 	inline static int push(lua_State *inL, int value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push(lua_State *inL, int64 value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push(lua_State *inL, uint64 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
@@ -307,7 +319,7 @@ public:
 		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value));
 		return 1;
 	}
-
+	 
 	inline static int push(lua_State *inL, const FText& value)
 	{
 		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
@@ -331,9 +343,12 @@ public:
 		return 1;
 	}
 	static void pushproperty(lua_State*inL, UProperty* property, const void* ptr);
+	static void push_ret_property(lua_State*inL, UProperty* property, const void* ptr);
+	static void pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProperty* property, const void* ptr);
 	static void pushproperty_type(lua_State*inL, UBoolProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UIntProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UUInt32Property* p, const void*ptr);
+	static void pushproperty_type(lua_State*inL, UInt64Property* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UFloatProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UDoubleProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UObjectPropertyBase* p, const void*ptr);
@@ -377,19 +392,19 @@ public:
 	template<class T, int N>
 	static int popcarr(lua_State *inL, const T(&value)[N], int index)
 	{
-		ue_lua_pushvalue(L, index);
-		ue_lua_pushnil(L);
+		ue_lua_pushvalue(inL, index);
+		ue_lua_pushnil(inL);
 		int i = 0;
-		while (ue_lua_next(L, -2) != 0)
+		while (ue_lua_next(inL, -2) != 0)
 		{
 			if (i < N) 
 			{
-				value[i] = popiml<T>::pop(L, -1);
-				ue_lua_pop(L, 1);
+				value[i] = popiml<T>::pop(inL, -1);
+				ue_lua_pop(inL, 1);
 			}
 			++i;
 		}
-		ue_lua_pop(L, 1);
+		ue_lua_pop(inL, 1);
 	}
 
 	static int pushall(lua_State *inL)
@@ -411,20 +426,26 @@ public:
 	}
 
 	template<typename T>
-	static T pop(lua_State*inL, int index)
+	inline static T pop(lua_State*inL, int index)
 	{
-		auto result = popiml<T>::pop(inL, index);
+		T result;
+		read(result, inL, index);
 		ue_lua_pop(inL, 1);
 		return result;
 	};
 
-	template<class T>
-	static void pop(TArray<T>& Result, lua_State*inL, int index)
+	template<typename T>
+	inline static void read(T& result, lua_State*inL, int index)
 	{
-		ULuaArrayHelper* ArrHelper = Cast<ULuaArrayHelper>((UObject*)touobject(inL, index));
+		result = popiml<T>::pop(inL, index);
+	};
+
+	template<class T>
+	inline static void read(TArray<T>& Result, lua_State*inL, int index)
+	{
+		ULuaArrayHelper* ArrHelper = (ULuaArrayHelper*)touobject(inL, index);
 		if (ArrHelper)
 		{
-			// 			FScriptArrayHelper_InContainer result(ArrHelper->Property, ArrHelper->Obj);
 			TArray<T>*Right = ArrHelper->ValuePtr<T>();
 			if (Right != &Result)
 				Result = *(TArray<T>*)Right;
@@ -435,14 +456,323 @@ public:
 		}
 		else
 		{
-			ensureMsgf(0, L"not arr");
+			ensureAlwaysMsgf(0, L"not arr");
 		}
+	}
+
+	template<class T>
+	inline static void read(TArray<T>** ArrPtr, lua_State*inL, int index)
+	{
+		ULuaArrayHelper* ArrHelper = (ULuaArrayHelper*)touobject(inL, index);
+		if (ArrHelper)
+		{
+			*ArrPtr = ArrHelper->ValuePtr<T>();
+		}
+		else if (ue_lua_istable(inL, index))
+		{
+			**ArrPtr = popiml<TArray<T>>::pop(inL, index);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not arr");
+		}
+	}
+
+	template<class K, class V>
+	inline static void read(TMap<K, V>& Result, lua_State*inL, int index)
+	{
+		ULuaMapHelper* Helper = (ULuaMapHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			TMap<K, V>*Right = Helper->ValuePtr<K, V>();
+			if (Right != &Result)
+				Result = *(TMap<K, V>*)Right;
+		}
+		else if (ue_lua_istable(inL, index))
+		{
+			Result = popiml<TMap<K, V>>::pop(inL, index);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not map");
+		}
+	}
+
+	template<class K, class V>
+	inline static void read(TMap<K, V>** MapPtr, lua_State*inL, int index)
+	{
+		ULuaMapHelper* Helper = (ULuaMapHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			*MapPtr = Helper->ValuePtr<K, V>();
+		}
+		else if (ue_lua_istable(inL, index))
+		{
+			**MapPtr = popiml<TMap<K, V>>::pop(inL, index);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not map");
+		}
+	}
+
+	template<class T>
+	inline static void read(TSet<T>& Result, lua_State*inL, int index)
+	{
+		ULuaSetHelper* Helper = (ULuaSetHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			TSet<T>*Right = Helper->ValuePtr<T>();
+			if (Right != &Result)
+				Result = *(TSet<T>*)Right;
+		}
+		else if (ue_lua_istable(inL, index))
+		{
+			Result = popiml<TSet<T>>::pop(inL, index);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not set");
+		}
+	}
+
+	template<class T>
+	inline static void read(TSet<T>** SetPtr, lua_State*inL, int index)
+	{
+		ULuaSetHelper* Helper = (ULuaSetHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			*SetPtr = Helper->ValuePtr<T>();
+		}
+		if (ue_lua_istable(inL, index))
+		{
+			**SetPtr = popiml<TSet<T>>::pop(inL, index);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not set");
+		}
+	}
+
+
+	template<class T>
+	static void pushback_table(lua_State*inL, int index, const TArray<T>& Arr)
+	{
+		ue_lua_pushvalue(inL, index);
+		int table_len = ue_lua_objlen(inL, -1);
+		for (int i = 1; i <= FMath::Max(table_len, Arr.Num()); i++)
+		{
+			ue_lua_pushinteger(inL, i);
+			if (i <= Arr.Num())
+				push(inL, Arr[i - 1]);
+			else
+				ue_lua_pushnil(inL);
+			ue_lua_rawset(inL, -3);
+		}
+	}
+	template<class K, class V>
+	static void pushback_table(lua_State*inL, int index, const TMap<K, V>& Map)
+	{
+		ue_lua_newtable(inL);
+		ue_lua_pushvalue(inL, index);
+		ue_lua_pushnil(inL);
+		int i = 1;
+		while (ue_lua_next(inL, -2) !=0)
+		{
+			ue_lua_pop(inL, 1);
+			K key = popiml<K>::pop(inL, -1);
+			if (!Map.Contains(key))
+			{
+				ue_lua_pushvalue(inL, -1);
+				ue_lua_rawseti(inL, -4, i);
+				i++;
+			}
+		}
+		ue_lua_pushnil(inL);
+		while (ue_lua_next(inL, -3) != 0)
+		{
+			ue_lua_pushnil(inL);
+			ue_lua_rawset(inL, -4);
+		}
+		ue_lua_remove(inL, -2);
+
+		for (auto& Pair : Map)
+		{
+			push(inL, Pair.Key);
+			push(inL, Pair.Value);
+			ue_lua_rawset(inL, -3);
+		}
+	}
+
+	template<class T>
+	static void pushback_table(lua_State*inL, int index, const TSet<T>& Set)
+	{
+		ue_lua_newtable(inL);
+		ue_lua_pushvalue(inL, index);
+		ue_lua_pushnil(inL);
+		int i = 1;
+		while (ue_lua_next(inL, -2) != 0)
+		{
+			ue_lua_pop(inL, 1);
+			T key = popiml<T>::pop(inL, -1);
+			if (!Set.Contains(key))
+			{
+				ue_lua_pushvalue(inL, -1);
+				ue_lua_rawseti(inL, -4, i);
+				i++;
+			}
+		}
+		ue_lua_pushnil(inL);
+		while (ue_lua_next(inL, -3) != 0)
+		{
+			ue_lua_pushnil(inL);
+			ue_lua_rawset(inL, -4);
+		}
+		ue_lua_remove(inL, -2);
+
+		for (auto& Key : Set)
+		{
+			push(inL, Key);
+			push(inL, true);
+			ue_lua_rawset(inL, -3);
+		}
+	}
+
+	template<class T>
+	static void pushback(lua_State*inL, int index, const TArray<T>& Arr)
+	{
+// is arrhelper
+		if (touobject(inL, index))
+		{
+			ue_lua_pushvalue(inL, index);
+		}
+// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Arr);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not arr");
+		}
+	}
+
+	template<class K, class V>
+	static void pushback(lua_State*inL, int index, const TMap<K, V>& Map)
+	{
+		// is maphelper
+		if (touobject(inL, index))
+		{
+			ue_lua_pushvalue(inL, index);
+		}
+		// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Map);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not map");
+		}
+	}
+
+	template<class T>
+	static void pushback(lua_State*inL, int index, const TSet<T>& Set)
+	{
+		// is arrhelper
+		if (touobject(inL, index))
+		{
+			ue_lua_pushvalue(inL, index);
+		}
+		// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Set);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not set");
+		}
+	}
+
+	template<class T>
+	static void pushback_private(lua_State*inL, int index, const TArray<T>& Arr)
+	{
+		// is arrhelper
+		ULuaArrayHelper* ArrHelper = (ULuaArrayHelper*)touobject(inL, index);
+		if (ArrHelper)
+		{
+			TArray<T>*Right = ArrHelper->ValuePtr<T>();
+			*Right = Arr;
+			ue_lua_pushvalue(inL, index);
+		}
+		// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Arr);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not arr");
+		}
+	}
+
+	template<class K, class V>
+	static void pushback_private(lua_State*inL, int index, const TMap<K, V>& Map)
+	{
+		// is maphelper
+		ULuaMapHelper* Helper = (ULuaMapHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			TMap<K, V>* MapPtr = Helper->ValuePtr<K, V>();
+			*MapPtr = Map;
+			ue_lua_pushvalue(inL, index);
+		}
+		// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Map);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not map");
+		}
+	}
+
+	template<class T>
+	static void pushback_private(lua_State*inL, int index, const TSet<T>& Set)
+	{
+		// is maphelper
+		ULuaSetHelper* Helper = (ULuaSetHelper*)touobject(inL, index);
+		if (Helper)
+		{
+			TSet<T>* SetPtr = Helper->ValuePtr<T>();
+			*SetPtr = Set;
+			ue_lua_pushvalue(inL, index);
+		}
+		// is lua table
+		else if (ue_lua_istable(inL, index))
+		{
+			pushback_table(inL, index, Set);
+		}
+		else
+		{
+			ensureAlwaysMsgf(0, L"not set");
+		}
+	}
+
+	template<class T>
+	static void pushback_private(lua_State*inL, int index, const T& Struct, const typename traitstructclass<T>::value* p = nullptr)
+	{
+		*(T*)tostruct(inL, index) = Struct;
+		ue_lua_pushvalue(inL, index);
 	}
 
 	static void popproperty(lua_State* inL, int index, UProperty* property, void* ptr);
 	static void popproperty_type(lua_State*inL, int index, UBoolProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UIntProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UUInt32Property* p, void*ptr);
+	static void popproperty_type(lua_State*inL, int index, UInt64Property* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UFloatProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UDoubleProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UObjectPropertyBase* p, void*ptr);
@@ -552,15 +882,146 @@ public:
 	static void call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr);
 	static void bpcall(const char* funname, UFunction* funcsig, void* ptr);
 
-	static void pusharr(lua_State* inL, void *Obj, UArrayProperty* Property);
-};
+	static void pushcontainer(lua_State* inL, void *Obj, UArrayProperty* Property);
+	static void pushcontainer(lua_State* inL, void *Obj, UMapProperty* Property);
+	static void pushcontainer(lua_State* inL, void *Obj, USetProperty* Property);
 
-// template<typename T, typename T1>
-// int UTableUtil::push(lua_State*inL, T* value)
-// {
-// // 	pushuobject(inL, (void*)value);
-// 	return 1;
-// }
+	inline static int push_ret(lua_State *inL, uint8 value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, int value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, int64 value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, uint64 value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, unsigned int value)
+	{
+		ue_lua_pushinteger(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, float value)
+	{
+		ue_lua_pushnumber(inL, value);
+		return 1;
+	}
+
+	inline static int push_ret(lua_State *inL, double value)
+	{
+		ue_lua_pushnumber(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, bool value)
+	{
+		ue_lua_pushboolean(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, const FString& value)
+	{
+		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value));
+		return 1;
+	}
+
+	inline static int push_ret(lua_State *inL, const FText& value)
+	{
+		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
+		return 1;
+	}
+
+	inline static int push_ret(lua_State *inL, const FName& value)
+	{
+		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
+		return 1;
+	}
+
+	inline static int push_ret(lua_State *inL, const char* value)
+	{
+		ue_lua_pushstring(inL, value);
+		return 1;
+	}
+	inline static int push_ret(lua_State *inL, const UClass* value)
+	{
+		pushuobject(inL, (void*)value);
+		return 1;
+	}
+
+	template<typename T>
+	static int push_ret(lua_State *inL, const T& value, const typename traitstructclass<T>::value* p = nullptr)
+	{
+		pushstruct(inL, traitstructclass<T>::name(), (void*)(new T(value)), true);
+		return 1;
+	}
+
+	template<typename T>
+	static int push_ret(lua_State *inL, const T* value, typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, T>::Type* p = nullptr)
+	{
+		pushuobject(inL, (void*)value);
+		return 1;
+	}
+
+	template<class T>
+	int push_ret(lua_State*inL, const TSubclassOf<T>& value)
+	{
+		pushuobject(inL, value.Get());
+		return 1;
+	}
+	template<class T>
+	static int push_ret(lua_State *inL, const TWeakObjectPtr<T>& value)
+	{
+		pushuobject(inL, (void*)value.Get());
+		return 1;
+	}
+
+	template<class T>
+	static int push_ret(lua_State *inL, const TSet<T>& value)
+	{
+		ue_lua_newtable(inL);
+		for (auto& ele : value)
+		{
+			push_ret(inL, ele);
+			push(inL, true);
+			ue_lua_rawset(inL, -3);
+		}
+		return 1;
+	}
+
+	template<class K, class V>
+	static int push_ret(lua_State *inL, const TMap<K, V>& value)
+	{
+		ue_lua_newtable(inL);
+		for (auto& ele : value)
+		{
+			push_ret(inL, ele.Key);
+			push_ret(inL, ele.Value);
+			ue_lua_rawset(inL, -3);
+		}
+		return 1;
+	}
+
+	template<class T>
+	static int push_ret(lua_State* inL, const TArray<T>& value)
+	{
+		ue_lua_newtable(inL);
+		for (int i = 0; i < value.Num(); i++)
+		{
+			push(inL, i + 1);
+			push_ret(inL, value[i]);
+			ue_lua_rawset(inL, -3);
+		}
+		return 1;
+	}
+};
 
 template<class T>
 int UTableUtil::push(lua_State*inL, const TArray<T>& value)
@@ -625,10 +1086,7 @@ public:
 	{
 		UTableUtil::GC();
 		Collector.AllowEliminatingReferences(false);
-		for (auto Object : objs)
-		{
-			Collector.AddReferencedObject(Object);
-		}
+		Collector.AddReferencedObjects(objs);
 		Collector.AllowEliminatingReferences(true);
 	}
 

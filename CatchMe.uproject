@@ -15,10 +15,18 @@
 			]
 		}
 	],
-	"Plugins": [
-		{
-			"Name": "LuaPlugin",
-			"Enabled": true
-		}
-	]
+  "Plugins": [
+    {
+      "Name": "LuaPlugin",
+      "Enabled": true
+    }
+  ],
+
+  "PreBuildSteps":
+  {
+      "Win64":
+      [
+          "\"$(EngineDir)/Build/BatchFiles/Build.bat\" UnrealHeaderTool Win64 Development -module LuaglueGenerator -plugin \"$(ProjectDir)/Plugins/LuaPlugin/LuaPlugin.uplugin\" -NoMutex"
+      ]
+  }
 }

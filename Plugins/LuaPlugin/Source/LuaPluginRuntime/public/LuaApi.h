@@ -28,6 +28,7 @@ LUAPLUGINRUNTIME_API void  (ue_lua_rawget)(lua_State *L, int idx);
 LUAPLUGINRUNTIME_API void  (ue_lua_rawgeti)(lua_State *L, int idx, int n);
 LUAPLUGINRUNTIME_API void  (ue_lua_createtable)(lua_State *L, int narr, int nrec);
 LUAPLUGINRUNTIME_API void  (ue_lua_rawset)(lua_State *L, int idx);
+LUAPLUGINRUNTIME_API void  (ue_lua_rawseti)(lua_State *L, int idx, int i);
 LUAPLUGINRUNTIME_API int   (ue_lua_setmetatable)(lua_State *L, int objindex);
 LUAPLUGINRUNTIME_API int   (ue_lua_setfenv)(lua_State *L, int idx);
 LUAPLUGINRUNTIME_API int   (ue_lua_pcall)(lua_State *L, int nargs, int nresults, int errfunc);

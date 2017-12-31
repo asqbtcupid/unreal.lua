@@ -66,31 +66,46 @@ int32 UBPAndLuaBridge::CallBlueprintFunction(Flua_State inL, UObject* funcsig, U
 
 	// Iterate over input parameters
 	TArray<UProperty*> PushBackParms;
+	TArray<UProperty*> ReturnParms;
+	TArray<int32> StackIndexs;
 	for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 	{
 		auto Prop = *It;
 
-		if ((Prop->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) & CPF_ReturnParm)
-		{
-			PushBackParms.Insert(Prop, 0);
-		}
-		else if ((Prop->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) & CPF_OutParm)
+		if ( Prop->GetPropertyFlags() & CPF_ReferenceParm )
 		{
 			PushBackParms.Add(Prop);
+			StackIndexs.Add(ArgIndex);
 		}
+		else if (( Prop ->GetPropertyFlags() & (CPF_OutParm | CPF_ReturnParm) ))
+		{
+			ReturnParms.Insert(Prop, 0);
+			continue;
+		}
+
 		if (ArgIndex <= ArgCount)
 		{
 			UTableUtil::popproperty(inL, ArgIndex, Prop, Buffer);
 			++ArgIndex;
 		}
+		else if (Prop->GetPropertyFlags() & CPF_ReferenceParm)
+		{
+			ensureMsgf(0, L"you should pass reference, other wise there will be bug");
+		}
 	}
 	Obj->ProcessEvent(Function, Buffer);
+	for (UProperty* Prop : ReturnParms)
+	{
+		UTableUtil::push_ret_property(inL, Prop, Buffer);
+	}
+	int32 i = 0;
 	for (UProperty* Prop : PushBackParms)
 	{
-		UTableUtil::pushproperty(inL, Prop, Buffer);
+		UTableUtil::pushback_ref_property(inL, StackIndexs[i], Prop, Buffer);
+		++i;
 	}
 
-	return PushBackParms.Num();
+	return i+ReturnParms.Num();
 }
 
 

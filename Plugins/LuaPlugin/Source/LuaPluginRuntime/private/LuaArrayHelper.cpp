@@ -3,6 +3,11 @@
 #include "LuaArrayHelper.h"
 #include "TableUtil.h"
 
+ULuaArrayHelper::ULuaArrayHelper()
+{
+	LuaCtor("frame.luaarrayhelper", this);
+}
+
 void ULuaArrayHelper::Init(void* _Obj, UArrayProperty* _Property)
 {
 	Obj = _Obj;
@@ -27,6 +32,54 @@ ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP(void* _Obj, UArrayProperty* Prope
 	return Result;
 }
 
+void ULuaArrayHelper::Copy(FScriptArrayHelper_InContainer& SrcArrayHelper, FScriptArrayHelper_InContainer& DestArrayHelper, UArrayProperty* p)
+{
+	int32 Num = SrcArrayHelper.Num();
+	if (!(p->Inner->PropertyFlags & CPF_IsPlainOldData))
+	{
+		DestArrayHelper.EmptyAndAddValues(Num);
+	}
+	else
+	{
+		DestArrayHelper.EmptyAndAddUninitializedValues(Num);
+	}
+	if (Num)
+	{
+		int32 Size = p->Inner->ElementSize;
+		uint8* SrcData = (uint8*)SrcArrayHelper.GetRawPtr();
+		uint8* DestData = (uint8*)DestArrayHelper.GetRawPtr();
+		if (!(p->Inner->PropertyFlags & CPF_IsPlainOldData))
+		{
+			for (int32 i = 0; i < Num; i++)
+			{
+				p->Inner->CopyCompleteValue(DestData + i * Size, SrcData + i * Size);
+			}
+		}
+		else
+		{
+			FMemory::Memcpy(DestData, SrcData, Num*Size);
+		}
+	}
+}
+
+void ULuaArrayHelper::CopyTo(UArrayProperty* p, void* ptr)
+{
+	if (ptr == Obj && p == Property)
+		return;
+	FScriptArrayHelper_InContainer SrcArrayHelper(Property, Obj);
+	FScriptArrayHelper_InContainer DestArrayHelper(p, ptr);
+	Copy(SrcArrayHelper, DestArrayHelper, p);
+}
+
+void ULuaArrayHelper::CopyFrom(UArrayProperty* p, void* ptr)
+{
+	if (ptr == Obj && p == Property)
+		return;
+	FScriptArrayHelper_InContainer SrcArrayHelper(p, ptr);
+	FScriptArrayHelper_InContainer DestArrayHelper(Property, Obj);
+	Copy(SrcArrayHelper, DestArrayHelper, Property);
+}
+
 int32 ULuaArrayHelper::Num()
 {
 	FScriptArrayHelper_InContainer result(Property, Obj);
@@ -39,7 +92,11 @@ int32 ULuaArrayHelper::Get(Flua_State inL, int32 Index)
 	--Index;
 	FScriptArrayHelper_InContainer result(Property, Obj);
 	if (!result.IsValidIndex(Index))
+	{
+		ensureMsgf(0, L"Index Invalid");
 		return 0;
+	}
+	
 	UProperty* InnerProperty = Property->Inner;
 	UTableUtil::pushproperty(inL, InnerProperty, result.GetRawPtr(Index));
 	return 1;
@@ -69,7 +126,10 @@ int32 ULuaArrayHelper::Remove(Flua_State inL, int32 Index)
 	FScriptArrayHelper_InContainer result(Property, Obj);
 	UProperty* InnerProperty = Property->Inner;
 	if (!result.IsValidIndex(Index))
+	{
+		ensureMsgf(0, L"Index Invalid");
 		return 0;
+	}
 
 	UTableUtil::pushproperty(inL, InnerProperty, result.GetRawPtr(Index));
 	result.RemoveValues(Index);
@@ -106,8 +166,21 @@ void ULuaArrayHelper::Empty(int32 Slack /*= 0*/)
 	result.EmptyValues(Slack);
 }
 
+void ULuaArrayHelper::Reset()
+{
+	FScriptArrayHelper_InContainer result(Property, Obj);
+	result.EmptyValues(0);
+}
+
 int32 ULuaArrayHelper::Table(Flua_State inL)
 {
-	UTableUtil::pushproperty(inL, Property, Obj);
+	FScriptArrayHelper_InContainer result(Property, Obj);
+	lua_newtable(inL);
+	for (int32 i = 0; i < result.Num(); ++i)
+	{
+		lua_pushinteger(inL, i + 1);
+		UTableUtil::pushproperty(inL, Property->Inner, result.GetRawPtr(i));
+		lua_rawset(inL, -3);
+	}
 	return 1;
 }

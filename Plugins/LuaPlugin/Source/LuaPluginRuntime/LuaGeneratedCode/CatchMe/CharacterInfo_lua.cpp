@@ -4,7 +4,7 @@ struct lua_static_load_CharacterInfo_struct
 {
 	static void load()
 	{
-		UTableUtil::loadlib(FCharacterInfo_Lib, "FCharacterInfo");
+		UTableUtil::loadstruct(FCharacterInfo_Lib, "FCharacterInfo");
 	}
 	lua_static_load_CharacterInfo_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}
 };

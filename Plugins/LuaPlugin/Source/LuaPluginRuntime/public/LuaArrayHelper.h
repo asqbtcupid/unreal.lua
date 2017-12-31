@@ -13,6 +13,7 @@ class LUAPLUGINRUNTIME_API ULuaArrayHelper : public UObject
 {
 	GENERATED_BODY()
 public:
+	ULuaArrayHelper();
 	void* Obj;
 
 	UArrayProperty* Property;
@@ -29,7 +30,11 @@ public:
 		static ULuaArrayHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
 	static ULuaArrayHelper* GetHelperCPP(void* _Obj, UArrayProperty* Property);
-	
+
+	void Copy(FScriptArrayHelper_InContainer& SrcArrayHelper, FScriptArrayHelper_InContainer& DestArrayHelper, UArrayProperty* p);
+	void CopyTo(UArrayProperty* p, void* ptr);
+	void CopyFrom(UArrayProperty* p, void* ptr);
+
 	UFUNCTION()
 		int32 Num();
 
@@ -54,7 +59,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = JustForDefaultValue)
 		void Empty(int32 Slack = 0);
 
+	UFUNCTION(BlueprintCallable, Category = JustForDefaultValue)
+		void Reset();
+
 	UFUNCTION(meta = (LuaCustomReturn))
 		int32 Table(Flua_State inL);
-		
 };

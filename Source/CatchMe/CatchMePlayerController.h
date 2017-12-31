@@ -44,6 +44,8 @@ public:
 	UFUNCTION(reliable, client)
 	void C_RemoveFoliage(int32 FoliageComponentIndex, int32 Index);
 
+	UPROPERTY(BlueprintReadWrite, Category="CM")
+		TArray<int32> arr;
 };
 
 
