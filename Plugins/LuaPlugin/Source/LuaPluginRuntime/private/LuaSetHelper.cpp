@@ -2,6 +2,7 @@
 
 #include "LuaSetHelper.h"
 #include "TableUtil.h"
+#include "../Launch/Resources/Version.h"
 
 ULuaSetHelper::ULuaSetHelper()
 {
@@ -99,8 +100,18 @@ int32 ULuaSetHelper::Get(Flua_State inL)
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
 	UTableUtil::popproperty(inL, 3, CurrKeyProp, KeyStorageSpace);
+#if ENGINE_MINOR_VERSION < 18
 	uint8* keyptr = result.FindElementFromHash(KeyStorageSpace);
+#else
+	uint8* keyptr = nullptr;
+	int32 Index = result.FindElementIndexFromHash(KeyStorageSpace);
+	if (Index != INDEX_NONE)
+	{
+		keyptr = result.GetElementPtr(Index);
+	}
+#endif
 	CurrKeyProp->DestroyValue(KeyStorageSpace);
+
 	if (keyptr)
 	{
 		UTableUtil::push(inL, true);
@@ -124,9 +135,17 @@ void ULuaSetHelper::Set(Flua_State inL)
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
-	result.FindElementFromHash(KeyStorageSpace);
 	UTableUtil::popproperty(inL, 3, CurrKeyProp, KeyStorageSpace);
+#if ENGINE_MINOR_VERSION < 18
 	uint8* keyptr = result.FindElementFromHash(KeyStorageSpace);
+#else
+	uint8* keyptr = nullptr;
+	int32 Index = result.FindElementIndexFromHash(KeyStorageSpace);
+	if (Index != INDEX_NONE)
+	{
+		keyptr = result.GetElementPtr(Index);
+	}
+#endif
 	if (lua_isnil(inL, -1))
 	{
 		if(keyptr)

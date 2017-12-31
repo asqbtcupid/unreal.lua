@@ -1,8 +1,9 @@
 #include "LuaFixLink.h"
 extern void FixLinkFunc_Engine_uclass_all();
 extern void FixLinkFunc_UMG_uclass_all();
-extern void FixLinkFunc_AIModule_uclass_all();
 extern void FixLinkFunc_Foliage_uclass_all();
+extern void FixLinkFunc_AIModule_uclass_all();
+extern void FixLinkFunc_VarWatcher_uclass_all();
 extern void FixLinkFunc_CatchMe_CatchMeAIController();
 extern void FixLinkFunc_CatchMe_CatchMeGameInstance();
 extern void FixLinkFunc_CatchMe_CMCharacterBase();
@@ -20,8 +21,8 @@ extern void FixLinkFunc_CoreUObject_ustruct_all();
 extern void FixLinkFunc_InputCore_ustruct_all();
 extern void FixLinkFunc_Engine_ustruct_all();
 extern void FixLinkFunc_UMG_ustruct_all();
-extern void FixLinkFunc_AIModule_ustruct_all();
 extern void FixLinkFunc_Foliage_ustruct_all();
+extern void FixLinkFunc_AIModule_ustruct_all();
 extern void FixLinkFunc_CatchMe_CharacterInfo();
 extern void FixLinkFunc_CatchMe_SkillInfo();
 extern void FixLinkFunc_LuaPluginRuntime_ustruct_all();
@@ -30,8 +31,9 @@ void LuaFixLink()
 {
 	FixLinkFunc_Engine_uclass_all();
 	FixLinkFunc_UMG_uclass_all();
-	FixLinkFunc_AIModule_uclass_all();
 	FixLinkFunc_Foliage_uclass_all();
+	FixLinkFunc_AIModule_uclass_all();
+	FixLinkFunc_VarWatcher_uclass_all();
 	FixLinkFunc_CatchMe_CatchMeAIController();
 	FixLinkFunc_CatchMe_CatchMeGameInstance();
 	FixLinkFunc_CatchMe_CMCharacterBase();
@@ -49,8 +51,8 @@ void LuaFixLink()
 	FixLinkFunc_InputCore_ustruct_all();
 	FixLinkFunc_Engine_ustruct_all();
 	FixLinkFunc_UMG_ustruct_all();
-	FixLinkFunc_AIModule_ustruct_all();
 	FixLinkFunc_Foliage_ustruct_all();
+	FixLinkFunc_AIModule_ustruct_all();
 	FixLinkFunc_CatchMe_CharacterInfo();
 	FixLinkFunc_CatchMe_SkillInfo();
 	FixLinkFunc_LuaPluginRuntime_ustruct_all();

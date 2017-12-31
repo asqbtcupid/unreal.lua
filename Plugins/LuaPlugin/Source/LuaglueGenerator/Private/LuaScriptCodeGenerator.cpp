@@ -4,6 +4,7 @@
 #include "ModulePath.h"
 #include "Paths.h"
 #include "FileManager.h"
+#include "../Launch/Resources/Version.h"
 #define GetWeakObjType(varname, returnname) 		FString typeName = GetPropertyTypeCPP(varname, CPPF_ArgumentOrReturnValue); \
 		int FirstSpaceIndex = typeName.Find(TEXT("<"));\
 		typeName = typeName.Mid(FirstSpaceIndex + 1);\
@@ -385,8 +386,10 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	if (Class->ClassFlags & CLASS_Interface && Function->GetName() == "ExecuteUbergraph")
 		return false;
 
+#if ENGINE_MINOR_VERSION >= 17
 	if (Function->HasAnyFunctionFlags(FUNC_EditorOnly))
 		return false;
+#endif
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
 	if (bExport)
 	{
@@ -866,9 +869,13 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property)
 		}
 	}
 	else if (Property->IsA(ULazyObjectProperty::StaticClass()) ||
+#if ENGINE_MINOR_VERSION < 18
 		Property->IsA(UAssetObjectProperty::StaticClass()) ||
-//  		Property->IsA(UWeakObjectProperty::StaticClass()) ||
 		Property->IsA(UAssetClassProperty::StaticClass()) 
+#else
+		Property->IsA(USoftObjectProperty::StaticClass()) ||
+		Property->IsA(USoftClassProperty::StaticClass())
+#endif
 		)
 	{
 		bSupported = false;

@@ -23,6 +23,7 @@
 #include "WalkableSlopeOverride.lua.h"
 #include "ComponentReference.lua.h"
 #include "Redirector.lua.h"
+#include "EdGraphTerminalType.lua.h"
 #include "EdGraphPinReference.lua.h"
 #include "StreamableTextureInstance.lua.h"
 #include "DynamicTextureInstance.lua.h"
@@ -34,14 +35,14 @@
 #include "NavigationLink.lua.h"
 #include "NavigationSegmentLink.lua.h"
 #include "SkeletalMeshClothBuildParams.lua.h"
+#include "IndexedCurve.lua.h"
+#include "RichCurveKey.lua.h"
+#include "RichCurve.lua.h"
 #include "AnimationRecordingSettings.lua.h"
 #include "AnimCurveType.lua.h"
 #include "SmartNameMapping.lua.h"
 #include "SmartNameContainer.lua.h"
 #include "SmartName.lua.h"
-#include "IndexedCurve.lua.h"
-#include "RichCurveKey.lua.h"
-#include "RichCurve.lua.h"
 #include "AnimCurveParam.lua.h"
 #include "AnimCurveBase.lua.h"
 #include "RawAnimSequenceTrack.lua.h"
@@ -62,6 +63,8 @@
 #include "BlueprintCookedComponentInstancingData.lua.h"
 #include "AlphaBlend.lua.h"
 #include "AnimBlueprintDebugData.lua.h"
+#include "TimeStretchCurve.lua.h"
+#include "TimeStretchCurveInstance.lua.h"
 #include "SkelMeshComponentLODInfo.lua.h"
 #include "PoseSnapshot.lua.h"
 #include "A2CSPose.lua.h"
@@ -147,10 +150,6 @@
 #include "VectorSpringState.lua.h"
 #include "MaterialInstanceBasePropertyOverrides.lua.h"
 #include "KAggregateGeom.lua.h"
-#include "ConvexElement2D.lua.h"
-#include "CircleElement2D.lua.h"
-#include "BoxElement2D.lua.h"
-#include "AggregateGeometry2D.lua.h"
 #include "ConstraintDrive.lua.h"
 #include "LinearDriveConstraint.lua.h"
 #include "AngularDriveConstraint.lua.h"
@@ -164,6 +163,7 @@
 #include "AudioQualitySettings.lua.h"
 #include "SoundConcurrencySettings.lua.h"
 #include "SoundSubmixSendInfo.lua.h"
+#include "SoundSourceBusSendInfo.lua.h"
 #include "DialogueContextMapping.lua.h"
 #include "SourceEffectChainEntry.lua.h"
 #include "AnimInstanceProxy.lua.h"
@@ -202,6 +202,7 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FWalkableSlopeOverride_Lib, "FWalkableSlopeOverride");
 		UTableUtil::loadstruct(FComponentReference_Lib, "FComponentReference");
 		UTableUtil::loadstruct(FRedirector_Lib, "FRedirector");
+		UTableUtil::loadstruct(FEdGraphTerminalType_Lib, "FEdGraphTerminalType");
 		UTableUtil::loadstruct(FEdGraphPinReference_Lib, "FEdGraphPinReference");
 		UTableUtil::loadstruct(FStreamableTextureInstance_Lib, "FStreamableTextureInstance");
 		UTableUtil::loadstruct(FDynamicTextureInstance_Lib, "FDynamicTextureInstance");
@@ -213,14 +214,14 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FNavigationLink_Lib, "FNavigationLink");
 		UTableUtil::loadstruct(FNavigationSegmentLink_Lib, "FNavigationSegmentLink");
 		UTableUtil::loadstruct(FSkeletalMeshClothBuildParams_Lib, "FSkeletalMeshClothBuildParams");
+		UTableUtil::loadstruct(FIndexedCurve_Lib, "FIndexedCurve");
+		UTableUtil::loadstruct(FRichCurveKey_Lib, "FRichCurveKey");
+		UTableUtil::loadstruct(FRichCurve_Lib, "FRichCurve");
 		UTableUtil::loadstruct(FAnimationRecordingSettings_Lib, "FAnimationRecordingSettings");
 		UTableUtil::loadstruct(FAnimCurveType_Lib, "FAnimCurveType");
 		UTableUtil::loadstruct(FSmartNameMapping_Lib, "FSmartNameMapping");
 		UTableUtil::loadstruct(FSmartNameContainer_Lib, "FSmartNameContainer");
 		UTableUtil::loadstruct(FSmartName_Lib, "FSmartName");
-		UTableUtil::loadstruct(FIndexedCurve_Lib, "FIndexedCurve");
-		UTableUtil::loadstruct(FRichCurveKey_Lib, "FRichCurveKey");
-		UTableUtil::loadstruct(FRichCurve_Lib, "FRichCurve");
 		UTableUtil::loadstruct(FAnimCurveParam_Lib, "FAnimCurveParam");
 		UTableUtil::loadstruct(FAnimCurveBase_Lib, "FAnimCurveBase");
 		UTableUtil::loadstruct(FRawAnimSequenceTrack_Lib, "FRawAnimSequenceTrack");
@@ -241,6 +242,8 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FBlueprintCookedComponentInstancingData_Lib, "FBlueprintCookedComponentInstancingData");
 		UTableUtil::loadstruct(FAlphaBlend_Lib, "FAlphaBlend");
 		UTableUtil::loadstruct(FAnimBlueprintDebugData_Lib, "FAnimBlueprintDebugData");
+		UTableUtil::loadstruct(FTimeStretchCurve_Lib, "FTimeStretchCurve");
+		UTableUtil::loadstruct(FTimeStretchCurveInstance_Lib, "FTimeStretchCurveInstance");
 		UTableUtil::loadstruct(FSkelMeshComponentLODInfo_Lib, "FSkelMeshComponentLODInfo");
 		UTableUtil::loadstruct(FPoseSnapshot_Lib, "FPoseSnapshot");
 		UTableUtil::loadstruct(FA2CSPose_Lib, "FA2CSPose");
@@ -326,10 +329,6 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FVectorSpringState_Lib, "FVectorSpringState");
 		UTableUtil::loadstruct(FMaterialInstanceBasePropertyOverrides_Lib, "FMaterialInstanceBasePropertyOverrides");
 		UTableUtil::loadstruct(FKAggregateGeom_Lib, "FKAggregateGeom");
-		UTableUtil::loadstruct(FConvexElement2D_Lib, "FConvexElement2D");
-		UTableUtil::loadstruct(FCircleElement2D_Lib, "FCircleElement2D");
-		UTableUtil::loadstruct(FBoxElement2D_Lib, "FBoxElement2D");
-		UTableUtil::loadstruct(FAggregateGeometry2D_Lib, "FAggregateGeometry2D");
 		UTableUtil::loadstruct(FConstraintDrive_Lib, "FConstraintDrive");
 		UTableUtil::loadstruct(FLinearDriveConstraint_Lib, "FLinearDriveConstraint");
 		UTableUtil::loadstruct(FAngularDriveConstraint_Lib, "FAngularDriveConstraint");
@@ -343,6 +342,7 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FAudioQualitySettings_Lib, "FAudioQualitySettings");
 		UTableUtil::loadstruct(FSoundConcurrencySettings_Lib, "FSoundConcurrencySettings");
 		UTableUtil::loadstruct(FSoundSubmixSendInfo_Lib, "FSoundSubmixSendInfo");
+		UTableUtil::loadstruct(FSoundSourceBusSendInfo_Lib, "FSoundSourceBusSendInfo");
 		UTableUtil::loadstruct(FDialogueContextMapping_Lib, "FDialogueContextMapping");
 		UTableUtil::loadstruct(FSourceEffectChainEntry_Lib, "FSourceEffectChainEntry");
 		UTableUtil::loadstruct(FAnimInstanceProxy_Lib, "FAnimInstanceProxy");

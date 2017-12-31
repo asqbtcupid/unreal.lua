@@ -47,7 +47,7 @@
 #include "DamageType.lua.h"
 #include "DataAsset.lua.h"
 #include "DataTable.lua.h"
-#include "DestructibleFractureSettings.lua.h"
+#include "DestructibleInterface.lua.h"
 #include "DeveloperSettings.lua.h"
 #include "DeviceProfileManager.lua.h"
 #include "DialogueVoice.lua.h"
@@ -184,7 +184,6 @@
 #include "CameraActor.lua.h"
 #include "Controller.lua.h"
 #include "DecalActor.lua.h"
-#include "DestructibleActor.lua.h"
 #include "DocumentationActor.lua.h"
 #include "Emitter.lua.h"
 #include "HUD.lua.h"
@@ -337,7 +336,6 @@
 #include "VectorFieldComponent.lua.h"
 #include "SkinnedMeshComponent.lua.h"
 #include "StaticMeshComponent.lua.h"
-#include "DestructibleComponent.lua.h"
 #include "PoseableMeshComponent.lua.h"
 #include "SkeletalMeshComponent.lua.h"
 #include "InstancedStaticMeshComponent.lua.h"
@@ -400,7 +398,6 @@
 #include "StereoLayerFunctionLibrary.lua.h"
 #include "VisualLoggerKismetLibrary.lua.h"
 #include "AnimBlueprintGeneratedClass.lua.h"
-#include "BodySetup2D.lua.h"
 #include "SkeletalBodySetup.lua.h"
 #include "CameraModifier_CameraShake.lua.h"
 #include "ActorChannel.lua.h"
@@ -663,9 +660,9 @@
 #include "DemoNetConnection.lua.h"
 #include "ReporterGraph.lua.h"
 #include "GameViewportClient.lua.h"
-#include "DestructibleMesh.lua.h"
 #include "SoundCue.lua.h"
 #include "SoundWave.lua.h"
+#include "SoundSourceBus.lua.h"
 #include "SoundWaveProcedural.lua.h"
 #include "SoundEffectSourcePreset.lua.h"
 #include "SoundEffectSubmixPreset.lua.h"
@@ -754,7 +751,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(DamageType_Lib, "UDamageType");
 		UTableUtil::loadlib(DataAsset_Lib, "UDataAsset");
 		UTableUtil::loadlib(DataTable_Lib, "UDataTable");
-		UTableUtil::loadlib(DestructibleFractureSettings_Lib, "UDestructibleFractureSettings");
+		UTableUtil::loadlib(DestructibleInterface_Lib, "IDestructibleInterface");
 		UTableUtil::loadlib(DeveloperSettings_Lib, "UDeveloperSettings");
 		UTableUtil::loadlib(DeviceProfileManager_Lib, "UDeviceProfileManager");
 		UTableUtil::loadlib(DialogueVoice_Lib, "UDialogueVoice");
@@ -891,7 +888,6 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(CameraActor_Lib, "ACameraActor");
 		UTableUtil::loadlib(Controller_Lib, "AController");
 		UTableUtil::loadlib(DecalActor_Lib, "ADecalActor");
-		UTableUtil::loadlib(DestructibleActor_Lib, "ADestructibleActor");
 		UTableUtil::loadlib(DocumentationActor_Lib, "ADocumentationActor");
 		UTableUtil::loadlib(Emitter_Lib, "AEmitter");
 		UTableUtil::loadlib(HUD_Lib, "AHUD");
@@ -1044,7 +1040,6 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(VectorFieldComponent_Lib, "UVectorFieldComponent");
 		UTableUtil::loadlib(SkinnedMeshComponent_Lib, "USkinnedMeshComponent");
 		UTableUtil::loadlib(StaticMeshComponent_Lib, "UStaticMeshComponent");
-		UTableUtil::loadlib(DestructibleComponent_Lib, "UDestructibleComponent");
 		UTableUtil::loadlib(PoseableMeshComponent_Lib, "UPoseableMeshComponent");
 		UTableUtil::loadlib(SkeletalMeshComponent_Lib, "USkeletalMeshComponent");
 		UTableUtil::loadlib(InstancedStaticMeshComponent_Lib, "UInstancedStaticMeshComponent");
@@ -1107,7 +1102,6 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(StereoLayerFunctionLibrary_Lib, "UStereoLayerFunctionLibrary");
 		UTableUtil::loadlib(VisualLoggerKismetLibrary_Lib, "UVisualLoggerKismetLibrary");
 		UTableUtil::loadlib(AnimBlueprintGeneratedClass_Lib, "UAnimBlueprintGeneratedClass");
-		UTableUtil::loadlib(BodySetup2D_Lib, "UBodySetup2D");
 		UTableUtil::loadlib(SkeletalBodySetup_Lib, "USkeletalBodySetup");
 		UTableUtil::loadlib(CameraModifier_CameraShake_Lib, "UCameraModifier_CameraShake");
 		UTableUtil::loadlib(ActorChannel_Lib, "UActorChannel");
@@ -1370,9 +1364,9 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(DemoNetConnection_Lib, "UDemoNetConnection");
 		UTableUtil::loadlib(ReporterGraph_Lib, "UReporterGraph");
 		UTableUtil::loadlib(GameViewportClient_Lib, "UGameViewportClient");
-		UTableUtil::loadlib(DestructibleMesh_Lib, "UDestructibleMesh");
 		UTableUtil::loadlib(SoundCue_Lib, "USoundCue");
 		UTableUtil::loadlib(SoundWave_Lib, "USoundWave");
+		UTableUtil::loadlib(SoundSourceBus_Lib, "USoundSourceBus");
 		UTableUtil::loadlib(SoundWaveProcedural_Lib, "USoundWaveProcedural");
 		UTableUtil::loadlib(SoundEffectSourcePreset_Lib, "USoundEffectSourcePreset");
 		UTableUtil::loadlib(SoundEffectSubmixPreset_Lib, "USoundEffectSubmixPreset");

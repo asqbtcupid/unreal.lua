@@ -5,6 +5,7 @@
 #include "TextProperty.h"
 #include "LuaFixLink.h"
 #include "LuaMapHelper.h"
+#include "../Launch/Resources/Version.h"
 
 DEFINE_LOG_CATEGORY(LuaLog);
 
@@ -823,12 +824,30 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 			const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 			void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 			CurrKeyProp->InitializeValue(KeyStorageSpace);
-			result.FindElementFromHash(KeyStorageSpace);
+#if ENGINE_MINOR_VERSION < 18
+			uint8* keyptr = result.FindElementFromHash(KeyStorageSpace);
+#else
+			uint8* keyptr = nullptr;
+			int32 Index = result.FindElementIndexFromHash(KeyStorageSpace);
+			if (Index != INDEX_NONE)
+			{
+				keyptr = result.GetElementPtr(Index);
+			}
+#endif
 			while (lua_next(inL, -2) != 0)
 			{
 				lua_pop(inL, 1);
 				popproperty(inL, -1, CurrKeyProp, KeyStorageSpace);
+#if ENGINE_MINOR_VERSION < 18
 				uint8* keyptr = result.FindElementFromHash(KeyStorageSpace);
+#else
+				uint8* keyptr = nullptr;
+				int32 Index = result.FindElementIndexFromHash(KeyStorageSpace);
+				if (Index != INDEX_NONE)
+				{
+					keyptr = result.GetElementPtr(Index);
+				}
+#endif
 				if (keyptr == nullptr)
 				{
 					lua_pushvalue(inL, -1);
