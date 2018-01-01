@@ -515,7 +515,6 @@ void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool 
 
 void UTableUtil::call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr)
 {
-// 	lua_pushcfunction(inL, ErrHandleFunc);
 	lua_rawgeti(inL, LUA_REGISTRYINDEX, funcid);
 	checkf(lua_isfunction(inL, -1), L"");
 	int32 ParamCount = 0;
@@ -536,7 +535,6 @@ void UTableUtil::call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr)
 #endif
 		log(lua_tostring(inL, -1));
 	}
-	lua_pop(inL, 1);
 }
 
 
