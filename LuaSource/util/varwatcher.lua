@@ -63,9 +63,9 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 			local ChildrenMap = {}
 			local ChildrenArr
 			if not bIsKey then
-				ChildrenArr = UNode.Children
+				ChildrenArr = UNode.Children:Table()
 			else
-				ChildrenArr = UNode.KeyChildren
+				ChildrenArr = UNode.KeyChildren:Table()
 			end
 			for i, Node in ipairs(ChildrenArr) do
 				local Key = self.m_WeakRegistry[Node.LuaIndex]
@@ -104,9 +104,9 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 				local ChildrenMap = {}
 				local ChildrenArr
 				if not bIsKey then
-					ChildrenArr = UNode.Children
+					ChildrenArr = UNode.Children:Table()
 				else
-					ChildrenArr = UNode.KeyChildren
+					ChildrenArr = UNode.KeyChildren:Table()
 				end
 				for i, Node in ipairs(ChildrenArr) do
 					local Key = self.m_WeakRegistry[Node.LuaIndex]

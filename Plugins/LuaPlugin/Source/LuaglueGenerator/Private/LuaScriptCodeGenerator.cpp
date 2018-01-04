@@ -266,12 +266,12 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	{
 		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
 		if (Function) 
-			Initializer = FString::Printf(TEXT("pushstruct(L,\"%s\", (void*)(new %s(%s)), true);"), *typeName, *typeName, *name);
+			Initializer = FString::Printf(TEXT("UTableUtil::push_ret(L, %s);"), *name);
 		else
 			if(ReturnValue->GetOuter()->IsA(UFunction::StaticClass()))
 				Initializer = FString::Printf(TEXT("pushstruct(L,\"%s\", (void*)(%s));"), *typeName, *name);
 			else
-				Initializer = FString::Printf(TEXT("pushstruct(L,\"%s\", (void*)(&%s));"), *typeName, *name);
+				Initializer = FString::Printf(TEXT("UTableUtil::push(L, %s);"), *name);
 	}
 	else if (ReturnValue->IsA(UWeakObjectProperty::StaticClass()))
 	{
@@ -755,6 +755,10 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 						FString PtrName = Param->GetName() + "_ptr";
 						FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback(L, %d, *%s);\r\n"), ParamIndex, *PtrName);
 					}
+					else if (Param->IsA(UStructProperty::StaticClass()))
+					{
+						FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback(L, %d, *%s);\r\n"), ParamIndex, *name);
+					}
 					else
 					{
 						FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, nullptr, Param, name));
@@ -806,6 +810,10 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 							|| Param->IsA(USetProperty::StaticClass())
 							|| Param->IsA(UStructProperty::StaticClass())
 							)
+						{
+							FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *name);
+						}
+						else if (Param->IsA(UStructProperty::StaticClass()))
 						{
 							FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *name);
 						}
@@ -1668,7 +1676,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		}
 		FString addition = FString::Printf(TEXT("static int32 %s_New(lua_State* L)\r\n{\r\n"), *namecpp);
 		addition += FString::Printf(TEXT("\t%s* Obj = new %s;\r\n"), *namecpp, *namecpp);
-		addition += FString::Printf(TEXT("\tpushstruct(L,\"%s\", (void*)Obj, true);\r\n"), *namecpp);
+		addition += FString::Printf(TEXT("\tpushstruct_gc(L,\"%s\", (void*)Obj);\r\n"), *namecpp);
 		addition += FString::Printf(TEXT("\treturn 1;\r\n}\r\n\r\n"));
 
 		addition += FString::Printf(TEXT("static int32 %s_Destroy(lua_State* L)\r\n{\r\n"), *namecpp);
@@ -1680,7 +1688,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		{
 			addition += FString::Printf(TEXT("static int32 %s_Copy(lua_State* L)\r\n{\r\n"), *namecpp);
 			addition += FString::Printf(TEXT("\t%s* Obj = (%s*)tostruct(L,1);\r\n"), *namecpp, *namecpp);
-			addition += FString::Printf(TEXT("\tpushstruct(L,\"%s\", (void*)(new %s(*Obj)), true);\r\n"), *namecpp, *namecpp);
+			addition += FString::Printf(TEXT("\tpushstruct_gc(L,\"%s\", (void*)(new %s(*Obj)));\r\n"), *namecpp, *namecpp);
 			addition += TEXT("\treturn 1;\r\n}\r\n\r\n");
 		}
 		for (FString& FilePath : ExtraIncludeHeader)

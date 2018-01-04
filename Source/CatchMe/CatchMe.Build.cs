@@ -2,7 +2,7 @@
 
 using UnrealBuildTool;
 using System.IO;
-
+ 
 public class CatchMe : ModuleRules
 {
     public CatchMe(ReadOnlyTargetRules Target) : base(Target)
@@ -14,5 +14,5 @@ public class CatchMe : ModuleRules
 
         CircularlyReferencedDependentModules.Add("LuaPluginRuntime");
     }
-}                
-                                                                                                                     
+}                 
+                                                                                                                            

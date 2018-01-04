@@ -26,7 +26,7 @@ lua_State* UTableUtil::TheOnlyLuaState = nullptr;
 int32 UTableUtil::ManualInitCount = 0;
 bool UTableUtil::HasManualInit = false;
 TSet<FString> UTableUtil::SupportedNativeStruct;
-
+FDelegateHandle LuaPreGarbageCollectDelegateHandle;
 // bool UTableUtil::bIsInsCall = false;
 
 #ifdef LuaDebug
@@ -153,13 +153,6 @@ void UTableUtil::init(bool IsManual)
 		lua_setmetatable(TheOnlyLuaState, -2);
 		lua_setfield(TheOnlyLuaState, LUA_REGISTRYINDEX, "_existuserdata");
 
-		//set table for need Destroy data
-		lua_newtable(TheOnlyLuaState);
-		lua_setfield(TheOnlyLuaState, LUA_REGISTRYINDEX, "_needgcobject");
-
-		lua_newtable(TheOnlyLuaState);
-		lua_setfield(TheOnlyLuaState, LUA_REGISTRYINDEX, "_needgcstruct");
-
 		//when lua has correspond table of the ins, push the table
 		lua_newtable(TheOnlyLuaState);
 		lua_newtable(TheOnlyLuaState);
@@ -187,6 +180,7 @@ void UTableUtil::init(bool IsManual)
 		if (PtrTickObject == nullptr)
 			PtrTickObject = new LuaTickObject();
 		call("Init", IsManual);
+		LuaPreGarbageCollectDelegateHandle = FCoreUObjectDelegates::PreGarbageCollect.AddStatic(&UTableUtil::GC);
 	}
 	HasManualInit = IsManual;
 }
@@ -233,7 +227,7 @@ void UTableUtil::shutdown_internal()
 		}
 	}
 #endif
-
+	FCoreUObjectDelegates::PreGarbageCollect.Remove(LuaPreGarbageCollectDelegateHandle);
 	TheOnlyLuaState = nullptr;
 }
 
@@ -299,65 +293,43 @@ int32 cast(lua_State* inL)
 int32 uobjcet_gcfunc(lua_State *inL)
 {
 	auto u = (void**)lua_touserdata(inL, -1);
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcobject");
-	lua_pushlightuserdata(inL, *u);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	UTableUtil::rmgcref(static_cast<UObject*>(*u));
+	lua_getmetatable(inL, 1);
+	lua_getfield(inL, -1, "Destroy");
+	if (lua_isfunction(inL, -1))
 	{
-		lua_pop(inL, 1);
-		lua_pushlightuserdata(inL, *u);
-		lua_pushnil(inL);
-		lua_rawset(inL, -3);
-		lua_getmetatable(inL, 1);
-		lua_getfield(inL, -1, "Destroy");
-		if (lua_iscfunction(inL, -1))
+		lua_pushvalue(inL, 1);
+		if (lua_pcall(inL, 1, 0, 0))
 		{
-			lua_pushvalue(inL, 1);
-			if (lua_pcall(inL, 1, 0, 0))
-			{
-				UTableUtil::log(FString(lua_tostring(inL, -1)));
-			}
+			UTableUtil::log(FString(lua_tostring(inL, -1)));
 		}
-#ifdef LuaDebug
-		lua_getmetatable(inL, 1);
-		lua_getfield(inL, -1, "classname");
-		FString n = lua_tostring(inL, -1);
-		lua_pop(inL, 2);
-		UTableUtil::countforgc[n]--;
-#endif
-		UTableUtil::rmgcref(static_cast<UObject*>(*u));
 	}
+#ifdef LuaDebug
+	else
+		lua_pop(inL, 1);
+	lua_getfield(inL, -1, "classname");
+	FString n = lua_tostring(inL, -1);
+	UTableUtil::countforgc[n]--;
+#endif
 	return 0;
 }
 int32 struct_gcfunc(lua_State *inL)
 {
-	auto u = (void**)lua_touserdata(inL, -1);
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcstruct");
-	lua_pushlightuserdata(inL, *u);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
-	{
-		lua_pop(inL, 1);
-		lua_pushlightuserdata(inL, *u);
-		lua_pushnil(inL);
-		lua_rawset(inL, -3);
-		lua_getmetatable(inL, 1);
-		lua_getfield(inL, -1, "Destroy");
-		lua_pushvalue(inL, 1);
-		lua_call(inL, 1, 0);
+	lua_getmetatable(inL, 1);
+	lua_getfield(inL, -1, "Destroy");
+	lua_pushvalue(inL, 1);
+	lua_call(inL, 1, 0);
 #ifdef LuaDebug
-		lua_getmetatable(inL, 1);
-		lua_getfield(inL, -1, "classname");
-		FString n = lua_tostring(inL, -1);
-		lua_pop(inL, 2);
-		UTableUtil::countforgc[n]--;
+	lua_getmetatable(inL, 1);
+	lua_getfield(inL, -1, "classname");
+	FString n = lua_tostring(inL, -1);
+	UTableUtil::countforgc[n]--;
 #endif
-	}
 	return 0;
 }
 
 
-void UTableUtil::initmeta(bool bIsStruct)
+void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 {
 	lua_pushstring(TheOnlyLuaState, "__index");
 	lua_pushcfunction(TheOnlyLuaState, indexFunc);
@@ -368,18 +340,21 @@ void UTableUtil::initmeta(bool bIsStruct)
 	lua_pushstring(TheOnlyLuaState, "__newindex");
 	lua_pushcfunction(TheOnlyLuaState, newindexFunc);
 	lua_rawset(TheOnlyLuaState, -3);
-	lua_pushstring(TheOnlyLuaState, "__gc");
-	if(!bIsStruct)
-		lua_pushcfunction(TheOnlyLuaState, uobjcet_gcfunc);
-	else
-		lua_pushcfunction(TheOnlyLuaState, struct_gcfunc);
-	lua_rawset(TheOnlyLuaState, -3);
+	if (bNeedGc) 
+	{
+		lua_pushstring(TheOnlyLuaState, "__gc");
+		if (!bIsStruct)
+			lua_pushcfunction(TheOnlyLuaState, uobjcet_gcfunc);
+		else
+			lua_pushcfunction(TheOnlyLuaState, struct_gcfunc);
+		lua_rawset(TheOnlyLuaState, -3);
+	}
 	lua_pushstring(TheOnlyLuaState, "__iscppclass");
 	lua_pushboolean(TheOnlyLuaState, true);
 	lua_rawset(TheOnlyLuaState, -3);
 }
 
-void UTableUtil::addmodule(const char* name, bool bIsStruct)
+void UTableUtil::addmodule(const char* name, bool bIsStruct, bool bNeedGc)
 {
 	lua_getglobal(TheOnlyLuaState, name);
 	if (lua_istable(TheOnlyLuaState, -1))
@@ -390,7 +365,7 @@ void UTableUtil::addmodule(const char* name, bool bIsStruct)
 	lua_pushvalue(TheOnlyLuaState, LUA_GLOBALSINDEX);
 	lua_pushstring(TheOnlyLuaState, name);
 	luaL_newmetatable(TheOnlyLuaState, name);
-	initmeta(bIsStruct);
+	initmeta(bIsStruct, bNeedGc);
 	lua_pushstring(TheOnlyLuaState, "classname");
 	lua_pushstring(TheOnlyLuaState, name);
 	lua_rawset(TheOnlyLuaState, -3);
@@ -482,12 +457,12 @@ int ErrHandleFunc(lua_State*L)
 	}
 	else
 	{
+		lua_pushvalue(L, -2);
+		lua_call(L, 1, 0);
 #ifdef LuaDebug
 		FString error = lua_tostring(L, -2);
 		ensureAlwaysMsgf(0, *error);
 #endif
-		lua_pushvalue(L, -2);
-		lua_call(L, 1, 0);
 	}
 	return 1;
 }
@@ -507,7 +482,7 @@ void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool 
 	else
 	{
 		lua_pop(inL, 1);
-		UTableUtil::addmodule(classname, bIsStruct);
+		UTableUtil::addmodule(classname, bIsStruct, true);
 		luaL_getmetatable(inL, classname);
 		lua_setmetatable(inL, index - 1);
 	}
@@ -676,7 +651,7 @@ void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const voi
 		uint8* result = (uint8*)FMemory::Malloc(p->GetSize());
 		ptr = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
 		p->CopyCompleteValueFromScriptVM(result, ptr);
-		pushstruct(inL, TCHAR_TO_UTF8(*CppTypeName), result, true);
+		pushstruct_gc(inL, TCHAR_TO_UTF8(*CppTypeName), result);
 	}
 	else if (UArrayProperty* p = Cast<UArrayProperty>(property))
 	{
@@ -959,9 +934,8 @@ void UTableUtil::pushproperty_type(lua_State*inL, UStructProperty* p, const void
 {
 	FString CppTypeName = p->Struct->GetStructCPPName();
 	void* result = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
-	pushstruct(inL, TCHAR_TO_UTF8(*CppTypeName), result);
+	pushstruct_nogc(inL, TCHAR_TO_UTF8(*CppTypeName), result);
 }
-
 
 void UTableUtil::pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr)
 {
@@ -1230,14 +1204,6 @@ void pushuobject(lua_State *inL, void* p, bool bgcrecord)
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
 
-
-		lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcobject");
-		lua_pushlightuserdata(inL, p);
-		lua_pushboolean(inL, true);
-		lua_rawset(inL, -3);
-		lua_pop(inL, 1);
-
-
 		UObject* UObject_p = static_cast<UObject*>(p);
 		UClass* Class = UObject_p->GetClass();
 		while (!Class->HasAnyClassFlags(CLASS_Native))
@@ -1269,8 +1235,24 @@ void pushuobject(lua_State *inL, void* p, bool bgcrecord)
 	}
 }
 
+void pushstruct_gc(lua_State *inL, const char* structname, void* p)
+{
+	if (p == nullptr)
+	{
+		lua_pushnil(inL);
+		return;
+	}
+	*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
+	UTableUtil::setmeta(inL, structname, -1, true);
+#ifdef LuaDebug
+	if (UTableUtil::countforgc.Contains(structname))
+		UTableUtil::countforgc[structname]++;
+	else
+		UTableUtil::countforgc.Add(structname, 1);
+#endif
+}
 
-void pushstruct(lua_State *inL, const char* structname, void* p, bool bgcrecord /*= false*/)
+void pushstruct_nogc(lua_State *inL, const char* structname, void* p)
 {
 	if (p == nullptr)
 	{
@@ -1286,28 +1268,15 @@ void pushstruct(lua_State *inL, const char* structname, void* p, bool bgcrecord 
 		lua_pushvalue(inL, -3);
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
-		if (bgcrecord)
-		{
-			lua_getfield(inL, LUA_REGISTRYINDEX, "_needgcstruct");
-			lua_pushlightuserdata(inL, p);
-			lua_pushboolean(inL, true);
-			lua_rawset(inL, -3);
-			lua_pop(inL, 1);
-#ifdef LuaDebug
-			if (UTableUtil::countforgc.Contains(structname))
-				UTableUtil::countforgc[structname]++;
-			else
-				UTableUtil::countforgc.Add(structname, 1);
-#endif
-		}
 	}
-	UTableUtil::setmeta(inL, structname, -1, true);
+	UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true);
+
 }
 
-void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct)
+void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct, bool bNeedGc)
 {
 	int i = 0;
-	UTableUtil::addmodule(classname, bIsStruct);
+	UTableUtil::addmodule(classname, bIsStruct, bNeedGc);
 	UTableUtil::openmodule(classname);
 	while (true)
 	{
@@ -1330,6 +1299,7 @@ void UTableUtil::loadstruct(const luaL_Reg funclist[], const char* classname)
 {
 	SupportedNativeStruct.Add(classname);
 	loadlib(funclist, classname, true);
+	loadlib(funclist, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(classname))), true, false);
 }
 
 void UTableUtil::loadEnum(const EnumItem list[], const char* enumname)

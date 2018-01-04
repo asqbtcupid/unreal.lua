@@ -37,7 +37,8 @@ using luafunc = int(struct lua_State*);
 
 bool existdata(lua_State*inL, void * p);
 LUAPLUGINRUNTIME_API void pushuobject(lua_State *inL, void* p, bool bgcrecord = false);
-LUAPLUGINRUNTIME_API void pushstruct(lua_State *inL, const char* structname, void* p, bool bgcrecord = false);
+LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, void* p);
+LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void* tousertype(lua_State* L, const char* classname, int i);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
@@ -213,7 +214,7 @@ public:
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
 #endif
-	static void addmodule(const char* classname, bool bIsStruct);
+	static void addmodule(const char* classname, bool bIsStruct, bool bNeedGc);
 	static void useCustomLoader();
 	UFUNCTION(BlueprintCallable, Category = "Lua")
 		static void init(bool IsManual = false);
@@ -221,11 +222,11 @@ public:
 	static void openmodule(const char* classname);
 	static void closemodule();
 	static void addfunc(const char* classname, luafunc f);
-	static void initmeta(bool bIsStruct);
+	static void initmeta(bool bIsStruct, bool bNeedGc = true);
 	static void setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct = false);
 
 	static void* tousertype(lua_State* InL, const char* classname, int i);
-	static void loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct = false);
+	static void loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct = false, bool bNeedGc = true);
 	static void loadstruct(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
 	static luavalue_ref ref_luavalue(lua_State*inL, int index);
@@ -247,7 +248,7 @@ public:
 	template<typename T>
 	static int push(lua_State *inL, const T& value, const typename traitstructclass<T>::value* p = nullptr)
 	{
-		pushstruct(inL, traitstructclass<T>::name(), (void*)(&value));
+		pushstruct_nogc(inL, traitstructclass<T>::name(), (void*)(&value));
 		return 1;
 	}
 
@@ -261,7 +262,7 @@ public:
 	template<typename T>
 	static int push(lua_State *inL, const T* value, const typename traitstructclass<T>::value* p = nullptr)
 	{
-		pushstruct(inL, traitstructclass<T>::name(), (void*)value);
+		pushstruct_nogc(inL, traitstructclass<T>::name(), (void*)value);
 		return 1;
 	}
 
@@ -696,6 +697,13 @@ public:
 	}
 
 	template<class T>
+	static void pushback(lua_State*inL, int index, const T& Struct, const typename traitstructclass<T>::value* p = nullptr)
+	{
+		*(T*)tostruct(inL, index) = Struct;
+		ue_lua_pushvalue(inL, index);
+	}
+
+	template<class T>
 	static void pushback_private(lua_State*inL, int index, const TArray<T>& Arr)
 	{
 		// is arrhelper
@@ -959,7 +967,7 @@ public:
 	template<typename T>
 	static int push_ret(lua_State *inL, const T& value, const typename traitstructclass<T>::value* p = nullptr)
 	{
-		pushstruct(inL, traitstructclass<T>::name(), (void*)(new T(value)), true);
+		pushstruct_gc(inL, traitstructclass<T>::name(), (void*)(new T(value)));
 		return 1;
 	}
 
@@ -1084,7 +1092,6 @@ public:
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
 	{
-		UTableUtil::GC();
 		Collector.AllowEliminatingReferences(false);
 		Collector.AddReferencedObjects(objs);
 		Collector.AllowEliminatingReferences(true);
