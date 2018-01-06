@@ -45,7 +45,7 @@ function CppObjectBase:NewCpp(...)
 end
 
 CppObjectBase.New = CppObjectBase.NewCpp
-
+CppObjectBase.__iscppclass = true
 function CppObjectBase:Ctor()
 	rawset(self, "_gc_list", {})
 	if AActor.Cast(self) then
@@ -62,32 +62,10 @@ end
 function CppObjectBase:Property(property)
 	return rawget(self._meta_, property)	
 end
--- param:userdata, return:table, table
-local BpFunctionAndPropertyMapCache={}
-local function GetBpFunctionAndPropertyMap(inscpp)
-	local cppclass = ULuautils.GetPrivateClass(inscpp)
-	local cache = BpFunctionAndPropertyMapCache[cppclass]
-
-	if not cache then
-		if not UBPAndLuaBridge.IsBpIns(inscpp) then
-			cache = {{}, {}}
-		else
-			cache = {}
-			cache[1] = UBPAndLuaBridge.GetClassBPFunctions(inscpp)
-			cache[2] = UBPAndLuaBridge.GetClassBPPropertys(inscpp)
-		end
-		BpFunctionAndPropertyMapCache[cppclass] = cache		
-	end
-
-	return cache[1], cache[2]
-end
 
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
-	local BlueprintFuncMap, BlueprintPropMap = GetBpFunctionAndPropertyMap(inscpp)
 	rawset(ins, "_cppinstance_", inscpp)
-	rawset(ins, "_BlueprintFuncMap_", BlueprintFuncMap)
-	rawset(ins, "_BlueprintPropMap_", BlueprintPropMap)
 	_objectins2luatable[inscpp] = ins
 	ins:Initialize(...)
 	return ins

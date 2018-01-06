@@ -31,9 +31,12 @@ function TestBpClass:TestSpeed()
 	A_(rawget(self, "FuncReturn_ParamMap_struct"))
 	local f = self.FuncReturn_ParamMap_struct
 	local time = os.clock()
+	local function h()
+	end
 	for i = 1, 10000 do
 		-- f(self, t)
-		self:FuncReturn_ParamMap_struct(t)
+		-- self:FuncReturn_ParamMap_struct(t)
+		h()
 	end
 	local t1 = os.clock()
 	A_(t1 - time)

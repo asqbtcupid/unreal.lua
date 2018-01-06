@@ -1,4 +1,4 @@
-local AnimInstance = Inherit(CppObjectBase, ULuaAnimInstance)
+local AnimInstance = Inherit(CppObjectBase)
 
 function AnimInstance:NativeInitializeAnimation()
 	local Pawn = self:TryGetPawnOwner()

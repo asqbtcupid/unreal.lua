@@ -1,4 +1,4 @@
-local LuaArrayHelper = Inherit(CppObjectBase, ULuaArrayHelper)
+local LuaArrayHelper = Inherit(CppObjectBase)
 
 local __index = LuaArrayHelper.__index
 local function __arrIndex(t, k)

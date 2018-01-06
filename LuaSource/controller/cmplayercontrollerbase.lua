@@ -1,4 +1,4 @@
-local CMPlayerControllerBase = Inherit(CppObjectBase, ACMPlayerControllerBase)
+local CMPlayerControllerBase = Inherit(CppObjectBase)
 
 function CMPlayerControllerBase:Ctor( )
 	self.m_InputMgr = InputMgr:NewIns(self)

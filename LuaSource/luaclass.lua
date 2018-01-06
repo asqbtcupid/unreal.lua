@@ -110,15 +110,13 @@ end
 
 local _parentclass = "_parentclass"
 local GetPrefix = "LuaGet_"
-
+local _cppinstance_str = "_cppinstance_"
 local function __indexcpp(t, k)
 	local GetFuncKey = GetPrefix..tostring(k)
 	local getfunc = rawget(t, GetFuncKey)
 	if getfunc then return getfunc(t) end
 
 	local class = getmetatable(t)
-	local classtemp = class
-	local cppclass = class._cppclass
 	while class do
 		local v = rawget(class, k)
 		if v then 
@@ -127,36 +125,33 @@ local function __indexcpp(t, k)
 			end
 			return v 
 		end 
-		class = rawget(class, _parentclass) 
-	end
-	local cppattr = cppclass[k]
-	if cppattr then 
-		return cppattr 
-	end
 
-	local getfunc = rawget(classtemp, GetFuncKey)
-	if getfunc then 
-		rawset(t, GetFuncKey, getfunc)
-		return getfunc(t) 
-	end
-
-	local FunSig = t._BlueprintFuncMap_[k]
-	if FunSig then
-		local function CallBlueprintFunc(ins, ...)
-			return UBPAndLuaBridge.CallBlueprintFunction(FunSig, ins, ...)
+		v = rawget(class, GetFuncKey)
+		if type(v) == "function" then
+			rawset(t, GetFuncKey, v)
+			return v(t)
 		end
-		rawset(t, k, CallBlueprintFunc)
-		return CallBlueprintFunc
-	else
-		local BPProperty = t._BlueprintPropMap_[k]
-		if BPProperty then
-			local function BpGetFunc(ins)
-				return UBPAndLuaBridge.GetBlueprintProperty(BPProperty, ins)
+
+		class = getmetatable(class) 
+	end
+
+	local _cppinstance_ = rawget(t, _cppinstance_str)
+	if _cppinstance_ then
+		local v = _cppinstance_[k] 
+		if v then 
+			if type(v) == "function" then
+				rawset(t, k, v)
 			end
-			rawset(t, GetFuncKey, BpGetFunc)
-			return BpGetFunc(t)
+			return v 
+		end 
+
+		v = _cppinstance_[GetFuncKey]
+		if type(v) == "function" then
+			rawset(t, GetFuncKey, v)
+			return v(t)
 		end
 	end
+
 end
 
 local _cppclass = "_cppclass"
@@ -168,23 +163,22 @@ local function __newindexcpp(t, k, v)
 
 	local class = getmetatable(t)
 
-	local cppclass = rawget(class, _cppclass)
-	f = cppclass[SetFuncKey]
-	if f then f(t, v); return end
+	while class do
+		local set_f = rawget(class, SetFuncKey)
+		if type(set_f) == "function" then 
+			rawset(t, SetFuncKey, set_f)
+			set_f(t, v) 
+			return
+		end 
+		class = getmetatable(class) 
+	end
 
-	f = rawget(class, SetFuncKey)
-	if f then f(t, v); return end
-
-
-	local BlueprintPropMap = rawget(t, "_BlueprintPropMap_")
-	if BlueprintPropMap then
-		local BPProperty = BlueprintPropMap[k]
-		if BPProperty then
-			local function SetValueFunc(ins,value)
-				UBPAndLuaBridge.SetBlueprintProperty(BPProperty, ins, value)
-			end
-			SetValueFunc(t, v)
-			rawset(t, SetFuncKey, SetValueFunc)
+	local _cppinstance_ = rawget(t, _cppinstance_str)
+	if _cppinstance_ then
+		local set_f = _cppinstance_[SetFuncKey]
+		if type(set_f) == "function" then
+			rawset(t, SetFuncKey, set_f)
+			set_f(t, v) 
 			return
 		end
 	end
@@ -192,32 +186,22 @@ local function __newindexcpp(t, k, v)
 	rawset(t, k, v)
 end
 
-local function Bind(self, inscpp)
-	if self._cppinstance_ then 
-		_objectins2luatable[self._cppinstance_] = nil	
-	end
-	_objectins2luatable[inscpp] = self
-	self._cppinstance_ = inscpp 
-end
-
-function Inherit(parent, cppclass)
+function Inherit(parent)
 	local TheNewClass = {}
+	TheNewClass.__index = __indexcpp
+	TheNewClass.__newindex = __newindexcpp
 	TheNewClass._parentclass = parent
-	if parent.__iscppclass or cppclass then
-		TheNewClass._cppclass = cppclass or parent._cppclass or parent
-		TheNewClass.__index = __indexcpp
-		TheNewClass.__newindex = __newindexcpp
-		addfunc(TheNewClass,cppclass)
-	else
-		TheNewClass.__index = TheNewClass
-	end
+	-- **********for luahotupdate************
 	if not _WITH_EDITOR then
 		addfunc(TheNewClass, parent)
+	else
+		setmetatable(TheNewClass, parent)
 	end
-	setmetatable(TheNewClass, parent)
+	-- **************************************
 	rawset(TheNewClass, "_meta_", TheNewClass)
 	return TheNewClass
 end
+
 Class = Inherit
 
 ObjectBase = Inherit(Object)

@@ -1,4 +1,4 @@
-local CatchMeGameInstance = Inherit(CppObjectBase, UCatchMeGameInstance)
+local CatchMeGameInstance = Inherit(CppObjectBase)
 
 function CatchMeGameInstance:Ctor()
 	GameInstance = self

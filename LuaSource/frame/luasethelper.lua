@@ -1,4 +1,4 @@
-local LuaSetHelper = Inherit(CppObjectBase, ULuaSetHelper)
+local LuaSetHelper = Inherit(CppObjectBase)
 
 local __index = LuaSetHelper.__index
 local function __mapIndex(t, k)

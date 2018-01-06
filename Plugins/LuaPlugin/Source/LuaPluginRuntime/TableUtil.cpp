@@ -6,6 +6,7 @@
 #include "LuaFixLink.h"
 #include "LuaMapHelper.h"
 #include "../Launch/Resources/Version.h"
+#include "BPAndLuaBridge.h"
 
 DEFINE_LOG_CATEGORY(LuaLog);
 
@@ -173,9 +174,7 @@ void UTableUtil::init(bool IsManual)
 		push(TheOnlyLuaState, true);
 		lua_setfield(TheOnlyLuaState, LUA_GLOBALSINDEX, "_WITH_EDITOR");
 #endif
-		//register all function
-		// 		ULuaLoad::LoadAll(L);
-		// 		ULuaLoadGame::LoadAll(L);
+		
 		GetInitDelegates().Broadcast();
 		if (PtrTickObject == nullptr)
 			PtrTickObject = new LuaTickObject();
@@ -184,7 +183,6 @@ void UTableUtil::init(bool IsManual)
 	}
 	HasManualInit = IsManual;
 }
-
 
 void UTableUtil::GC()
 {
@@ -246,7 +244,7 @@ int32 indexFunc(lua_State* inL)
 		if (!lua_isnil(inL, -1))
 		{
 			lua_pushvalue(inL, 1);
-			lua_pcall(inL, 1, 1, 0);
+			lua_call(inL, 1, 1);
 		}
 	}
 	return 1;
@@ -254,23 +252,16 @@ int32 indexFunc(lua_State* inL)
 
 int32 newindexFunc(lua_State* inL)
 {
-	if (lua_isuserdata(inL, 1))
+	lua_getmetatable(inL, 1);
+	FString property = FString(lua_tostring(inL, 2));
+	FString propertyKey = FString::Printf(TEXT("LuaSet_%s"), *property);
+	UTableUtil::push(inL, propertyKey);
+	lua_rawget(inL, -2);
+	if (!lua_isnil(inL, -1))
 	{
-		lua_getmetatable(inL, 1);
-		FString property = FString(lua_tostring(inL, 2));
-		FString propertyKey = FString::Printf(TEXT("LuaSet_%s"), *property);
-		UTableUtil::push(inL, propertyKey);
-		lua_rawget(inL, -2);
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, 3);
-			lua_call(inL, 2, 1);
-		}
-	}
-	else if (lua_istable(inL, 1))
-	{
-		lua_rawset(inL, -3);
+		lua_pushvalue(inL, 1);
+		lua_pushvalue(inL, 3);
+		lua_call(inL, 2, 0);
 	}
 	return 0;
 }
@@ -485,6 +476,157 @@ void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool 
 		UTableUtil::addmodule(classname, bIsStruct, true);
 		luaL_getmetatable(inL, classname);
 		lua_setmetatable(inL, index - 1);
+	}
+}
+
+static int32 BpCall(lua_State* inL)
+{
+	UFunction* Function = (UFunction*)lua_touserdata(inL, lua_upvalueindex(1));
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	uint8* Buffer = (uint8*)FMemory_Alloca(Function->ParmsSize);
+	FScopedArguments scoped_arguments(Function, Buffer);
+
+	int ArgIndex = 2;
+	int ArgCount = lua_gettop(inL);
+
+	// Iterate over input parameters
+	TArray<UProperty*> PushBackParms;
+	TArray<UProperty*> ReturnParms;
+	TArray<int32> StackIndexs;
+	for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
+	{
+		auto Prop = *It;
+
+		if (Prop->GetPropertyFlags() & CPF_ReferenceParm)
+		{
+			PushBackParms.Add(Prop);
+			StackIndexs.Add(ArgIndex);
+		}
+		else if ((Prop->GetPropertyFlags() & (CPF_OutParm | CPF_ReturnParm)))
+		{
+			ReturnParms.Insert(Prop, 0);
+			continue;
+		}
+
+		if (ArgIndex <= ArgCount)
+		{
+			UTableUtil::popproperty(inL, ArgIndex, Prop, Buffer);
+			++ArgIndex;
+		}
+		else if (Prop->GetPropertyFlags() & CPF_ReferenceParm)
+		{
+			ensureMsgf(0, L"you should pass reference, other wise there will be bug");
+		}
+	}
+	Obj->ProcessEvent(Function, Buffer);
+	for (UProperty* Prop : ReturnParms)
+	{
+		UTableUtil::push_ret_property(inL, Prop, Buffer);
+	}
+	for (int i = 0; i<PushBackParms.Num();i++)
+	{
+		UProperty* Prop = PushBackParms[i];
+		UTableUtil::pushback_ref_property(inL, StackIndexs[i], Prop, Buffer);
+	}
+
+	return PushBackParms.Num() + ReturnParms.Num();
+}
+
+static int32 GetBpProp(lua_State* inL)
+{
+	UProperty* Property = (UProperty*)lua_touserdata(inL, lua_upvalueindex(1));
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	UTableUtil::pushproperty(inL, Property, Obj);
+	return 1;
+}
+
+static int32 SetBpProp(lua_State* inL)
+{
+	UProperty* Property = (UProperty*)lua_touserdata(inL, lua_upvalueindex(1));
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	UTableUtil::popproperty(inL, 2, Property, Obj);
+	return 0;
+}
+
+void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
+{
+	UClass* Class = Obj->GetClass();
+	if (Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+	{
+		const char* classname = TCHAR_TO_UTF8(*Class->GetName());
+		lua_getglobal(inL, classname);
+		if (lua_isnil(inL, -1))
+		{
+			lua_pop(inL, 1);
+			UClass* NativeClass = Class;
+			do 
+				NativeClass = NativeClass->GetSuperClass();
+			while (!NativeClass->HasAnyClassFlags(CLASS_Native));
+
+			const char* nativeclassname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName()));
+			lua_newtable(inL);
+			lua_getglobal(inL, nativeclassname);
+			if (lua_isnil(inL, -1))
+			{
+				lua_pop(inL, 1);
+				addmodule(nativeclassname, false, true);
+				lua_getglobal(inL, nativeclassname);
+			}
+
+			lua_pushnil(inL);
+			while (lua_next(inL, -2) != 0)
+			{
+				lua_pushvalue(inL, -2);
+				lua_pushvalue(inL, -2);
+				lua_rawset(inL, -6);
+				lua_pop(inL, 1);
+			}
+			lua_pop(inL, 1);
+
+			lua_pushstring(inL, "classname");
+			lua_pushstring(inL, classname);
+			lua_rawset(inL, -3);
+
+			for (TFieldIterator<UFunction> FuncIt(Class); FuncIt; ++FuncIt)
+			{
+				UFunction* Function = *FuncIt;
+				if (!Function->HasAnyFunctionFlags(FUNC_Native))
+				{
+					push(inL, Function->GetName());
+					lua_pushlightuserdata(inL, (void*)Function);
+					lua_pushcclosure(inL, BpCall, 1);
+					lua_rawset(inL, -3);
+				}
+			}
+
+			for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+			{
+				UProperty* Property = *PropertyIt;
+				if (UClass* OuterClass = Cast<UClass>(Property->GetOuter()))
+				{
+					if (OuterClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+					{
+						push(inL, "LuaGet_" + Property->GetName());
+						lua_pushlightuserdata(inL, (void*)Property);
+						lua_pushcclosure(inL, GetBpProp, 1);
+						lua_rawset(inL, -3);
+						push(inL, "LuaSet_" + Property->GetName());
+						lua_pushlightuserdata(inL, (void*)Property);
+						lua_pushcclosure(inL, SetBpProp, 1);
+						lua_rawset(inL, -3);
+					}
+				}
+			}
+
+			lua_pushvalue(inL, -1);
+			lua_setglobal(inL, classname);
+		}
+		lua_setmetatable(inL, index-1);
+	}
+	else
+	{
+		const char* classname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName()));
+		setmeta(inL, classname, index);
 	}
 }
 
@@ -1204,19 +1346,19 @@ void pushuobject(lua_State *inL, void* p, bool bgcrecord)
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
 
-		UObject* UObject_p = static_cast<UObject*>(p);
-		UClass* Class = UObject_p->GetClass();
-		while (!Class->HasAnyClassFlags(CLASS_Native))
-			Class = Class->GetSuperClass();
-		const char* classname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName()));
+		UTableUtil::set_uobject_meta(inL, (UObject*)p, -1);
+		UTableUtil::addgcref((UObject*)p);
+
 #ifdef LuaDebug
+		UClass* Class = ((UObject*)p)->GetClass();
+		const char* classname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName()));
+		if (Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
+			classname = TCHAR_TO_UTF8(*Class->GetName());
 		if (UTableUtil::countforgc.Contains(classname))
 			UTableUtil::countforgc[classname]++;
 		else
 			UTableUtil::countforgc.Add(classname, 1);
 #endif
-		UTableUtil::addgcref(static_cast<UObject*>(p));
-		UTableUtil::setmeta(inL, classname, -1);
 	}
 	else
 	{

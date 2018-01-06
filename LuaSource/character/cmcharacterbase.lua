@@ -1,4 +1,4 @@
-local CMCharacterBase = Inherit(CppObjectBase, ACMCharacterBase)
+local CMCharacterBase = Inherit(CppObjectBase)
 
 function CMCharacterBase:Ctor()
 end

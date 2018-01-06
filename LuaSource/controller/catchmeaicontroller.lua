@@ -1,4 +1,4 @@
-local CatchMeAIController = Inherit(CppObjectBase, ACatchMeAIController)
+local CatchMeAIController = Inherit(CppObjectBase)
 function CatchMeAIController:Ctor()
 	self:SetReplicates(true)
 	-- A_(UKismetSystemLibrary.IsServer(self))

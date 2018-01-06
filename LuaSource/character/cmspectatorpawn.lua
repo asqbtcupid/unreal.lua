@@ -1,4 +1,4 @@
-local CMSpectatorPawn = Inherit(CppObjectBase, ACMSpectatorPawn)
+local CMSpectatorPawn = Inherit(CppObjectBase)
 
 function CMSpectatorPawn:Ctor()
 	self:Timer(self.Tick, self):Time(0.001)

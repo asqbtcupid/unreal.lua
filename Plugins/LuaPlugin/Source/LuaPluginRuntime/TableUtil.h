@@ -229,6 +229,7 @@ public:
 	static void addfunc(const char* classname, luafunc f);
 	static void initmeta(bool bIsStruct, bool bNeedGc = true);
 	static void setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct = false);
+	static void set_uobject_meta(lua_State *inL, UObject* Obj, int index);
 
 	static void* tousertype(lua_State* InL, const char* classname, int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct = false, bool bNeedGc = true);
@@ -742,7 +743,6 @@ public:
 	template<class T>
 	static void pushback(lua_State*inL, int index, const T& Struct, const typename traitstructclass<T>::value* p = nullptr)
 	{
-		*(T*)tostruct(inL, index) = Struct;
 		ue_lua_pushvalue(inL, index);
 	}
 

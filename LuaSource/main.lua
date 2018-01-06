@@ -58,7 +58,7 @@ function Ctor(classpath, inscpp, ...)
             end
             local CtorFunc = rawget(class, "Ctor")
             if CtorFunc then
-                CtorFunc(inslua)
+                CtorFunc(inslua, ...)
             end
         end
     else

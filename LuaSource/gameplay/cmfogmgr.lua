@@ -1,4 +1,4 @@
-local CMFogMgr = Inherit(CppObjectBase, UCMFogMgr)
+local CMFogMgr = Inherit(CppObjectBase)
 
 function CMFogMgr:Ctor()
 	self.m_MIDs = {}

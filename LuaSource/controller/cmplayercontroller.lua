@@ -1,5 +1,5 @@
 local CMPlayerControllerBase = require "controller.cmplayercontrollerbase"
-local CMPlayerController = Inherit(CMPlayerControllerBase, ACatchMePlayerController)
+local CMPlayerController = Inherit(CMPlayerControllerBase)
 
 function CMPlayerController:Ctor( )
 	self.SpawnActors = {}

@@ -1,5 +1,5 @@
 local CMCharacterBase = require "character.cmcharacterbase"
-local CatchMeCharacter = Inherit(CMCharacterBase, ACatchMeCharacter)
+local CatchMeCharacter = Inherit(CMCharacterBase)
 local Damage = require "gameplay.damage"
 
 local ESkillState = 
