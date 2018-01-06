@@ -1268,9 +1268,14 @@ void pushstruct_nogc(lua_State *inL, const char* structname, void* p)
 		lua_pushvalue(inL, -3);
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
+		UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true);
 	}
-	UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true);
+}
 
+void pushstruct_stack(lua_State *inL, const char* structname, void* p)
+{
+	*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
+	UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true);
 }
 
 void UTableUtil::loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct, bool bNeedGc)

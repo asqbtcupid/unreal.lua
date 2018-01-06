@@ -90,3 +90,19 @@ end
 
 FVector2D.New = ULuautils.FVector2D_New
 FColor.New = ULuautils.FColor_New
+
+local function CopyToNoGcStructMeta(StructName)
+	local WithGcStructMeta = _G[StructName]
+	local WithoutGcStructMeta = _G[StructName.."_nogc"]
+	for k, v in pairs(WithGcStructMeta) do
+		if k ~= "__gc" then
+			WithoutGcStructMeta[k] = v
+		end
+	end
+end
+CopyToNoGcStructMeta("FVector")
+CopyToNoGcStructMeta("FRotator")
+CopyToNoGcStructMeta("FTransform")
+CopyToNoGcStructMeta("FColor")
+CopyToNoGcStructMeta("FVector2D")
+CopyToNoGcStructMeta("FReplifetimeCond")

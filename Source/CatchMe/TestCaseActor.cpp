@@ -210,6 +210,13 @@ void ATestCaseActor::FuncReturn_ParamMap(TMap<FString, int32>& Map)
 	Map.Add("hehe", 100);
 }
 
+void ATestCaseActor::FuncReturn_ParamMap_struct(TMap<FString, FVector>& Map)
+{
+	Map.Reset();
+	Map.Add("test1", FVector(1, 2, 3));
+	Map.Add("test2", FVector(4, 5, 6));
+}
+
 FVector ATestCaseActor::FuncReturnStruct()
 {
 	return FVector(11, 22, 12);
@@ -230,6 +237,21 @@ TSet<FVector> ATestCaseActor::FuncReturnSet_public(TSet<FVector>& Set)
 	TSet<FVector> result;
 	result.Add(FVector(9, 8, 7));
 	return result;
+}
+
+void ATestCaseActor::TestSpeed_Native(int32 i)
+{
+	for (int j = 0; j < i; j++)
+	{
+		FuncReturn_ParamMap_struct(test_map_copy_public);
+	}
+}
+
+void ATestCaseActor::FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map)
+{
+	Map.Reset();
+	Map.Add("test1", FVector(1, 2, 3));
+	Map.Add("test2", FVector(4, 5, 6));
 }
 
 TSet<FVector> ATestCaseActor::FuncReturnSet_private(TSet<FVector>& Set)

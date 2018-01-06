@@ -95,7 +95,7 @@ function CMPlayerController:S_RemoveFoliage_Imp(FoliageIndex, Index)
 			v:C_RemoveFoliage(FoliageIndex,Index)
 		end
 	else
-		local TransForm = FTransform.New()
+		local TransForm = FTransform.Temp()
 		FoliageComponent:GetInstanceTransform(Index, TransForm, true)
 		local Pos = TransForm:Break()
 		if self.m_FogMgr:CanSeeNow(Pos) then
@@ -112,7 +112,7 @@ end
 
 function CMPlayerController:InputTap_Release(Pos, HoldTime)
 	if not self.m_bHasMoveScreen then
-		local Hit = FHitResult.New()
+		local Hit = FHitResult.Temp()
 		if self:GetHitResult(Pos[1], Pos[2], Hit, ECollisionEnabled.QueryOnly) then
 			local actor = Hit.Actor
 			if actor and actor.m_CanAttacked and actor.m_Visible then
@@ -198,7 +198,7 @@ function CMPlayerController:Visible(character)
 	else
 		local StartPos = self.PlayCharacter:K2_GetActorLocation()
 		local EndPos = character:K2_GetActorLocation() 
-		local Hit = FHitResult.New()
+		local Hit = FHitResult.Temp()
 		if UKismetSystemLibrary.LineTraceSingle(self.PlayCharacter, StartPos, EndPos, ETraceTypeQuery.TraceTypeQuery1, true, {}, EDrawDebugTrace.None, Hit, true) then
 			if Hit.Actor == character then
 				return true

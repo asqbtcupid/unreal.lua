@@ -21,6 +21,34 @@ function TestBpClass:BeginPlay( )
 	self:TestMapRetFunc()
 	self:TestSetProperty()
 	self:TestSetFunc()
+	-- self:Timer(self.TestSpeed, self):Time(3):Num(1)
+	-- self:TestSpeed()
+end
+
+function TestBpClass:TestSpeed()
+	-- local t = {}
+	local t = self.test_map_copy_public
+	A_(rawget(self, "FuncReturn_ParamMap_struct"))
+	local f = self.FuncReturn_ParamMap_struct
+	local time = os.clock()
+	for i = 1, 10000 do
+		-- f(self, t)
+		self:FuncReturn_ParamMap_struct(t)
+	end
+	local t1 = os.clock()
+	A_(t1 - time)
+	self:TestSpeed_Native(10000)
+	-- for i = 1, 10000 do
+	-- 	self:FuncReturn_ParamMap_struct_private(t)
+	-- end
+	local t2 = os.clock()
+	A_(t2 - t1)
+	-- for i = 1, 10000 do
+	-- 	self:FuncReturn_ParamMap_struct_bp(t)
+	-- end
+	-- local t3 = os.clock()
+	-- A_(t3 - t2)
+	
 end
 
 function TestBpClass:TestSetFunc( )
@@ -275,6 +303,31 @@ function TestBpClass:TestMapRefFunc( )
 	self:bp_test_map_ref(test_map)
 	assert(test_map.xixi == nil)
 	assert(test_map.hehe == 100)
+
+	local t1 = {}
+	self:FuncReturn_ParamMap_struct(t1)
+	assert(t1.test1.X == 1)
+	assert(t1.test1.Y == 2)
+	assert(t1.test1.Z == 3)
+	assert(t1.test2.X == 4)
+	assert(t1.test2.Y == 5)
+	assert(t1.test2.Z == 6)
+	local t2 = {}
+	self:FuncReturn_ParamMap_struct_private(t2)
+	assert(t2.test1.X == 1)
+	assert(t2.test1.Y == 2)
+	assert(t2.test1.Z == 3)
+	assert(t2.test2.X == 4)
+	assert(t2.test2.Y == 5)
+	assert(t2.test2.Z == 6)
+	local t2 = {}
+	self:FuncReturn_ParamMap_struct_bp(t2)
+	assert(t2.test1.X == 1)
+	assert(t2.test1.Y == 2)
+	assert(t2.test1.Z == 3)
+	assert(t2.test2.X == 4)
+	assert(t2.test2.Y == 5)
+	assert(t2.test2.Z == 6)
 end
 
 function TestBpClass:TestMapRetFunc( )

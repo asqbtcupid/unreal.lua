@@ -266,7 +266,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	{
 		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
 		if (Function) 
-			Initializer = FString::Printf(TEXT("UTableUtil::push_ret(L, %s);"), *name);
+			Initializer = FString::Printf(TEXT("UTableUtil::push(L, %s);"), *name);
 		else
 			if(ReturnValue->GetOuter()->IsA(UFunction::StaticClass()))
 				Initializer = FString::Printf(TEXT("pushstruct(L,\"%s\", (void*)(%s));"), *typeName, *name);
@@ -303,7 +303,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 			Initializer += FString::Printf(TEXT("\tUTableUtil::pushcontainer(L, Obj, Property);"));
 		}
 		else {
-			Initializer = "UTableUtil::push_ret(L, " + name + ");\r\n";
+			Initializer = "UTableUtil::push(L, " + name + ");\r\n";
 		}
 	}
 	else if (ReturnValue->IsA(UByteProperty::StaticClass()) || ReturnValue->IsA(UEnumProperty::StaticClass()))
@@ -331,7 +331,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 			Initializer += FString::Printf(TEXT("\tUTableUtil::pushcontainer(L, Obj, Property);"));
 		}
 		else {
-			Initializer = "UTableUtil::push_ret(L, " + name + ");\r\n";
+			Initializer = "UTableUtil::push(L, " + name + ");\r\n";
 		}
 	}
 	else if (auto p = Cast<USetProperty>(ReturnValue))
@@ -346,7 +346,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 			Initializer += FString::Printf(TEXT("\tUTableUtil::pushcontainer(L, Obj, Property);"));
 		}
 		else {
-			Initializer = "UTableUtil::push_ret(L, " + name + ");\r\n";
+			Initializer = "UTableUtil::push(L, " + name + ");\r\n";
 		}
 	}
 	else
@@ -513,11 +513,26 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Fun
 	return Params;
 }
 
+bool NeedTempIns(UProperty *Param)
+{
+	if (Param->IsA(UStructProperty::StaticClass()))
+		return true;
+	if (auto p = Cast<UArrayProperty>(Param))
+		return NeedTempIns(p->Inner);
+	if (auto p = Cast<USetProperty>(Param))
+		return NeedTempIns(p->ElementProp);
+	if (auto p = Cast<UMapProperty>(Param))
+		return NeedTempIns(p->KeyProp) || NeedTempIns(p->ValueProp);
+	return false;
+}
+
 FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc, bool bIsInterface)
 {
 	FString Params;
 	FString paramList;
 	FString returnType;
+	UProperty* ReturnParam = nullptr;
+
 	FString FuncName = Function->GetName();
 	int count_all_param = 0;
 	int count_all_param_for_warning = 0;
@@ -534,6 +549,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 			if (Param->GetName() == "ReturnValue")
 			{
 				returnType = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+				ReturnParam = Param;
 			}
 			else
 			{
@@ -594,12 +610,22 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 				{
 					if (Param->IsA(UStructProperty::StaticClass()))
 						Params += FString::Printf(TEXT("\t%s* %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName());
+					else if (NeedTempIns(Param))
+					{
+						FString TypeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+						Params += FString::Printf(TEXT("\t%s& %s = UTableUtil::GetTempIns<%s>();\r\n"), *TypeName, *Param->GetName(), *TypeName);
+					}
 					else
 						Params += FString::Printf(TEXT("\t%s %s;\r\n"), *GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue), *Param->GetName());
 				}
 			}
-			if (!returnType.IsEmpty())
-				Params += FString::Printf(TEXT("\t%s result;\r\n"), *returnType);
+			if (ReturnParam)
+			{
+				if (NeedTempIns(ReturnParam))
+					Params += FString::Printf(TEXT("\t%s& result = UTableUtil::GetTempIns<%s>();\r\n"), *returnType, *returnType);
+				else
+					Params += FString::Printf(TEXT("\t%s result;\r\n"), *returnType);
+			}
 		}
 		int count_init_param = 0;
 		if (count_default_param > 0 && count_default_param + count_init_param >= count_all_param)
@@ -629,7 +655,10 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 					}
 					else
 					{
-						Params += FString::Printf(TEXT("\t%s %s;\r\n"), *nameCpp, *Param->GetName());
+						if (NeedTempIns(Param))
+							Params += FString::Printf(TEXT("\t%s& %s = UTableUtil::GetTempIns<%s>();\r\n"), *nameCpp, *Param->GetName(), *nameCpp);
+						else
+							Params += FString::Printf(TEXT("\t%s %s;\r\n"), *nameCpp, *Param->GetName());
 						FString PtrName = Param->GetName() + "_ptr";
 						Params += FString::Printf(TEXT("\t%s* %s = &%s;\r\n"), *nameCpp, *PtrName, *Param->GetName());
 						Params += InitializeParam(Param, ParamIndex, false, "&"+PtrName);
@@ -651,10 +680,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 					count_init_param++;
 					if (count_default_param > 0)
 					{
-						if (!nameCpp.Contains("*") && Param->IsA(UStructProperty::StaticClass()))
-							Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
-						else
-							Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
+						Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
 						// SpawnSoundAttached ambiouscall blame UE4 not me
 						if (count_default_param + count_init_param >= count_all_param  && !(FuncName == "SpawnSoundAttached" && count_init_param == 4))
 							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
@@ -673,8 +699,16 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 	}
 	if (count_default_param == 0)
 	{
-		if (!returnType.IsEmpty())
-			Params += FString::Printf(TEXT("\t%s result = "), *returnType);
+		if (ReturnParam)
+		{
+			if (NeedTempIns(ReturnParam))
+			{
+				Params += FString::Printf(TEXT("\t%s& result = UTableUtil::GetTempIns<%s>();\r\n"), *returnType, *returnType);
+				Params += FString::Printf(TEXT("\tresult = "));
+			}
+			else
+				Params += FString::Printf(TEXT("\t%s result = "), *returnType);
+		}
 		else
 			Params += "\t";
 		FString callobj = "Obj->";
@@ -788,7 +822,15 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 				if ((Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) & CPF_ReturnParm)
 				{
 					FString name = "args." + Param->GetName();
-					FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, (UFunction*)1, Param, name));
+					if (NeedTempIns(Param))
+					{
+						FString TypeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+						FunctionBody += FString::Printf(TEXT("\t%s& result = UTableUtil::GetTempIns<%s>();\r\n"), *TypeName, *TypeName);
+						FunctionBody += FString::Printf(TEXT("\tresult = %s;\r\n"), *name);
+						FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, (UFunction*)1, Param, "result"));
+					}
+					else
+						FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *Push(ClassNameCPP, (UFunction*)1, Param, name));
 					returnCount++;
 					ReturnValueProperty = Param;
 					break;
@@ -811,11 +853,15 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 							|| Param->IsA(UStructProperty::StaticClass())
 							)
 						{
-							FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *name);
-						}
-						else if (Param->IsA(UStructProperty::StaticClass()))
-						{
-							FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *name);
+							if (NeedTempIns(Param))
+							{
+								FString TypeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+								FunctionBody += FString::Printf(TEXT("\t%s& %s = UTableUtil::GetTempIns<%s>();\r\n"), *TypeName, *Param->GetName(), *TypeName);
+								FunctionBody += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *name);
+								FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *Param->GetName());
+							}
+							else
+								FunctionBody += FString::Printf(TEXT("\tUTableUtil::pushback_private(L, %d, %s);\r\n"), ParamIndex, *name);
 						}
 						else
 						{
@@ -1683,9 +1729,15 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		addition += FString::Printf(TEXT("\t%s* Obj = (%s*)tostruct(L,1);\r\n"), *namecpp, *namecpp);
 		addition += FString::Printf(TEXT("\tdelete Obj;\r\n"));
 		addition += TEXT("\treturn 0;\r\n}\r\n\r\n");
+
 		bool bExportCopyFunction = !NoCopyStruct.Contains(namecpp);
 		if (bExportCopyFunction)
 		{
+			addition += FString::Printf(TEXT("static int32 %s_Temp(lua_State* L)\r\n{\r\n"), *namecpp);
+			addition += FString::Printf(TEXT("\t%s& Ins = UTableUtil::GetTempInsInit<%s>();\r\n"), *namecpp, *namecpp);
+			addition += FString::Printf(TEXT("\tpushstruct_nogc(L, \"%s\", (void*)(&Ins));\r\n"), *namecpp);
+			addition += TEXT("\treturn 1;\r\n}\r\n\r\n");
+
 			addition += FString::Printf(TEXT("static int32 %s_Copy(lua_State* L)\r\n{\r\n"), *namecpp);
 			addition += FString::Printf(TEXT("\t%s* Obj = (%s*)tostruct(L,1);\r\n"), *namecpp, *namecpp);
 			addition += FString::Printf(TEXT("\tpushstruct_gc(L,\"%s\", (void*)(new %s(*Obj)));\r\n"), *namecpp, *namecpp);
@@ -1702,7 +1754,10 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *namecpp);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *namecpp);
 		if (bExportCopyFunction)
+		{
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"Temp\", %s_Temp},\r\n"), *namecpp);
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"Copy\", %s_Copy },\r\n"), *namecpp);
+		}
 
 
 		for (auto& PropertyName : allPropertyName)
@@ -1714,6 +1769,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 
 		GeneratedGlue += "template<>\r\nclass traitstructclass<" + namecpp + ">{\r\n";
 		GeneratedGlue += "public:\r\ninline static const char* name(){ return \"" + namecpp + "\";}\r\n";
+		GeneratedGlue += "using NotStructType = NeedTempInsType;\r\n";
 		GeneratedGlue += "using value = "+ namecpp +";\r\n};\r\n";
 
 		SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);

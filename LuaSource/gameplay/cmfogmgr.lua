@@ -42,7 +42,7 @@ function CMFogMgr:UpdateForTexture(delta)
 	self.m_PastTime = self.m_PastTime + delta
 	if self.m_PastTime >= self.m_UpdateInterval then
 		self.m_PastTime = 0
-		self:UpdateFOV(self.m_Controller.m_Pawn:K2_GetActorLocation())
+		-- self:UpdateFOV(self.m_Controller.m_Pawn:K2_GetActorLocation())
 	end
 	for i, v in ipairs(self.m_MIDs) do
 		v:SetScalarParameterValue("time", self.m_PastTime/self.m_UpdateInterval)

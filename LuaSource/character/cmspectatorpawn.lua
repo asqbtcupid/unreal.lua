@@ -2,6 +2,7 @@ local CMSpectatorPawn = Inherit(CppObjectBase, ACMSpectatorPawn)
 
 function CMSpectatorPawn:Ctor()
 	self:Timer(self.Tick, self):Time(0.001)
+	-- self.m_HitTemp = FHitResult.New()
 end
 
 function CMSpectatorPawn:Tick( )
@@ -15,7 +16,7 @@ function CMSpectatorPawn:Tick( )
 	end
 	self.m_Player = self.m_Player or (self:GetController() and self:GetController().PlayCharacter)
 	if self.m_Player then
-		self:K2_SetActorLocation(self.m_Player:K2_GetActorLocation(), false, FHitResult.New(), true)
+		self:K2_SetActorLocation(self.m_Player:K2_GetActorLocation(), false, FHitResult.Temp(), true)
 	end
 end
 

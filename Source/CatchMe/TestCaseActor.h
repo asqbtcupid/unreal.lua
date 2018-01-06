@@ -111,6 +111,9 @@ public:
 	UFUNCTION()
 		void FuncReturn_ParamMap(TMap<FString,int32>& Map);
 
+	UFUNCTION(BlueprintCallable, Category = "TestCase")
+		void FuncReturn_ParamMap_struct(TMap<FString, FVector>& Map);
+
 	UFUNCTION()
 		FVector FuncReturnStruct();
 	UPROPERTY()
@@ -127,7 +130,11 @@ public:
 		TSet<FVector> test_set_copy_public;
 	UFUNCTION()
 		TSet<FVector> FuncReturnSet_public(TSet<FVector>& Set);
+	UFUNCTION()
+		void TestSpeed_Native(int32 i);
 private:
+	UFUNCTION()
+		void FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map);
 	UFUNCTION()
 		TSet<FVector> FuncReturnSet_private(TSet<FVector>& Set);
 	UPROPERTY()

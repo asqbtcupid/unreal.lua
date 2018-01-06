@@ -10,6 +10,7 @@
 #include "LuaArrayHelper.h"
 #include "LuaMapHelper.h"
 #include "LuaSetHelper.h"
+#include "AndOrNot.h"
 #include "TableUtil.generated.h"
 
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
@@ -25,10 +26,13 @@ struct EnumItem
 	const char* key;
 	const int32 value;
 };
-
+struct NeedTempInsType {};
+struct NotNeedTempInsType {};
 template<class T>
 class traitstructclass
 {
+public:
+	using NotStructType = NotNeedTempInsType;
 };
 typedef int luavalue_ref;
 DECLARE_LOG_CATEGORY_EXTERN(LuaLog, Log, All);
@@ -39,6 +43,7 @@ bool existdata(lua_State*inL, void * p);
 LUAPLUGINRUNTIME_API void pushuobject(lua_State *inL, void* p, bool bgcrecord = false);
 LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, void* p);
+LUAPLUGINRUNTIME_API void pushstruct_stack(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void* tousertype(lua_State* L, const char* classname, int i);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
@@ -414,6 +419,13 @@ public:
 	}
 
 	template<class T>
+	static int pushall(lua_State *inL, const T& value, typename traitstructclass<T>::value* t = nullptr)
+	{
+		pushstruct_stack(inL, traitstructclass<T>::name(), (void*)(&value));
+		return 1;
+	}
+
+	template<class T>
 	static int pushall(lua_State *inL, T&& value)
 	{
 		push(inL, Forward<T>(value));
@@ -639,8 +651,36 @@ public:
 		}
 	}
 
+	template<class T, class T1>
+	static T1& MayNeedTempIns(T1& v, typename TEnableIf<TIsSame<typename traitstructclass<T>::NotStructType, NotNeedTempInsType>::Value, T>::Type* p = nullptr)
+	{
+		return v;
+	}
+
+	template<class T, class T1>
+	static T1& MayNeedTempIns(T1& v, typename TEnableIf<TIsSame<typename traitstructclass<T>::NotStructType, NeedTempInsType>::Value, T>::Type* p = nullptr)
+	{
+		T1& TempIns = GetTempIns<T1>();
+		TempIns = v;
+		return TempIns;
+	}
+
+	template<class K, class V>
+	static TMap<K, V>& MayNeedTempInsForMap(TMap<K, V>& v, typename TEnableIf< TOr<TIsSame<typename traitstructclass<K>::NotStructType, NeedTempInsType>, TIsSame<typename traitstructclass<V>::NotStructType, NeedTempInsType>>::Value, K>::Type* p = nullptr)
+	{
+		TMap<K, V>& TempIns = GetTempIns<TMap<K, V>>();
+		TempIns = v;
+		return TempIns;
+	}
+
+	template<class K, class V>
+	static TMap<K, V>& MayNeedTempInsForMap(TMap<K, V>& v, typename TEnableIf< TAnd<TIsSame<typename traitstructclass<K>::NotStructType, NotNeedTempInsType>, TIsSame<typename traitstructclass<V>::NotStructType, NotNeedTempInsType>>::Value, K>::Type* p = nullptr)
+	{
+		return v;
+	}
+
 	template<class T>
-	static void pushback(lua_State*inL, int index, const TArray<T>& Arr)
+	static void pushback(lua_State*inL, int index, TArray<T>& Arr)
 	{
 // is arrhelper
 		if (touobject(inL, index))
@@ -650,6 +690,7 @@ public:
 // is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TArray<T>& Temp = MayNeedTempIns<T>(Arr);
 			pushback_table(inL, index, Arr);
 		}
 		else
@@ -659,7 +700,7 @@ public:
 	}
 
 	template<class K, class V>
-	static void pushback(lua_State*inL, int index, const TMap<K, V>& Map)
+	static void pushback(lua_State*inL, int index, TMap<K, V>& Map)
 	{
 		// is maphelper
 		if (touobject(inL, index))
@@ -669,6 +710,7 @@ public:
 		// is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TMap<K, V>& Temp = MayNeedTempInsForMap<K, V>(Map);
 			pushback_table(inL, index, Map);
 		}
 		else
@@ -678,7 +720,7 @@ public:
 	}
 
 	template<class T>
-	static void pushback(lua_State*inL, int index, const TSet<T>& Set)
+	static void pushback(lua_State*inL, int index, TSet<T>& Set)
 	{
 		// is arrhelper
 		if (touobject(inL, index))
@@ -688,6 +730,7 @@ public:
 		// is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TSet<T>& Temp = MayNeedTempIns<T>(Set);
 			pushback_table(inL, index, Set);
 		}
 		else
@@ -704,7 +747,7 @@ public:
 	}
 
 	template<class T>
-	static void pushback_private(lua_State*inL, int index, const TArray<T>& Arr)
+	static void pushback_private(lua_State*inL, int index, TArray<T>& Arr)
 	{
 		// is arrhelper
 		ULuaArrayHelper* ArrHelper = (ULuaArrayHelper*)touobject(inL, index);
@@ -717,6 +760,7 @@ public:
 		// is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TArray<T>& Temp = MayNeedTempIns<T>(Arr);
 			pushback_table(inL, index, Arr);
 		}
 		else
@@ -726,7 +770,7 @@ public:
 	}
 
 	template<class K, class V>
-	static void pushback_private(lua_State*inL, int index, const TMap<K, V>& Map)
+	static void pushback_private(lua_State*inL, int index, TMap<K, V>& Map)
 	{
 		// is maphelper
 		ULuaMapHelper* Helper = (ULuaMapHelper*)touobject(inL, index);
@@ -739,6 +783,7 @@ public:
 		// is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TMap<K, V>& Temp = MayNeedTempInsForMap<K, V>(Map);
 			pushback_table(inL, index, Map);
 		}
 		else
@@ -748,7 +793,7 @@ public:
 	}
 
 	template<class T>
-	static void pushback_private(lua_State*inL, int index, const TSet<T>& Set)
+	static void pushback_private(lua_State*inL, int index, TSet<T>& Set)
 	{
 		// is maphelper
 		ULuaSetHelper* Helper = (ULuaSetHelper*)touobject(inL, index);
@@ -761,6 +806,7 @@ public:
 		// is lua table
 		else if (ue_lua_istable(inL, index))
 		{
+// 			TSet<T>& Temp = MayNeedTempIns<T>(Set);
 			pushback_table(inL, index, Set);
 		}
 		else
@@ -894,140 +940,29 @@ public:
 	static void pushcontainer(lua_State* inL, void *Obj, UMapProperty* Property);
 	static void pushcontainer(lua_State* inL, void *Obj, USetProperty* Property);
 
-	inline static int push_ret(lua_State *inL, uint8 value)
+	template<class T>
+	static T& GetTempIns()
 	{
-		ue_lua_pushinteger(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, int value)
-	{
-		ue_lua_pushinteger(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, int64 value)
-	{
-		ue_lua_pushinteger(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, uint64 value)
-	{
-		ue_lua_pushinteger(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, unsigned int value)
-	{
-		ue_lua_pushinteger(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, float value)
-	{
-		ue_lua_pushnumber(inL, value);
-		return 1;
-	}
-
-	inline static int push_ret(lua_State *inL, double value)
-	{
-		ue_lua_pushnumber(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, bool value)
-	{
-		ue_lua_pushboolean(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, const FString& value)
-	{
-		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value));
-		return 1;
-	}
-
-	inline static int push_ret(lua_State *inL, const FText& value)
-	{
-		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
-		return 1;
-	}
-
-	inline static int push_ret(lua_State *inL, const FName& value)
-	{
-		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
-		return 1;
-	}
-
-	inline static int push_ret(lua_State *inL, const char* value)
-	{
-		ue_lua_pushstring(inL, value);
-		return 1;
-	}
-	inline static int push_ret(lua_State *inL, const UClass* value)
-	{
-		pushuobject(inL, (void*)value);
-		return 1;
-	}
-
-	template<typename T>
-	static int push_ret(lua_State *inL, const T& value, const typename traitstructclass<T>::value* p = nullptr)
-	{
-		pushstruct_gc(inL, traitstructclass<T>::name(), (void*)(new T(value)));
-		return 1;
-	}
-
-	template<typename T>
-	static int push_ret(lua_State *inL, const T* value, typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, T>::Type* p = nullptr)
-	{
-		pushuobject(inL, (void*)value);
-		return 1;
+		const int32 len = 10;
+		static T* Temp = new T[len];
+		static int32 i = -1;
+		i = (i + 1) % len;
+		return Temp[i];
 	}
 
 	template<class T>
-	int push_ret(lua_State*inL, const TSubclassOf<T>& value)
+	static T& GetTempInsInit(typename TEnableIf<TStructOpsTypeTraits<T>::WithCopy, T>::Type* p = nullptr)
 	{
-		pushuobject(inL, value.Get());
-		return 1;
-	}
-	template<class T>
-	static int push_ret(lua_State *inL, const TWeakObjectPtr<T>& value)
-	{
-		pushuobject(inL, (void*)value.Get());
-		return 1;
+		T& Ins = GetTempIns<T>();
+		Ins = T();
+		return Ins;
 	}
 
 	template<class T>
-	static int push_ret(lua_State *inL, const TSet<T>& value)
+	static T& GetTempInsInit(typename TEnableIf<!TStructOpsTypeTraits<T>::WithCopy, T>::Type* p = nullptr)
 	{
-		ue_lua_newtable(inL);
-		for (auto& ele : value)
-		{
-			push_ret(inL, ele);
-			push(inL, true);
-			ue_lua_rawset(inL, -3);
-		}
-		return 1;
-	}
-
-	template<class K, class V>
-	static int push_ret(lua_State *inL, const TMap<K, V>& value)
-	{
-		ue_lua_newtable(inL);
-		for (auto& ele : value)
-		{
-			push_ret(inL, ele.Key);
-			push_ret(inL, ele.Value);
-			ue_lua_rawset(inL, -3);
-		}
-		return 1;
-	}
-
-	template<class T>
-	static int push_ret(lua_State* inL, const TArray<T>& value)
-	{
-		ue_lua_newtable(inL);
-		for (int i = 0; i < value.Num(); i++)
-		{
-			push(inL, i + 1);
-			push_ret(inL, value[i]);
-			ue_lua_rawset(inL, -3);
-		}
-		return 1;
+		T& Ins = GetTempIns<T>();
+		return Ins;
 	}
 };
 

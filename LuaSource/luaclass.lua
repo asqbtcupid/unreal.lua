@@ -121,11 +121,18 @@ local function __indexcpp(t, k)
 	local cppclass = class._cppclass
 	while class do
 		local v = rawget(class, k)
-		if v then return v end 
+		if v then 
+			if type(v) == "function" then
+				rawset(t, k, v)
+			end
+			return v 
+		end 
 		class = rawget(class, _parentclass) 
 	end
 	local cppattr = cppclass[k]
-	if cppattr then return cppattr end
+	if cppattr then 
+		return cppattr 
+	end
 
 	local getfunc = rawget(classtemp, GetFuncKey)
 	if getfunc then 
