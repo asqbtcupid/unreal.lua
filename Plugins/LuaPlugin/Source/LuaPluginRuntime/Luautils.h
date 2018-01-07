@@ -27,6 +27,9 @@ public:
 	static UWorld* GetWorld1(AActor *obj);
 
 	UFUNCTION()
+		static UWorld* GetActorWorld(AActor *obj);
+
+	UFUNCTION()
 	static void SetupAttachment(USceneComponent* Child, USceneComponent* InParent, FName InSocketName = NAME_None);
 
 	UFUNCTION()
@@ -62,11 +65,8 @@ public:
 	UFUNCTION()
 		static UObject* GetPrivateClass(UObject *p);
 
-	UFUNCTION()
-		static TSet<AActor*> GCThisSet(const TSet<AActor*>& ActorsInLua);
-
-	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (WorldContext = "WorldContextObject"))
-		static void Ctor(const UObject* WorldContextObject, const FString& LuaClassName);
-	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (WorldContext = "WorldContextObject"))
-		static void Call(const UObject* WorldContextObject, const FString& FunctionName);
+	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (DefaultToSelf = "Ins"))
+		static void Ctor(UObject* Ins, const FString& LuaClassName);
+	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (DefaultToSelf = "Ins"))
+		static void Call(UObject* Ins, const FString& FunctionName);
 };

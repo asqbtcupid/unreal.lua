@@ -3,7 +3,7 @@ function Init(IsMannual)
     -- package.cpath = package.cpath .. ";".._luadir.."/?.dll"
     require "frame.initrequire"
     local function ShowMem()
-        collectgarbage("collect")
+        -- collectgarbage("collect")
         a_("lua memory: ", collectgarbage("count"))
     end
     TimerMgr:Get():On(ShowMem):Time(2)
@@ -78,6 +78,7 @@ end
 
 function GC()
     GlobalEvent.Fire("GC")
+    -- collectgarbage("collect")
 end
 
 function Shutdown()

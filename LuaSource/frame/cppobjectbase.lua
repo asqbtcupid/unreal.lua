@@ -2,13 +2,7 @@ require "luaclass"
 CppObjectBase = Class(ObjectBase)
 CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
-
-local LevelActors = {}
-local function GcActors()
-	LevelActors = ULuautils.GCThisSet(LevelActors)
-end
-GlobalEvent.On("GC", GcActors)
-
+local LinkAgainstGC = {}
 function CppObjectBase:EndPlay(Reason)
 	if not self.m_HasEndPlay then
 		self.m_HasEndPlay = true
@@ -21,6 +15,11 @@ function CppObjectBase:Destroy()
 		if v.Release then
 			v:Release()
 		end
+	end
+	LinkAgainstGC[self] = nil
+	local _cppinstance_ = rawget(self, "_cppinstance_")
+	if _cppinstance_ then 
+		_cppinstance_:Destroy()
 	end
 end
 
@@ -46,6 +45,7 @@ end
 
 CppObjectBase.New = CppObjectBase.NewCpp
 CppObjectBase.__iscppclass = true
+local LevelActors = {}
 function CppObjectBase:Ctor()
 	rawset(self, "_gc_list", {})
 	if AActor.Cast(self) then
@@ -56,6 +56,25 @@ end
 function CppObjectBase:GC(obj)
 	if obj then
 		self._gc_list[obj] = true
+	end
+end
+
+
+function CppObjectBase:Link(Actor)
+	if AActor.Cast(Actor) then
+		if type(Actor) == "table" then
+			Actor:GC(self)
+		else
+			LinkAgainstGC[self] = true
+			local destroy_delegate = Actor.OnEndPlay
+			self:GC(destroy_delegate)
+			local function f(ins)
+				ins:Release()
+			end
+			destroy_delegate:Add(SafeCallBack(f, self))
+		end
+	else
+		-- error("can only link to Actor")
 	end
 end
 
@@ -93,6 +112,27 @@ function CppSingleton:Get(...)
 	return meta._ins
 end
 
+function OnWorldCleanup(World, bSessionEnded, bCleanupResources)
+	local ActorToDelete = {}
+	for Actor in pairs(LevelActors) do
+		local ActorWorld = ULuautils.GetActorWorld(Actor)
+		if not ActorWorld or ActorWorld == World then
+			table.insert(ActorToDelete, Actor)
+		end
+	end
 
+	for i, Actor in ipairs(ActorToDelete) do
+		Actor:Release()
+		LevelActors[Actor] = nil
+	end
+	ActorToDelete = nil
+	World = nil
+	for bpclassname in pairs(NeedGcBpClassName) do
+		_G[bpclassname] = nil
+	end
+    collectgarbage("collect")
+    -- delegate function may reference actor in their's upvalue，So need twice collect
+    collectgarbage("collect")
+end
 
 return CppObjectBase

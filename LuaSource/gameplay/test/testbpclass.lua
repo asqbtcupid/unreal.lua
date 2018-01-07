@@ -1,4 +1,4 @@
-local TestBpClass = Inherit(CppObjectBase, ATestCaseActor)
+local TestBpClass = Inherit(CppObjectBase)
 
 function TestBpClass:EndPlay(Reason)
 	CppObjectBase.EndPlay(self)

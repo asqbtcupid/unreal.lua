@@ -1,5 +1,5 @@
 local SimpleDlg = require "simpledlg"
-local testUmg = Inherit(SimpleDlg, UUserWidget)
+local testUmg = Inherit(SimpleDlg)
 testUmg:DynamicLoad("test")
 function testUmg:Ctor(controller)
 	self.Controller = controller

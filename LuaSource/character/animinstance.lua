@@ -2,13 +2,11 @@ local AnimInstance = Inherit(CppObjectBase)
 
 function AnimInstance:NativeInitializeAnimation()
 	local Pawn = self:TryGetPawnOwner()
-	if type(Pawn) == "table" then
-		Pawn:GC(self)
-		self.m_Pawn = Pawn
-	end
+	self:Link(Pawn)
+	self.m_Pawn = Pawn
 end
 
-function AnimInstance:NativeUpdateAnimation(delta)
+function AnimInstance:NativeUpdateAnimation()
 	if self.m_Pawn then
 		self.WalkSpeed = #self.m_Pawn:GetVelocity()
 		local controller = UGameplayStatics.GetPlayerController(self, 0)
@@ -17,7 +15,5 @@ function AnimInstance:NativeUpdateAnimation(delta)
 		end
 	end
 end
-
-
 
 return AnimInstance

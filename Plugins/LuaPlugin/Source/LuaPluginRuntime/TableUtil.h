@@ -48,6 +48,7 @@ LUAPLUGINRUNTIME_API void* tousertype(lua_State* L, const char* classname, int i
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
+LUAPLUGINRUNTIME_API void PrintLuaStack(lua_State*L = nullptr);
 
 template<class T>
 class popiml {
@@ -216,8 +217,10 @@ class LUAPLUGINRUNTIME_API UTableUtil : public UBlueprintFunctionLibrary
 public:
 	static FLuaInitDelegates& GetInitDelegates();
 	static lua_State* GetTheOnlyLuaState();
+	static TSet<FString> NeedGcBpClassName;
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
+	static TMap<FString, UClass*> bpname2bpclass;
 #endif
 	static void addmodule(const char* classname, bool bIsStruct, bool bNeedGc);
 	static void useCustomLoader();

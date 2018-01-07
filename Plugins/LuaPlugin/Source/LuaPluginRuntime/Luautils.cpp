@@ -9,6 +9,11 @@ UWorld* ULuautils::GetWorld1(AActor* obj)
 	return obj->GetWorld();
 }
 
+UWorld* ULuautils::GetActorWorld(AActor *obj)
+{
+	return obj->GetWorld();
+}
+
 void ULuautils::SetupAttachment(USceneComponent* Child, USceneComponent* InParent, FName InSocketName)
 {
 	Child->SetupAttachment(InParent, InSocketName);
@@ -80,25 +85,12 @@ UObject* ULuautils::GetPrivateClass(UObject *p)
 	return p->GetClass();
 }
 
-
-TSet<AActor*> ULuautils::GCThisSet(const TSet<AActor*>& ActorsInLua)
-{
-	TSet<AActor*> LeftActors;
-	for (AActor* actor : ActorsInLua)
-	{
-		if (actor->IsPendingKill())
-			continue;
-		LeftActors.Add(actor);
-	}
-	return LeftActors;
-}
-
-void ULuautils::Ctor(const UObject* WorldContextObject, const FString& LuaClassName)
+void ULuautils::Ctor(UObject* WorldContextObject, const FString& LuaClassName)
 {
 	UTableUtil::call("Ctor", LuaClassName, WorldContextObject);
 }
 
-void ULuautils::Call(const UObject* WorldContextObject, const FString& FunctionName)
+void ULuautils::Call(UObject* WorldContextObject, const FString& FunctionName)
 {
 	UTableUtil::inscall("Call", TCHAR_TO_UTF8(*FunctionName), WorldContextObject);
 }

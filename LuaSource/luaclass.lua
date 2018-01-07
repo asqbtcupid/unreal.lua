@@ -101,7 +101,6 @@ function Object:Release(...)
 		error("not ins")
 	end
 	if self._has_destroy_ then
-		-- error("double Destroy "..tostring(self).." "..tostring(self.classname).." "..tostring(self.m_HasEndPlay))
 		return
 	end
 	InternDestroy(self._meta_, self, ...)

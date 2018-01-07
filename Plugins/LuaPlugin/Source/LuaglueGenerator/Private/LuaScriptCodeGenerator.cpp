@@ -2037,7 +2037,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 
 	for (FString& Path : AllLuaGenCpp)
 	{
-// 		SaveHeaderIfChanged(Path, "");
- 		IFileManager::Get().Delete(*Path);
+		SaveHeaderIfChanged(Path, "");
+//  		IFileManager::Get().Delete(*Path);
 	}
 }
