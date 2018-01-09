@@ -433,6 +433,7 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(EEnvTestDot_Enum, "EEnvTestDot");
 		UTableUtil::loadEnum(EEnvTestPathfinding_Enum, "EEnvTestPathfinding");
 		UTableUtil::loadEnum(EAISenseNotifyType_Enum, "EAISenseNotifyType");
+		UTableUtil::loadEnum(TestEnum_Enum, "TestEnum");
 	}
 	lua_static_load_allenum_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}
 };

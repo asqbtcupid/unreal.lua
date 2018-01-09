@@ -21,7 +21,7 @@ public class LuaPluginRuntime : ModuleRules
         Definitions.Add("FAST_WITHOUT_HOTLOAD");
         if (Target.Type == TargetType.Editor)
         {
-            PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher" });
+            PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });
         }
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
         if (Target.Platform == UnrealTargetPlatform.Win64)

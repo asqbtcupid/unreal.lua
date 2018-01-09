@@ -9,6 +9,12 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FDelegateTest1,  bool,    test_bool,   int32,    test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FDelegateTest2, FVector, test_struct, UObject*, test_obj, TSubclassOf<AActor>, test_class, TArray<int32>, test_arr, TArray<FVector>, test_arrstruct, TSet<int32>, test_set);
 
+UENUM(BlueprintType)
+enum class TestEnum : uint8
+{
+	one,
+	two,
+};
 
 UCLASS()
 class CATCHME_API ATestCaseActor : public AActor
@@ -132,7 +138,14 @@ public:
 		TSet<FVector> FuncReturnSet_public(TSet<FVector>& Set);
 	UFUNCTION()
 		void TestSpeed_Native(int32 i);
+
+	UPROPERTY()
+		TMap<FString, TestEnum> test_map_enum_public;
+	UFUNCTION(BlueprintCallable, Category = "TestCase")
+		void Func_Test_Enum(TestEnum enum_Param);
 private:
+	UPROPERTY()
+		TMap<FString, TestEnum> test_map_enum_private;
 	UFUNCTION()
 		void FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map);
 	UFUNCTION()

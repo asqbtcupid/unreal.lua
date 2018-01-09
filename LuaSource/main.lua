@@ -7,13 +7,11 @@ function Init(IsMannual)
         a_("lua memory: ", collectgarbage("count"))
     end
     TimerMgr:Get():On(ShowMem):Time(2)
-    G_IsMannul = IsMannual
-    if IsMannual then
-         if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
-            InitLuahotupdate()
-        end
-        -- require "util.sbcompletions".run()
+
+    if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
+        InitLuahotupdate()
     end
+        -- require "util.sbcompletions".run()
 end
 
 function InitLuahotupdate()

@@ -1522,20 +1522,23 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	{
 		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("New"));
 		GeneratedGlue += TEXT("\r\n{\r\n");
-		GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
 		GeneratedGlue += TEXT("\tUObject* Obj = nullptr;\r\n");
-		GeneratedGlue += TEXT("\tif(ue_lua_gettop(L) <= 1)\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer);\r\n"), *ClassNameCPP);
-		GeneratedGlue += TEXT("\telse if(ue_lua_gettop(L) <= 2){\r\n");
-		GeneratedGlue += TEXT("\t\tFName Name = FName(ue_lua_tostring(L, 2));\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Name);\r\n\t}\r\n"), *ClassNameCPP);
-		GeneratedGlue += TEXT("\telse{\r\n");
-		GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)(touobject(L, 2));\r\n");
+		GeneratedGlue += TEXT("\tint32 len = ue_lua_gettop(L);\r\n");
+
+		GeneratedGlue += TEXT("\tif(len == 0)\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>();\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\telse if(len == 1){\r\n");
+		GeneratedGlue += TEXT("\t\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer);\r\n\t}\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\telse if(len == 2){\r\n");
+		GeneratedGlue += TEXT("\t\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
+		GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)touobject(L, 2);\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Class);\r\n\t}\r\n"), *ClassNameCPP);
+		GeneratedGlue += TEXT("\telse if(len == 3){\r\n");
+		GeneratedGlue += TEXT("\t\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
+		GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)touobject(L, 1);\r\n");
 		GeneratedGlue += TEXT("\t\tFName Name = FName(ue_lua_tostring(L, 3));\r\n");
-		GeneratedGlue += FString::Printf(TEXT("\t\t Obj = NewObject<%s>(Outer,Class,Name);\r\n\t}\r\n"), *ClassNameCPP);
-// 		GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
-// 		GeneratedGlue += TEXT("\t\t\tUTableUtil::addgcref(Obj);\r\n");
-// 		GeneratedGlue += TEXT("\t}\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Class, Name);\r\n\t}\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, (void*)Obj, true);\r\n"));
 		GeneratedGlue += TEXT("\treturn 1;\r\n");
 		GeneratedGlue += TEXT("}\r\n\r\n");
@@ -1622,6 +1625,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 	if (!(Class->ClassFlags & CLASS_Interface))
 	{
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"New\", %s_New },\r\n"), *ClassNameCPP);
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"NewObject\", %s_New },\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"Destroy\", %s_Destroy },\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"FObjectFinder\", %s_FObjectFinder },\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"FClassFinder\", %s_FClassFinder },\r\n"), *ClassNameCPP);
@@ -2037,7 +2041,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 
 	for (FString& Path : AllLuaGenCpp)
 	{
-		SaveHeaderIfChanged(Path, "");
+		SaveHeaderIfChanged(Path, "//you should delete this file. In order to let UBT run again, you should make tiny change to project's build.cs.");
 //  		IFileManager::Get().Delete(*Path);
 	}
 }

@@ -1,8 +1,8 @@
 LuaVarWatcher = Inherit(Singleton)
 
 function LuaVarWatcher:Ctor()
-	-- only work in editor mode, GameInstance can be other UObject instance
-	if GameInstance == nil or UVarNode == nil then
+	-- only work in editor mode
+	if UVarNode == nil then
 		self.m_NotWork = true
 	end
 	local weakmeta = {__mode = "kv"}
@@ -45,7 +45,7 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 				ChildNode.Value = ValueStr
 			else
 				local Index = self:AddToIndexMap(key)
-				ChildNode = UVarNode.New(GameInstance, self:GetUNodeNewName())
+				ChildNode = UVarNode.New()
 				ChildNode:Init(KeyName, ValueStr, Index)
 				UNode:AddChild(ChildNode, bIsKey)
 			end
@@ -136,6 +136,9 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 end
 
 function LuaVarWatcher:Tick( )
+	if self.m_NotWork then
+		return
+	end
 	if UVarNode.NeedUpdate() then
 		self.m_NeedShowFunction = UVarNode.NeedShowFunction()
 		local RootToClean = {}
@@ -172,7 +175,7 @@ function LuaVarWatcher:AddNode(VarName, VarValue)
 	end
 	
 	local Index = self:AddToIndexMap(VarValue)
-	local NewUNode = UVarNode.New(GameInstance, self:GetUNodeNewName())
+	local NewUNode = UVarNode.New()
 	NewUNode:Init(VarName, tostring(VarValue), Index)
 	self.m_Root[NewUNode] = Index
 	NewUNode:AddToRootArr()

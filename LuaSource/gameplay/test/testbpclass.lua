@@ -6,21 +6,22 @@ end
 
 function TestBpClass:BeginPlay( )
 	CppObjectBase.BeginPlay(self)
-	self:TestNativePublicPropertyReadWrite()
-	self:TestNativePrivatePropertyReadWrite()
-	self:TestCppFunction()
-	self:TestBpPropertyReadWrite()
-	self:TestBpPropertyArr()
-	self:TestArrParam()
-	self:TestBpPropertyArr1()
-	self:TestReturnStruct()
-	self:TestArrInnerStruct()
-	self:TestDelegate()
-	self:TestMapProperty()
-	self:TestMapRefFunc()
-	self:TestMapRetFunc()
-	self:TestSetProperty()
-	self:TestSetFunc()
+	-- self:TestNativePublicPropertyReadWrite()
+	-- self:TestNativePrivatePropertyReadWrite()
+	-- self:TestCppFunction()
+	-- self:TestBpPropertyReadWrite()
+	-- self:TestBpPropertyArr()
+	-- self:TestArrParam()
+	-- self:TestBpPropertyArr1()
+	-- self:TestReturnStruct()
+	-- self:TestArrInnerStruct()
+	-- self:TestDelegate()
+	-- self:TestMapProperty()
+	-- self:TestMapRefFunc()
+	-- self:TestMapRetFunc()
+	-- self:TestSetProperty()
+	-- self:TestSetFunc()
+	self:TestEnum()
 	-- self:Timer(self.TestSpeed, self):Time(3):Num(1)
 	-- self:TestSpeed()
 end
@@ -909,6 +910,18 @@ function TestBpClass:TestCallLua( test_bool_public, test_int_public, test_int64_
 	assert(test_set_public[199] == true)
 	assert(test_map_public.test1 == 100)
 	assert(test_map_public.test2 == 200)
+end
+
+function TestBpClass:TestEnum()
+	assert(self.test_enum_bp == 1)
+	self.test_map_enum_public.test1 = 1
+	self.test_map_enum_public.test2 = 0
+	assert(self.test_map_enum_public.test1 == 1)
+	assert(self.test_map_enum_public.test2 == 0)
+
+	self.test_map_enum_public = {test1=0,test2=1}	
+	assert(self.test_map_enum_public.test1 == 0)
+	assert(self.test_map_enum_public.test2 == 1)
 end
 
 return TestBpClass

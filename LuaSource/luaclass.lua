@@ -110,6 +110,7 @@ end
 local _parentclass = "_parentclass"
 local GetPrefix = "LuaGet_"
 local _cppinstance_str = "_cppinstance_"
+local _cppinstance_meta_str = "_cppinstance_meta_"
 local function __indexcpp(t, k)
 	local GetFuncKey = GetPrefix..tostring(k)
 	local getfunc = rawget(t, GetFuncKey)
@@ -134,9 +135,9 @@ local function __indexcpp(t, k)
 		class = getmetatable(class) 
 	end
 
-	local _cppinstance_ = rawget(t, _cppinstance_str)
-	if _cppinstance_ then
-		local v = _cppinstance_[k] 
+	local _cppinstance_meta = rawget(t, _cppinstance_meta_str)
+	if _cppinstance_meta then
+		local v = _cppinstance_meta[k] 
 		if v then 
 			if type(v) == "function" then
 				rawset(t, k, v)
@@ -144,7 +145,7 @@ local function __indexcpp(t, k)
 			return v 
 		end 
 
-		v = _cppinstance_[GetFuncKey]
+		v = _cppinstance_meta[GetFuncKey]
 		if type(v) == "function" then
 			rawset(t, GetFuncKey, v)
 			return v(t)

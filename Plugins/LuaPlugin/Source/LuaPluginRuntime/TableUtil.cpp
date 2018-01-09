@@ -10,6 +10,10 @@
 #include "Engine/World.h"
 #include "Engine/LevelScriptActor.h"
 
+#if WITH_EDITOR
+	#include "Editor.h"
+#endif
+
 DEFINE_LOG_CATEGORY(LuaLog);
 
 FLuaInitDelegates& UTableUtil::GetInitDelegates()
@@ -32,7 +36,10 @@ bool UTableUtil::HasManualInit = false;
 TSet<FString> UTableUtil::SupportedNativeStruct;
 FDelegateHandle LuaPreGarbageCollectDelegateHandle;
 FDelegateHandle LuaOnWorldCleanUpDelegateHandle;
-
+#if WITH_EDITOR
+FDelegateHandle LuaOnEditorEndPlayDelegateHandle;
+FDelegateHandle LuaOnEditorBeginPlayDelegateHandle;
+#endif
 #ifdef LuaDebug
 TMap<FString, int> UTableUtil::countforgc;
 TMap<FString, UClass*> UTableUtil::bpname2bpclass;
@@ -53,6 +60,7 @@ static void* LuaAlloc(void *Ud, void *Ptr, size_t OldSize, size_t NewSize)
 
 static int32 LuaPanic(lua_State *L)
 {
+	LuaFixLink();
 	UTableUtil::log(FString::Printf(TEXT("PANIC: unprotected error in call to Lua API(%s)"), ANSI_TO_TCHAR(lua_tostring(L, -1))));
 	return 0;
 }
@@ -108,20 +116,22 @@ void UTableUtil::useCustomLoader()
 
 void UTableUtil::init(bool IsManual)
 {
-	LuaFixLink();
-	if (IsManual)
-	{
-		++ManualInitCount;
-	}
 	if (TheOnlyLuaState != nullptr)
-	{
-		if (IsManual && !HasManualInit)
-		{
-			shutdown_internal();
-		}
-		else
-			return;
-	}
+		return;
+
+// 	if (IsManual)
+// 	{
+// 		++ManualInitCount;
+// 	}
+// 	if (TheOnlyLuaState != nullptr)
+// 	{
+// 		if (IsManual && !HasManualInit)
+// 		{
+// 			shutdown_internal();
+// 		}
+// 		else
+// 			return;
+// 	}
 
 	SupportedNativeStruct.Reset();
 	auto l = lua_newstate(LuaAlloc, nullptr);
@@ -192,8 +202,26 @@ void UTableUtil::init(bool IsManual)
 			[](UWorld* World, bool bSessionEnded, bool bCleanupResources)
 			{LuaStaticCall("OnWorldCleanup", World, bSessionEnded, bCleanupResources);}
 		);
+#if WITH_EDITOR
+		LuaOnEditorEndPlayDelegateHandle = FEditorDelegates::EndPIE.AddLambda
+		(
+			[&](const bool IsSim)
+			{
+				FEditorDelegates::EndPIE.Remove(LuaOnEditorEndPlayDelegateHandle);
+				UTableUtil::shutdown();
+			}
+		);
+		LuaOnEditorBeginPlayDelegateHandle = FEditorDelegates::PreBeginPIE.AddLambda
+		(
+			[&](const bool IsSim)
+			{
+				FEditorDelegates::PreBeginPIE.Remove(LuaOnEditorBeginPlayDelegateHandle);
+				UTableUtil::shutdown();
+			}
+		);
+#endif
 	}
-	HasManualInit = IsManual;
+// 	HasManualInit = IsManual;
 }
 
 void UTableUtil::GC()
@@ -206,8 +234,7 @@ void UTableUtil::GC()
 
 void UTableUtil::shutdown()
 {
-	--ManualInitCount;
-	if (TheOnlyLuaState != nullptr && ManualInitCount == 0)
+	if (TheOnlyLuaState != nullptr)
 	{
 		shutdown_internal();
 	}
@@ -1120,7 +1147,7 @@ void UTableUtil::pushproperty_type(lua_State*inL, UByteProperty* p, const void*p
 
 void UTableUtil::pushproperty_type(lua_State*inL, UEnumProperty* p, const void*ptr)
 {
-	lua_pushinteger(inL, (int)p->GetUnderlyingProperty()->GetValueTypeHash(ptr));
+	pushproperty(inL, p->GetUnderlyingProperty(), p->ContainerPtrToValuePtr<void>(ptr));
 }
 
 void UTableUtil::pushproperty_type(lua_State*inL, UWeakObjectProperty* p, const void*ptr)
@@ -1301,7 +1328,7 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, UByteProperty* p, vo
 
 void UTableUtil::popproperty_type(lua_State*inL, int index, UEnumProperty* p, void*ptr)
 {
-	popproperty(inL, index, p->GetUnderlyingProperty(), ptr);
+	popproperty(inL, index, p->GetUnderlyingProperty(), p->ContainerPtrToValuePtr<void>(ptr));
 }
 
 void UTableUtil::popproperty_type(lua_State*inL, int index, UStructProperty* p, void*ptr)

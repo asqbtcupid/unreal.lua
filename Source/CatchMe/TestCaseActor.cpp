@@ -247,6 +247,11 @@ void ATestCaseActor::TestSpeed_Native(int32 i)
 	}
 }
 
+void ATestCaseActor::Func_Test_Enum(TestEnum enum_Param)
+{
+
+}
+
 void ATestCaseActor::FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map)
 {
 	Map.Reset();

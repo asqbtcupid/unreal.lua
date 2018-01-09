@@ -50,17 +50,30 @@ LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
 LUAPLUGINRUNTIME_API void PrintLuaStack(lua_State*L = nullptr);
 
+
+template<class T>
+static T popinternal(lua_State *L, int index, typename TEnableIf< TIsSame<typename traitstructclass<T>::NotStructType, NotNeedTempInsType>::Value,T>::Type* pp = nullptr )
+{
+	return (T)ue_lua_tointeger(L, index);
+};
+
+template<class T>
+static T popinternal(lua_State *L, int index, typename TEnableIf< TIsSame<typename traitstructclass<T>::NotStructType, NeedTempInsType>::Value, T>::Type* pp = nullptr)
+{
+	T* p = (T*)tostruct(L, index);
+	if (p == nullptr)
+	{
+		return T();
+	}
+	return *p;
+};
+
 template<class T>
 class popiml {
 public:
-	static T pop(lua_State *L, int index, typename traitstructclass<T>::value* t = nullptr)
+	static T pop(lua_State *L, int index)
 	{
-		T* p = (T*)tostruct(L, index);
-		if (p == nullptr)
-		{
-			return T();
-		}
-		return *p;
+		return popinternal<T>(L, index);
 	}
 };
 template<class T>

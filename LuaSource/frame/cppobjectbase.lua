@@ -3,6 +3,7 @@ CppObjectBase = Class(ObjectBase)
 CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
 local LinkAgainstGC = {}
+local LevelActors = {}
 function CppObjectBase:EndPlay(Reason)
 	if not self.m_HasEndPlay then
 		self.m_HasEndPlay = true
@@ -20,7 +21,9 @@ function CppObjectBase:Destroy()
 	local _cppinstance_ = rawget(self, "_cppinstance_")
 	if _cppinstance_ then 
 		_cppinstance_:Destroy()
+		rawset(self, "_cppinstance_", nil)
 	end
+	LevelActors[self] = nil
 end
 
 function CppObjectBase:BeginPlay()
@@ -28,7 +31,7 @@ function CppObjectBase:BeginPlay()
 		self.m_HasBeginPlay = true
 		local OnEndPlayDelegate = self.OnEndPlay
 		self:GC(OnEndPlayDelegate)
-		OnEndPlayDelegate:Add(self.EndPlay)
+		OnEndPlayDelegate:Add(SafeCallBack(self.EndPlay, self))
 	end
 end
 
@@ -45,7 +48,6 @@ end
 
 CppObjectBase.New = CppObjectBase.NewCpp
 CppObjectBase.__iscppclass = true
-local LevelActors = {}
 function CppObjectBase:Ctor()
 	rawset(self, "_gc_list", {})
 	if AActor.Cast(self) then
@@ -85,6 +87,7 @@ end
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
 	rawset(ins, "_cppinstance_", inscpp)
+	rawset(ins, "_cppinstance_meta_", getmetatable(inscpp))
 	_objectins2luatable[inscpp] = ins
 	ins:Initialize(...)
 	return ins

@@ -26,7 +26,7 @@ function CMPlayerController:BeginPlay( )
 end
 
 function CMPlayerController:InitFogMgr()
-	self.m_FogMgr = UCMFogMgr.New(self, "FogMgr")
+	self.m_FogMgr = UCMFogMgr.New(self)
 	self:GC(self.m_FogMgr)
 	self.m_FogMgr:LuaInit(self)
 end
