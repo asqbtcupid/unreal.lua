@@ -1,6 +1,5 @@
 #include "tableutil.h"
 #include "BPAndLuaBridge.lua.h"
-#include "BpCallLuaObj.lua.h"
 #include "LuaArrayHelper.lua.h"
 #include "LuaDelegate.lua.h"
 #include "LuaMapHelper.lua.h"
@@ -14,7 +13,6 @@ struct lua_static_load_LuaPluginRuntime_uclass_all_struct
 	static void load()
 	{
 		UTableUtil::loadlib(BPAndLuaBridge_Lib, "UBPAndLuaBridge");
-		UTableUtil::loadlib(BpCallLuaObj_Lib, "UBpCallLuaObj");
 		UTableUtil::loadlib(LuaArrayHelper_Lib, "ULuaArrayHelper");
 		UTableUtil::loadlib(LuaDelegate_Lib, "ULuaDelegate");
 		UTableUtil::loadlib(LuaMapHelper_Lib, "ULuaMapHelper");

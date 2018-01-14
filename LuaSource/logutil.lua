@@ -51,3 +51,9 @@ end
 function Xpcall(f)
     xpcall(f, errhandle)
 end
+
+function ensure(isTrue, msg)
+    if not isTrue then
+        error(msg)
+    end
+end

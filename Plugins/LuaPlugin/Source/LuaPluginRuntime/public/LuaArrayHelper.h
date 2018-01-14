@@ -19,21 +19,23 @@ public:
 	UArrayProperty* Property;
 		
 	void Init(void* _Obj, UArrayProperty* _Property);
+	void Init_ValuePtr(void* _Obj, UArrayProperty* _Property);
 
 	template<class T>
 	TArray<T>* ValuePtr()
 	{
-		return Property->ContainerPtrToValuePtr<TArray<T>>(Obj);
+		return (TArray<T>*)(Obj);
 	}
 
 	UFUNCTION()
 		static ULuaArrayHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
 	static ULuaArrayHelper* GetHelperCPP(void* _Obj, UArrayProperty* Property);
+	static ULuaArrayHelper* GetHelperCPP_ValuePtr(void* _Obj, UArrayProperty* Property);
 
-	void Copy(FScriptArrayHelper_InContainer& SrcArrayHelper, FScriptArrayHelper_InContainer& DestArrayHelper, UArrayProperty* p);
-	void CopyTo(UArrayProperty* p, void* ptr);
-	void CopyFrom(UArrayProperty* p, void* ptr);
+	void Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, UArrayProperty* p);
+	void CopyTo(UArrayProperty* p, const void* ptr);
+	void CopyFrom(UArrayProperty* p, const void* ptr);
 
 	UFUNCTION()
 		int32 Num();

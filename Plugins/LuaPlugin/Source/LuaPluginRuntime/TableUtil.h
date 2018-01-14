@@ -11,6 +11,7 @@
 #include "LuaMapHelper.h"
 #include "LuaSetHelper.h"
 #include "AndOrNot.h"
+#include "Engine/UserDefinedStruct.h"
 #include "TableUtil.generated.h"
 
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
@@ -20,6 +21,14 @@
 
 #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, ##__VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
+
+#ifndef USE_LUASOURCE
+	#define USE_LUASOURCE	0
+#endif
+
+#ifndef STRONG_CHECK_GC_REF
+	#define STRONG_CHECK_GC_REF	0
+#endif
 
 struct EnumItem
 {
@@ -44,7 +53,6 @@ LUAPLUGINRUNTIME_API void pushuobject(lua_State *inL, void* p, bool bgcrecord = 
 LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_stack(lua_State *inL, const char* structname, void* p);
-LUAPLUGINRUNTIME_API void* tousertype(lua_State* L, const char* classname, int i);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
@@ -235,6 +243,7 @@ public:
 	static TMap<FString, int> countforgc;
 	static TMap<FString, UClass*> bpname2bpclass;
 #endif
+	static TMap<FString, UUserDefinedStruct*> bpname2bpstruct;
 	static void addmodule(const char* classname, bool bIsStruct, bool bNeedGc);
 	static void useCustomLoader();
 	UFUNCTION(BlueprintCallable, Category = "Lua")
@@ -244,10 +253,10 @@ public:
 	static void closemodule();
 	static void addfunc(const char* classname, luafunc f);
 	static void initmeta(bool bIsStruct, bool bNeedGc = true);
-	static void setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct = false);
+	static void setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct = false, bool bNeedGc = true);
 	static void set_uobject_meta(lua_State *inL, UObject* Obj, int index);
+	static void MayAddNewStructType(UUserDefinedStruct* BpStruct);
 
-	static void* tousertype(lua_State* InL, const char* classname, int i);
 	static void loadlib(const luaL_Reg funclist[], const char* classname, bool bIsStruct = false, bool bNeedGc = true);
 	static void loadstruct(const luaL_Reg funclist[], const char* classname);
 	static void loadEnum(const EnumItem list[], const char* enumname);
@@ -386,6 +395,26 @@ public:
 	static void pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr);
 	static void pushproperty_type(lua_State*inL, UMapProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, USetProperty* p, const void*ptr);
+
+	static void pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UBoolProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UIntProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UUInt32Property* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UInt64Property* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UFloatProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UDoubleProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UObjectPropertyBase* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UStrProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UNameProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UTextProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UByteProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UEnumProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UStructProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UMulticastDelegateProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UWeakObjectProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UArrayProperty* property, const void* ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UMapProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, USetProperty* p, const void*ptr);
 
 	template<class T>
 	static int push(lua_State *inL, const TArray<T>& value);
@@ -574,7 +603,7 @@ public:
 		{
 			*SetPtr = Helper->ValuePtr<T>();
 		}
-		if (ue_lua_istable(inL, index))
+		else if (ue_lua_istable(inL, index))
 		{
 			**SetPtr = popiml<TSet<T>>::pop(inL, index);
 		}
@@ -918,16 +947,14 @@ public:
 	template<class ReturnType, class UObjectPtrType, class... T>
 	static ReturnType inscallr(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
 	{
-#ifndef LUA_CALL_WITHOUTCHECK
 		if (TheOnlyLuaState == nullptr)
 			init();
-
-		if (ptr == nullptr)
+#ifndef LUA_CALL_WITHOUTCHECK
+		if (ptr == nullptr || !existluains(TheOnlyLuaState, (void*)(ptr)))
+		{
+			ensureAlwaysMsgf(0, L"cpp ins doesn't ctor or has been release");
 			return ReturnType();
-
-		if (!existluains(TheOnlyLuaState, (void*)(ptr)))
-			return ReturnType();
-		lua_pop(TheOnlyLuaState, 1);
+		}
 #endif
 		return callr<ReturnType>(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
 	}
@@ -935,16 +962,14 @@ public:
 	template<class UObjectPtrType, class... T>
 	static void inscall(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
 	{
-#ifndef LUA_CALL_WITHOUTCHECK
 		if (TheOnlyLuaState == nullptr)
 			init();
-
-		if (ptr == nullptr)
+#ifndef LUA_CALL_WITHOUTCHECK
+		if (ptr == nullptr || !existluains(TheOnlyLuaState, (void*)(ptr)))
+		{
+			ensureAlwaysMsgf(0, L"cpp ins doesn't ctor or has been release");
 			return;
-
-		if (!existluains(TheOnlyLuaState, (void*)(ptr)))
-			return;
-		lua_pop(TheOnlyLuaState, 1);
+		}
 #endif
 		call(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
 	}
@@ -1041,11 +1066,7 @@ public:
 		return Singleton;
 	}
 
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
-	{
-		Collector.AllowEliminatingReferences(false);
-		Collector.AddReferencedObjects(objs);
-		Collector.AllowEliminatingReferences(true);
-	}
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+	
 
 };

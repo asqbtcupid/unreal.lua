@@ -10,8 +10,15 @@ ULuaArrayHelper::ULuaArrayHelper()
 
 void ULuaArrayHelper::Init(void* _Obj, UArrayProperty* _Property)
 {
-	Obj = _Obj;
 	Property = _Property;
+	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
+	// ValuePtr = Property->ContainerPtrToValuePtr<void>(Obj);
+}
+
+void ULuaArrayHelper::Init_ValuePtr(void* _Obj, UArrayProperty* _Property)
+{
+	Property = _Property;
+	Obj = _Obj;
 }
 
 ULuaArrayHelper* ULuaArrayHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
@@ -32,7 +39,14 @@ ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP(void* _Obj, UArrayProperty* Prope
 	return Result;
 }
 
-void ULuaArrayHelper::Copy(FScriptArrayHelper_InContainer& SrcArrayHelper, FScriptArrayHelper_InContainer& DestArrayHelper, UArrayProperty* p)
+ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP_ValuePtr(void* _Obj, UArrayProperty* Property)
+{
+	ULuaArrayHelper* Result = NewObject<ULuaArrayHelper>();
+	Result->Init_ValuePtr(_Obj, Property);
+	return Result;
+}
+
+void ULuaArrayHelper::Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, UArrayProperty* p)
 {
 	int32 Num = SrcArrayHelper.Num();
 	if (!(p->Inner->PropertyFlags & CPF_IsPlainOldData))
@@ -62,27 +76,27 @@ void ULuaArrayHelper::Copy(FScriptArrayHelper_InContainer& SrcArrayHelper, FScri
 	}
 }
 
-void ULuaArrayHelper::CopyTo(UArrayProperty* p, void* ptr)
+void ULuaArrayHelper::CopyTo(UArrayProperty* p, const void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptArrayHelper_InContainer SrcArrayHelper(Property, Obj);
-	FScriptArrayHelper_InContainer DestArrayHelper(p, ptr);
+	FScriptArrayHelper SrcArrayHelper(Property, Obj);
+	FScriptArrayHelper DestArrayHelper(p, ptr);
 	Copy(SrcArrayHelper, DestArrayHelper, p);
 }
 
-void ULuaArrayHelper::CopyFrom(UArrayProperty* p, void* ptr)
+void ULuaArrayHelper::CopyFrom(UArrayProperty* p, const void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptArrayHelper_InContainer SrcArrayHelper(p, ptr);
-	FScriptArrayHelper_InContainer DestArrayHelper(Property, Obj);
+	FScriptArrayHelper SrcArrayHelper(p, ptr);
+	FScriptArrayHelper DestArrayHelper(Property, Obj);
 	Copy(SrcArrayHelper, DestArrayHelper, Property);
 }
 
 int32 ULuaArrayHelper::Num()
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	return result.Num();
 }
 
@@ -90,7 +104,7 @@ int32 ULuaArrayHelper::Get(Flua_State inL, int32 Index)
 {
 	//lua arr start at 1
 	--Index;
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	if (!result.IsValidIndex(Index))
 	{
 		ensureMsgf(0, L"Index Invalid");
@@ -106,7 +120,7 @@ void ULuaArrayHelper::Set(Flua_State inL, int32 Index, Flua_Index Value)
 {
 	//lua arr start at 1
 	--Index;
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	result.ExpandForIndex(Index);
 	UProperty* InnerProperty = Property->Inner;
 	UTableUtil::popproperty(inL, Value, InnerProperty, result.GetRawPtr(Index));
@@ -114,7 +128,7 @@ void ULuaArrayHelper::Set(Flua_State inL, int32 Index, Flua_Index Value)
 
 void ULuaArrayHelper::Add(Flua_State inL, Flua_Index Value)
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	UProperty* InnerProperty = Property->Inner;
 	int32 Index = result.AddValue();
 	UTableUtil::popproperty(inL, Value, InnerProperty, result.GetRawPtr(Index));
@@ -123,7 +137,7 @@ void ULuaArrayHelper::Add(Flua_State inL, Flua_Index Value)
 int32 ULuaArrayHelper::Remove(Flua_State inL, int32 Index)
 {
 	--Index;
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	UProperty* InnerProperty = Property->Inner;
 	if (!result.IsValidIndex(Index))
 	{
@@ -138,7 +152,7 @@ int32 ULuaArrayHelper::Remove(Flua_State inL, int32 Index)
 
 int32 ULuaArrayHelper::Pop(Flua_State inL)
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	if (result.Num() > 0)
 	{
 		UProperty* InnerProperty = Property->Inner;
@@ -154,7 +168,7 @@ int32 ULuaArrayHelper::Pop(Flua_State inL)
 void ULuaArrayHelper::Insert(Flua_State inL, int32 Index, Flua_Index Value)
 {
 	--Index;
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	UProperty* InnerProperty = Property->Inner;
 	result.InsertValues(Index);
 	UTableUtil::popproperty(inL, Value, InnerProperty, result.GetRawPtr(Index));
@@ -162,19 +176,19 @@ void ULuaArrayHelper::Insert(Flua_State inL, int32 Index, Flua_Index Value)
 
 void ULuaArrayHelper::Empty(int32 Slack /*= 0*/)
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	result.EmptyValues(Slack);
 }
 
 void ULuaArrayHelper::Reset()
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	result.EmptyValues(0);
 }
 
 int32 ULuaArrayHelper::Table(Flua_State inL)
 {
-	FScriptArrayHelper_InContainer result(Property, Obj);
+	FScriptArrayHelper result(Property, Obj);
 	lua_newtable(inL);
 	for (int32 i = 0; i < result.Num(); ++i)
 	{

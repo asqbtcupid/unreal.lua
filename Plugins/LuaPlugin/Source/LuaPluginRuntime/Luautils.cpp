@@ -84,13 +84,3 @@ UObject* ULuautils::GetPrivateClass(UObject *p)
 {
 	return p->GetClass();
 }
-
-void ULuautils::Ctor(UObject* WorldContextObject, const FString& LuaClassName)
-{
-	UTableUtil::call("Ctor", LuaClassName, WorldContextObject);
-}
-
-void ULuautils::Call(UObject* WorldContextObject, const FString& FunctionName)
-{
-	UTableUtil::inscall("Call", TCHAR_TO_UTF8(*FunctionName), WorldContextObject);
-}

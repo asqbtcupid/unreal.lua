@@ -4,6 +4,15 @@
 #include "RHI.h"
 #include "CMFogMgr.generated.h"
 
+UCLASS()
+class CATCHME_API UCMFogMgr_Test : public UObject
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+		UObject* hehe;
+};
+
 class UTexture2D;
 UCLASS()
 class CATCHME_API UCMFogMgr : public UObject

@@ -21,8 +21,8 @@ void ACMCharacterBase::BeginPlay()
 
 void ACMCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
 	LuaCall("EndPlay", this, int(EndPlayReason));
+	Super::EndPlay(EndPlayReason);
 }
 
 // Called every frame

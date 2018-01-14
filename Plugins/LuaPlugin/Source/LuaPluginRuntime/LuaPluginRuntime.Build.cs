@@ -16,9 +16,13 @@ public class LuaPluginRuntime : ModuleRules
         PrivateIncludePaths.Add("LuaPluginRuntime/Private");
 
         PublicDependencyModuleNames.AddRange(new string[] {  "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore", "Foliage", "GameplayTasks" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG", "CatchMe"});
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG"});
+
+        PrivateDependencyModuleNames.AddRange(new string[] { "CatchMe" });
+
         Definitions.Add("LuaDebug");
-        Definitions.Add("FAST_WITHOUT_HOTLOAD");
+        Definitions.Add("STRONG_CHECK_GC_REF");
+
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });
@@ -26,6 +30,7 @@ public class LuaPluginRuntime : ModuleRules
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
+            Definitions.Add("USE_LUASOURCE");
             PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Win64", "Debug", "lua.lib"));
 //             PublicAdditionalLibraries.Add(Path.Combine(LuaLibPath, "Lib", "Win64", "Release", "lua.lib"));
         }

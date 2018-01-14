@@ -1536,7 +1536,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Class);\r\n\t}\r\n"), *ClassNameCPP);
 		GeneratedGlue += TEXT("\telse if(len == 3){\r\n");
 		GeneratedGlue += TEXT("\t\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
-		GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)touobject(L, 1);\r\n");
+		GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)touobject(L, 2);\r\n");
 		GeneratedGlue += TEXT("\t\tFName Name = FName(ue_lua_tostring(L, 3));\r\n");
 		GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Class, Name);\r\n\t}\r\n"), *ClassNameCPP);
 		GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, (void*)Obj, true);\r\n"));

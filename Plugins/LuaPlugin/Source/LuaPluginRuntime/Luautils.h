@@ -65,8 +65,4 @@ public:
 	UFUNCTION()
 		static UObject* GetPrivateClass(UObject *p);
 
-	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (DefaultToSelf = "Ins"))
-		static void Ctor(UObject* Ins, const FString& LuaClassName);
-	UFUNCTION(BlueprintCallable, Category = "luautils", meta = (DefaultToSelf = "Ins"))
-		static void Call(UObject* Ins, const FString& FunctionName);
 };

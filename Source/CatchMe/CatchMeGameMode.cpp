@@ -10,6 +10,6 @@ ACatchMeGameMode::ACatchMeGameMode()
 
 void ACatchMeGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
 	LuaCall("EndPlay", this, int(EndPlayReason));
+	Super::EndPlay(EndPlayReason);
 }

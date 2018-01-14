@@ -11,8 +11,14 @@ ULuaMapHelper::ULuaMapHelper()
 
 void ULuaMapHelper::Init(void* _Obj, UMapProperty* _Property)
 {
-	Obj = _Obj;
 	Property = _Property;
+	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
+}
+
+void ULuaMapHelper::Init_ValuePtr(void* _Obj, UMapProperty* _Property)
+{
+	Property = _Property;
+	Obj = _Obj;
 }
 
 ULuaMapHelper* ULuaMapHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
@@ -33,7 +39,14 @@ ULuaMapHelper* ULuaMapHelper::GetHelperCPP(void* _Obj, UMapProperty* Property)
 	return Result;
 }
 
-void ULuaMapHelper::Copy(FScriptMapHelper_InContainer& SrcMapHelper, FScriptMapHelper_InContainer& DestMapHelper, UMapProperty* p)
+ULuaMapHelper* ULuaMapHelper::GetHelperCPP_ValuePtr(void* _Obj, UMapProperty* Property)
+{
+	ULuaMapHelper* Result = NewObject<ULuaMapHelper>();
+	Result->Init_ValuePtr(_Obj, Property);
+	return Result;
+}
+
+void ULuaMapHelper::Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, UMapProperty* p)
 {
 	int32 Num = SrcMapHelper.Num();
 	DestMapHelper.EmptyValues(Num);
@@ -66,8 +79,8 @@ void ULuaMapHelper::CopyTo(UMapProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptMapHelper_InContainer SrcMapHelper(Property, Obj);
-	FScriptMapHelper_InContainer DestMapHelper(p, ptr);
+	FScriptMapHelper SrcMapHelper(Property, Obj);
+	FScriptMapHelper DestMapHelper(p, ptr);
 	Copy(SrcMapHelper, DestMapHelper, p);
 }
 
@@ -75,14 +88,14 @@ void ULuaMapHelper::CopyFrom(UMapProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptMapHelper_InContainer SrcMapHelper(p, ptr);
-	FScriptMapHelper_InContainer DestMapHelper(Property, Obj);
+	FScriptMapHelper SrcMapHelper(p, ptr);
+	FScriptMapHelper DestMapHelper(Property, Obj);
 	Copy(SrcMapHelper, DestMapHelper, Property);
 }
 
 int32 ULuaMapHelper::Num()
 {
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 	return result.Num();
 }
 
@@ -95,7 +108,7 @@ int32 ULuaMapHelper::Get(Flua_State inL)
 		return 0;
 	}
 #endif
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 	UProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
@@ -121,7 +134,7 @@ void ULuaMapHelper::Set(Flua_State inL)
 		return ;
 	}
 #endif
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 	UProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
@@ -155,7 +168,7 @@ void ULuaMapHelper::Add(Flua_State inL)
 		return;
 	}
 #endif
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 
 	UProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
@@ -180,13 +193,13 @@ void ULuaMapHelper::Add(Flua_State inL)
 
 void ULuaMapHelper::Reset()
 {
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 	result.EmptyValues(0);
 }
 
 int32 ULuaMapHelper::Table(Flua_State inL)
 {
-	FScriptMapHelper_InContainer result(Property, Obj);
+	FScriptMapHelper result(Property, Obj);
 	lua_newtable(inL);
 	for (int32 i = 0; i < result.Num(); ++i)
 	{

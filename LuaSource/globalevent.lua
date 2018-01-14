@@ -10,6 +10,32 @@ function GlobalEvent.ClearLastEventData()
 end
 
 local weakmeta = {__mode = "v"}
+
+function InsCallBack(callBack, Ins, ...)
+	if type(Ins) ~= "table" or Ins._meta_ == nil then
+		error("InsCallBack error, Ins Must is a class ins")
+	end
+	local parameters = setmetatable({Ins, ...}, weakmeta)
+    local handle = {}
+    function handle:GetParam()
+    	return parameters
+    end
+    local len_p = table.maxn(parameters)
+    local function f(...)
+        local args = {...}
+        local len_a = table.maxn(args)
+        for i = 1, len_a do
+            parameters[i+len_p] = args[i]
+        end
+        if parameters[1] == nil or parameters[1]._has_destroy_ then
+        	return
+        end
+        handle.result = callBack(unpack(parameters, 1, len_p+len_a))
+        return handle.result
+    end
+    return f, handle
+end
+
 function SafeCallBack(callBack, ...)
 	local parameters = setmetatable({...}, weakmeta)
     local handle = {}

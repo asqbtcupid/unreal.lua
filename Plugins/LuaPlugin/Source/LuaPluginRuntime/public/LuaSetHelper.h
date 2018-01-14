@@ -23,19 +23,21 @@ public:
 	USetProperty* Property;
 
 	void Init(void* _Obj, USetProperty* _Property);
+	void Init_ValuePtr(void* _Obj, USetProperty* _Property);
 
 	template<class T>
 	TSet<T>* ValuePtr()
 	{
-		return Property->ContainerPtrToValuePtr<TSet<T>>(Obj);
+		return (TSet<T>*)(Obj);
 	}
 
 	UFUNCTION()
 		static ULuaSetHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
 	static ULuaSetHelper* GetHelperCPP(void* _Obj, USetProperty* Property);
+	static ULuaSetHelper* GetHelperCPP_ValuePtr(void* _Obj, USetProperty* Property);
 
-	void Copy(FScriptSetHelper_InContainer& SrcSetHelper, FScriptSetHelper_InContainer& DestSetHelper, USetProperty* p);
+	void Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, USetProperty* p);
 	void CopyTo(USetProperty* p, void* ptr);
 	void CopyFrom(USetProperty* p, void* ptr);
 

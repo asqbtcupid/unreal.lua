@@ -6,53 +6,27 @@ end
 
 function TestBpClass:BeginPlay( )
 	CppObjectBase.BeginPlay(self)
-	-- self:TestNativePublicPropertyReadWrite()
-	-- self:TestNativePrivatePropertyReadWrite()
-	-- self:TestCppFunction()
-	-- self:TestBpPropertyReadWrite()
-	-- self:TestBpPropertyArr()
-	-- self:TestArrParam()
-	-- self:TestBpPropertyArr1()
-	-- self:TestReturnStruct()
-	-- self:TestArrInnerStruct()
-	-- self:TestDelegate()
-	-- self:TestMapProperty()
-	-- self:TestMapRefFunc()
-	-- self:TestMapRetFunc()
-	-- self:TestSetProperty()
-	-- self:TestSetFunc()
+	self:TestNativePublicPropertyReadWrite()
+	self:TestNativePrivatePropertyReadWrite()
+	self:TestCppFunction()
+	self:TestBpPropertyReadWrite()
+	self:TestBpPropertyArr()
+	self:TestArrParam()
+	self:TestBpPropertyArr1()
+	self:TestReturnStruct()
+	self:TestArrInnerStruct()
+	self:TestDelegate()
+	self:TestMapProperty()
+	self:TestMapRefFunc()
+	self:TestMapRetFunc()
+	self:TestSetProperty()
+	self:TestSetFunc()
 	self:TestEnum()
-	-- self:Timer(self.TestSpeed, self):Time(3):Num(1)
-	-- self:TestSpeed()
+	self:TestBpStructType()
 end
 
-function TestBpClass:TestSpeed()
-	-- local t = {}
-	local t = self.test_map_copy_public
-	A_(rawget(self, "FuncReturn_ParamMap_struct"))
-	local f = self.FuncReturn_ParamMap_struct
-	local time = os.clock()
-	local function h()
-	end
-	for i = 1, 10000 do
-		-- f(self, t)
-		-- self:FuncReturn_ParamMap_struct(t)
-		h()
-	end
-	local t1 = os.clock()
-	A_(t1 - time)
-	self:TestSpeed_Native(10000)
-	-- for i = 1, 10000 do
-	-- 	self:FuncReturn_ParamMap_struct_private(t)
-	-- end
-	local t2 = os.clock()
-	A_(t2 - t1)
-	-- for i = 1, 10000 do
-	-- 	self:FuncReturn_ParamMap_struct_bp(t)
-	-- end
-	-- local t3 = os.clock()
-	-- A_(t3 - t2)
-	
+function TestBpClass:TestBpStructType( )
+
 end
 
 function TestBpClass:TestSetFunc( )
@@ -922,6 +896,16 @@ function TestBpClass:TestEnum()
 	self.test_map_enum_public = {test1=0,test2=1}	
 	assert(self.test_map_enum_public.test1 == 0)
 	assert(self.test_map_enum_public.test2 == 1)
+
+	assert(self.test_bpenum_type == 2)
 end
+
+function TestBpGlobalCall(param1,param2,param3,param4,param5,param6,param7)
+    return param1,param2,param3,param4,param5,param6,param7
+end	
+
+function TestBpClass:TestBpCall(param1,param2,param3,param4,param5,param6,param7)
+    return param1,param2,param3,param4,param5,param6,param7
+end	
 
 return TestBpClass

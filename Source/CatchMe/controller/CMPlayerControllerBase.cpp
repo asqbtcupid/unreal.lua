@@ -7,15 +7,14 @@
 
 void ACMPlayerControllerBase::BeginPlay()
 {
-	
 	Super::BeginPlay();
 	LuaCall("BeginPlay", this);
 }
 
 void ACMPlayerControllerBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
 	LuaCall("EndPlay", this, int(EndPlayReason));
+	Super::EndPlay(EndPlayReason);
 }
 
 void ACMPlayerControllerBase::PlayerTick(float DeltaTime)

@@ -19,19 +19,21 @@ public:
 	UMapProperty* Property;
 		
 	void Init(void* _Obj, UMapProperty* _Property);
+	void Init_ValuePtr(void* _Obj, UMapProperty* _Property);
 
 	template<class K, class V>
 	TMap<K, V>* ValuePtr()
 	{
-		return Property->ContainerPtrToValuePtr<TMap<K, V>>(Obj);
+		return (TMap<K, V>*)(Obj);
 	}
 
 	UFUNCTION()
 		static ULuaMapHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
 	static ULuaMapHelper* GetHelperCPP(void* _Obj, UMapProperty* Property);
+	static ULuaMapHelper* GetHelperCPP_ValuePtr(void* _Obj, UMapProperty* Property);
 
-	void Copy(FScriptMapHelper_InContainer& SrcMapHelper, FScriptMapHelper_InContainer& DestMapHelper, UMapProperty* p);
+	void Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, UMapProperty* p);
 	void CopyTo(UMapProperty* p, void* ptr);
 	void CopyFrom(UMapProperty* p, void* ptr);
 

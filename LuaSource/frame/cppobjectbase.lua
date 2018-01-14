@@ -83,12 +83,13 @@ end
 function CppObjectBase:Property(property)
 	return rawget(self._meta_, property)	
 end
-
+local setexisttable = _setexisttable 
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
 	rawset(ins, "_cppinstance_", inscpp)
 	rawset(ins, "_cppinstance_meta_", getmetatable(inscpp))
-	_objectins2luatable[inscpp] = ins
+	-- _objectins2luatable[inscpp] = ins
+	setexisttable(inscpp, ins)
 	ins:Initialize(...)
 	return ins
 end
@@ -123,7 +124,6 @@ function OnWorldCleanup(World, bSessionEnded, bCleanupResources)
 			table.insert(ActorToDelete, Actor)
 		end
 	end
-
 	for i, Actor in ipairs(ActorToDelete) do
 		Actor:Release()
 		LevelActors[Actor] = nil

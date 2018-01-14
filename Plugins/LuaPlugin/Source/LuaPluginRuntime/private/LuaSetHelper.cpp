@@ -11,8 +11,14 @@ ULuaSetHelper::ULuaSetHelper()
 
 void ULuaSetHelper::Init(void* _Obj, USetProperty* _Property)
 {
-	Obj = _Obj;
 	Property = _Property;
+	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
+}
+
+void ULuaSetHelper::Init_ValuePtr(void* _Obj, USetProperty* _Property)
+{
+	Property = _Property;
+	Obj = _Obj;
 }
 
 ULuaSetHelper* ULuaSetHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
@@ -33,7 +39,14 @@ ULuaSetHelper* ULuaSetHelper::GetHelperCPP(void* _Obj, USetProperty* Property)
 	return Result;
 }
 
-void ULuaSetHelper::Copy(FScriptSetHelper_InContainer& SrcSetHelper, FScriptSetHelper_InContainer& DestSetHelper, USetProperty* p)
+ULuaSetHelper* ULuaSetHelper::GetHelperCPP_ValuePtr(void* _Obj, USetProperty* Property)
+{
+	ULuaSetHelper* Result = NewObject<ULuaSetHelper>();
+	Result->Init_ValuePtr(_Obj, Property);
+	return Result;
+}
+
+void ULuaSetHelper::Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, USetProperty* p)
 {
 	int32 Num = SrcSetHelper.Num();
 	DestSetHelper.EmptyElements(Num);
@@ -65,8 +78,8 @@ void ULuaSetHelper::CopyTo(USetProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptSetHelper_InContainer SrcSetHelper(Property, Obj);
-	FScriptSetHelper_InContainer DestSetHelper(p, ptr);
+	FScriptSetHelper SrcSetHelper(Property, Obj);
+	FScriptSetHelper DestSetHelper(p, ptr);
 	Copy(SrcSetHelper, DestSetHelper, p);
 }
 
@@ -74,14 +87,14 @@ void ULuaSetHelper::CopyFrom(USetProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
-	FScriptSetHelper_InContainer SrcSetHelper(p, ptr);
-	FScriptSetHelper_InContainer DestSetHelper(Property, Obj);
+	FScriptSetHelper SrcSetHelper(p, ptr);
+	FScriptSetHelper DestSetHelper(Property, Obj);
 	Copy(SrcSetHelper, DestSetHelper, Property);
 }
 
 int32 ULuaSetHelper::Num()
 {
-	FScriptSetHelper_InContainer result(Property, Obj);
+	FScriptSetHelper result(Property, Obj);
 	return result.Num();
 }
 
@@ -94,7 +107,7 @@ int32 ULuaSetHelper::Get(Flua_State inL)
 		return 0;
 	}
 #endif
-	FScriptSetHelper_InContainer result(Property, Obj);
+	FScriptSetHelper result(Property, Obj);
 	UProperty* CurrKeyProp = Property->ElementProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
@@ -130,7 +143,7 @@ void ULuaSetHelper::Set(Flua_State inL)
 		return;
 	}
 #endif
-	FScriptSetHelper_InContainer result(Property, Obj);
+	FScriptSetHelper result(Property, Obj);
 	UProperty* CurrKeyProp = Property->ElementProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
@@ -177,13 +190,13 @@ void ULuaSetHelper::Add(Flua_State inL)
 
 void ULuaSetHelper::Reset()
 {
-	FScriptSetHelper_InContainer result(Property, Obj);
+	FScriptSetHelper result(Property, Obj);
 	result.EmptyElements(0);
 }
 
 int32 ULuaSetHelper::Table(Flua_State inL)
 {
-	FScriptSetHelper_InContainer result(Property, Obj);
+	FScriptSetHelper result(Property, Obj);
 	lua_newtable(inL);
 	for (int32 i = 0; i < result.Num(); ++i)
 	{
