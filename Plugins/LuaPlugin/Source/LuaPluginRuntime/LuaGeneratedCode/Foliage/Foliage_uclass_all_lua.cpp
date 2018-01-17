@@ -4,6 +4,7 @@
 #include "FoliageType.lua.h"
 #include "InstancedFoliageActor.lua.h"
 #include "InteractiveFoliageActor.lua.h"
+#include "InteractiveFoliageComponent.lua.h"
 #include "ProceduralFoliageBlockingVolume.lua.h"
 #include "ProceduralFoliageComponent.lua.h"
 #include "ProceduralFoliageSpawner.lua.h"
@@ -19,6 +20,7 @@ struct lua_static_load_Foliage_uclass_all_struct
 		UTableUtil::loadlib(FoliageType_Lib, "UFoliageType");
 		UTableUtil::loadlib(InstancedFoliageActor_Lib, "AInstancedFoliageActor");
 		UTableUtil::loadlib(InteractiveFoliageActor_Lib, "AInteractiveFoliageActor");
+		UTableUtil::loadlib(InteractiveFoliageComponent_Lib, "UInteractiveFoliageComponent");
 		UTableUtil::loadlib(ProceduralFoliageBlockingVolume_Lib, "AProceduralFoliageBlockingVolume");
 		UTableUtil::loadlib(ProceduralFoliageComponent_Lib, "UProceduralFoliageComponent");
 		UTableUtil::loadlib(ProceduralFoliageSpawner_Lib, "UProceduralFoliageSpawner");

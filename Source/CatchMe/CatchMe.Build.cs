@@ -15,8 +15,7 @@ public class CatchMe : ModuleRules
         if (Target.Platform == UnrealTargetPlatform.Mac)
         {
             CircularlyReferencedDependentModules.Add("LuaPluginRuntime");
-        }
+        } 
     }
-      
-}                      
-                                                                                                                                                
+}                              
+                                                                                                                                                             

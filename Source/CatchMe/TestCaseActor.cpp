@@ -127,6 +127,14 @@ void ATestCaseActor::Tick(float DeltaTime)
 
 }
 
+void ATestCaseActor::TestLoad1()
+{
+}
+
+void ATestCaseActor::TestLoad2()
+{
+}
+
 void ATestCaseActor::RunCppCallLuaTest()
 {
 

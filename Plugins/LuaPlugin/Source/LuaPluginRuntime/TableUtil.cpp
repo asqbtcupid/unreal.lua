@@ -1530,6 +1530,7 @@ void UTableUtil::MayAddNewStructType(UUserDefinedStruct* BpStruct)
 #endif 
 		return;
 	}
+	bpname2bpstruct.Add(TypeName, BpStruct);
 	const char* name = TCHAR_TO_UTF8(*TypeName);
 	const char* name_nogc = TCHAR_TO_UTF8(*FString::Printf(L"%s_nogc", *TypeName));
 	addmodule(name_nogc, true, false);

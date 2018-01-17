@@ -26,7 +26,6 @@ function TestBpClass:BeginPlay( )
 end
 
 function TestBpClass:TestBpStructType( )
-
 end
 
 function TestBpClass:TestSetFunc( )

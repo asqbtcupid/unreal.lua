@@ -4,20 +4,19 @@
 #include "AISystemBase.lua.h"
 #include "AnimationAsset.lua.h"
 #include "AnimClassData.lua.h"
-#include "AnimClassInterface.lua.h"
 #include "AnimCompress.lua.h"
 #include "AnimInstance.lua.h"
 #include "AnimMetaData.lua.h"
 #include "AnimNotify.lua.h"
 #include "AnimNotifyState.lua.h"
 #include "AnimSet.lua.h"
+#include "AnimStateMachineTypes.lua.h"
 #include "AssetImportData.lua.h"
 #include "AssetManager.lua.h"
 #include "AssetMappingTable.lua.h"
 #include "AssetUserData.lua.h"
 #include "AutomationTestSettings.lua.h"
 #include "AvoidanceManager.lua.h"
-#include "BlendableInterface.lua.h"
 #include "BlendProfile.lua.h"
 #include "BlueprintAsyncActionBase.lua.h"
 #include "BlueprintCore.lua.h"
@@ -26,6 +25,7 @@
 #include "BodySetup.lua.h"
 #include "BoneMaskFilter.lua.h"
 #include "BookMark.lua.h"
+#include "BookMark2D.lua.h"
 #include "Breakpoint.lua.h"
 #include "BrushBuilder.lua.h"
 #include "ButtonStyleAsset.lua.h"
@@ -39,10 +39,9 @@
 #include "CheckBoxStyleAsset.lua.h"
 #include "Commandlet.lua.h"
 #include "Console.lua.h"
-#include "ControlRigInterface.lua.h"
 #include "CrowdManagerBase.lua.h"
 #include "CurveBase.lua.h"
-#include "CurveSourceInterface.lua.h"
+#include "CurveEdPresetCurve.lua.h"
 #include "CurveTable.lua.h"
 #include "DamageType.lua.h"
 #include "DataAsset.lua.h"
@@ -61,6 +60,8 @@
 #include "EdGraphSchema.lua.h"
 #include "EndUserSettings.lua.h"
 #include "Engine.lua.h"
+#include "EngineBaseTypes.lua.h"
+#include "EngineHandlerComponentFactory.lua.h"
 #include "EngineTypes.lua.h"
 #include "Exporter.lua.h"
 #include "Font.lua.h"
@@ -71,13 +72,11 @@
 #include "GameInstance.lua.h"
 #include "GameUserSettings.lua.h"
 #include "HapticFeedbackEffect_Base.lua.h"
-#include "ImportantToggleSettingInterface.lua.h"
 #include "InheritableComponentHandler.lua.h"
 #include "InputSettings.lua.h"
-#include "Interface_AssetUserData.lua.h"
-#include "Interface_PostProcessVolume.lua.h"
 #include "InterpCurveEdSetup.lua.h"
 #include "InterpData.lua.h"
+#include "InterpFilter.lua.h"
 #include "InterpGroup.lua.h"
 #include "InterpGroupInst.lua.h"
 #include "InterpTrack.lua.h"
@@ -96,27 +95,18 @@
 #include "MaterialInterface.lua.h"
 #include "MaterialParameterCollection.lua.h"
 #include "MaterialParameterCollectionInstance.lua.h"
-#include "MatineeAnimInterface.lua.h"
 #include "MorphTarget.lua.h"
-#include "NavAgentInterface.lua.h"
 #include "NavArea.lua.h"
 #include "NavCollision.lua.h"
-#include "NavEdgeProviderInterface.lua.h"
 #include "NavigationDataChunk.lua.h"
 #include "NavigationPath.lua.h"
-#include "NavigationPathGenerator.lua.h"
 #include "NavigationQueryFilter.lua.h"
-#include "NavLinkCustomInterface.lua.h"
+#include "NavigationTypes.lua.h"
 #include "NavLinkDefinition.lua.h"
-#include "NavLinkHostInterface.lua.h"
-#include "NavNodeInterface.lua.h"
-#include "NavPathObserverInterface.lua.h"
-#include "NavRelevantInterface.lua.h"
 #include "NetDriver.lua.h"
-#include "NetworkPredictionInterface.lua.h"
 #include "NodeMappingContainer.lua.h"
-#include "NodeMappingProviderInterface.lua.h"
 #include "ObjectLibrary.lua.h"
+#include "ObjectReferencer.lua.h"
 #include "OcclusionPluginSourceSettingsBase.lua.h"
 #include "OnlineBlueprintCallProxyBase.lua.h"
 #include "OnlineEngineInterface.lua.h"
@@ -125,7 +115,10 @@
 #include "ParticleEmitter.lua.h"
 #include "ParticleLODLevel.lua.h"
 #include "ParticleModule.lua.h"
+#include "ParticleModuleEventSendToGame.lua.h"
 #include "ParticleSystem.lua.h"
+#include "ParticleSystemReplay.lua.h"
+#include "PendingNetGame.lua.h"
 #include "PhysicalMaterial.lua.h"
 #include "PhysicalMaterialPropertyBase.lua.h"
 #include "PhysicsAsset.lua.h"
@@ -138,12 +131,13 @@
 #include "PlayerInput.lua.h"
 #include "Polys.lua.h"
 #include "PoseWatch.lua.h"
-#include "PreviewCollectionInterface.lua.h"
+#include "ReporterBase.lua.h"
 #include "ReverbEffect.lua.h"
 #include "ReverbPluginSourceSettingsBase.lua.h"
 #include "Rig.lua.h"
-#include "RVOAvoidanceInterface.lua.h"
 #include "SaveGame.lua.h"
+#include "Scene.lua.h"
+#include "ScriptViewportClient.lua.h"
 #include "SCS_Node.lua.h"
 #include "Selection.lua.h"
 #include "SimpleConstructionScript.lua.h"
@@ -152,13 +146,13 @@
 #include "SkeletalMeshSocket.lua.h"
 #include "Skeleton.lua.h"
 #include "SlateBrushAsset.lua.h"
-#include "SlateTextureAtlasInterface.lua.h"
 #include "SoundAttenuation.lua.h"
 #include "SoundBase.lua.h"
 #include "SoundClass.lua.h"
 #include "SoundConcurrency.lua.h"
 #include "SoundEffectPreset.lua.h"
 #include "SoundEffectSourcePresetChain.lua.h"
+#include "SoundGroups.lua.h"
 #include "SoundMix.lua.h"
 #include "SoundNode.lua.h"
 #include "SoundSubmix.lua.h"
@@ -168,6 +162,7 @@
 #include "StringTable.lua.h"
 #include "SubsurfaceProfile.lua.h"
 #include "SubUVAnimation.lua.h"
+#include "TextPropertyTestObject.lua.h"
 #include "Texture.lua.h"
 #include "TextureLODSettings.lua.h"
 #include "ThumbnailInfo.lua.h"
@@ -176,7 +171,7 @@
 #include "UserDefinedEnum.lua.h"
 #include "UserDefinedStruct.lua.h"
 #include "VectorField.lua.h"
-#include "VisualLoggerDebugSnapshotInterface.lua.h"
+#include "VisualLoggerAutomationTests.lua.h"
 #include "World.lua.h"
 #include "WorldComposition.lua.h"
 #include "AmbientSound.lua.h"
@@ -202,6 +197,7 @@
 #include "NavigationTestingActor.lua.h"
 #include "NavLinkProxy.lua.h"
 #include "Note.lua.h"
+#include "ParticleEventManager.lua.h"
 #include "Pawn.lua.h"
 #include "PlayerCameraManager.lua.h"
 #include "ReflectionCapture.lua.h"
@@ -219,6 +215,7 @@
 #include "AudioVolume.lua.h"
 #include "BlockingVolume.lua.h"
 #include "CameraBlockingVolume.lua.h"
+#include "CullDistanceVolume.lua.h"
 #include "LevelStreamingVolume.lua.h"
 #include "LightmassCharacterIndirectDetailVolume.lua.h"
 #include "LightmassImportanceVolume.lua.h"
@@ -266,6 +263,7 @@
 #include "PlaneReflectionCapture.lua.h"
 #include "SphereReflectionCapture.lua.h"
 #include "PhysicsConstraintActor.lua.h"
+#include "PhysicsThruster.lua.h"
 #include "RadialForceActor.lua.h"
 #include "PlanarReflection.lua.h"
 #include "SceneCapture2D.lua.h"
@@ -314,6 +312,7 @@
 #include "SceneCaptureComponent.lua.h"
 #include "SpringArmComponent.lua.h"
 #include "StereoLayerComponent.lua.h"
+#include "WindDirectionalSourceComponent.lua.h"
 #include "LightComponent.lua.h"
 #include "SkyLightComponent.lua.h"
 #include "DirectionalLightComponent.lua.h"
@@ -330,6 +329,7 @@
 #include "NavLinkComponent.lua.h"
 #include "NavLinkRenderingComponent.lua.h"
 #include "NavMeshRenderingComponent.lua.h"
+#include "NavTestRenderingComponent.lua.h"
 #include "ParticleSystemComponent.lua.h"
 #include "ShapeComponent.lua.h"
 #include "SplineComponent.lua.h"
@@ -366,9 +366,11 @@
 #include "AimOffsetBlendSpace1D.lua.h"
 #include "AnimCompress_Automatic.lua.h"
 #include "AnimCompress_BitwiseCompressOnly.lua.h"
+#include "AnimCompress_LeastDestructive.lua.h"
 #include "AnimCompress_RemoveEverySecondKey.lua.h"
 #include "AnimCompress_RemoveLinearKeys.lua.h"
 #include "AnimCompress_RemoveTrivialKeys.lua.h"
+#include "AnimCompress_PerTrackCompression.lua.h"
 #include "AnimSingleNodeInstance.lua.h"
 #include "AnimNotify_PlayParticleEffect.lua.h"
 #include "AnimNotify_PlaySound.lua.h"
@@ -376,6 +378,12 @@
 #include "AnimNotifyState_DisableRootMotion.lua.h"
 #include "AnimNotifyState_TimedParticleEffect.lua.h"
 #include "AnimNotifyState_Trail.lua.h"
+#include "AsyncActionLoadPrimaryAssetBase.lua.h"
+#include "AsyncActionChangePrimaryAssetBundles.lua.h"
+#include "AsyncActionLoadPrimaryAsset.lua.h"
+#include "AsyncActionLoadPrimaryAssetClass.lua.h"
+#include "AsyncActionLoadPrimaryAssetClassList.lua.h"
+#include "AsyncActionLoadPrimaryAssetList.lua.h"
 #include "Blueprint.lua.h"
 #include "AnimBlueprint.lua.h"
 #include "LevelScriptBlueprint.lua.h"
@@ -406,6 +414,8 @@
 #include "ActorChannel.lua.h"
 #include "ControlChannel.lua.h"
 #include "VoiceChannel.lua.h"
+#include "PluginCommandlet.lua.h"
+#include "SmokeTestCommandlet.lua.h"
 #include "CurveFloat.lua.h"
 #include "CurveLinearColor.lua.h"
 #include "CurveVector.lua.h"
@@ -418,6 +428,7 @@
 #include "AudioSettings.lua.h"
 #include "CollisionProfile.lua.h"
 #include "GarbageCollectionSettings.lua.h"
+#include "MeshSimplificationSettings.lua.h"
 #include "NetworkSettings.lua.h"
 #include "PhysicsSettings.lua.h"
 #include "RendererOverrideSettings.lua.h"
@@ -452,9 +463,11 @@
 #include "HapticFeedbackEffect_Buffer.lua.h"
 #include "HapticFeedbackEffect_Curve.lua.h"
 #include "HapticFeedbackEffect_SoundWave.lua.h"
+#include "InterpFilter_Classes.lua.h"
 #include "InterpFilter_Custom.lua.h"
 #include "InterpGroupCamera.lua.h"
 #include "InterpGroupDirector.lua.h"
+#include "InterpGroupInstCamera.lua.h"
 #include "InterpGroupInstDirector.lua.h"
 #include "InterpTrackBoolProp.lua.h"
 #include "InterpTrackDirector.lua.h"
@@ -467,29 +480,68 @@
 #include "InterpTrackVectorBase.lua.h"
 #include "InterpTrackVisibility.lua.h"
 #include "InterpTrackAnimControl.lua.h"
+#include "InterpTrackFade.lua.h"
+#include "InterpTrackFloatAnimBPParam.lua.h"
+#include "InterpTrackFloatMaterialParam.lua.h"
+#include "InterpTrackFloatParticleParam.lua.h"
 #include "InterpTrackFloatProp.lua.h"
 #include "InterpTrackMoveAxis.lua.h"
+#include "InterpTrackSlomo.lua.h"
 #include "InterpTrackLinearColorProp.lua.h"
 #include "InterpTrackAudioMaster.lua.h"
 #include "InterpTrackColorProp.lua.h"
+#include "InterpTrackColorScale.lua.h"
 #include "InterpTrackSound.lua.h"
 #include "InterpTrackVectorMaterialParam.lua.h"
 #include "InterpTrackVectorProp.lua.h"
 #include "InterpTrackInstAnimControl.lua.h"
+#include "InterpTrackInstAudioMaster.lua.h"
+#include "InterpTrackInstColorScale.lua.h"
 #include "InterpTrackInstDirector.lua.h"
 #include "InterpTrackInstEvent.lua.h"
+#include "InterpTrackInstFade.lua.h"
+#include "InterpTrackInstFloatAnimBPParam.lua.h"
+#include "InterpTrackInstFloatMaterialParam.lua.h"
+#include "InterpTrackInstFloatParticleParam.lua.h"
 #include "InterpTrackInstMove.lua.h"
+#include "InterpTrackInstParticleReplay.lua.h"
+#include "InterpTrackInstProperty.lua.h"
+#include "InterpTrackInstSlomo.lua.h"
+#include "InterpTrackInstSound.lua.h"
+#include "InterpTrackInstToggle.lua.h"
+#include "InterpTrackInstVectorMaterialParam.lua.h"
+#include "InterpTrackInstVisibility.lua.h"
+#include "InterpTrackInstBoolProp.lua.h"
+#include "InterpTrackInstColorProp.lua.h"
 #include "InterpTrackInstFloatProp.lua.h"
+#include "InterpTrackInstLinearColorProp.lua.h"
+#include "InterpTrackInstVectorProp.lua.h"
 #include "LevelStreamingAlwaysLoaded.lua.h"
 #include "LevelStreamingKismet.lua.h"
+#include "LevelStreamingPersistent.lua.h"
 #include "EngineMessage.lua.h"
 #include "MaterialExpressionAbs.lua.h"
+#include "MaterialExpressionActorPositionWS.lua.h"
 #include "MaterialExpressionAdd.lua.h"
 #include "MaterialExpressionAppendVector.lua.h"
+#include "MaterialExpressionArccosine.lua.h"
+#include "MaterialExpressionArccosineFast.lua.h"
+#include "MaterialExpressionArcsine.lua.h"
+#include "MaterialExpressionArcsineFast.lua.h"
+#include "MaterialExpressionArctangent.lua.h"
+#include "MaterialExpressionArctangent2.lua.h"
+#include "MaterialExpressionArctangent2Fast.lua.h"
+#include "MaterialExpressionArctangentFast.lua.h"
+#include "MaterialExpressionAtmosphericFogColor.lua.h"
+#include "MaterialExpressionAtmosphericLightColor.lua.h"
+#include "MaterialExpressionAtmosphericLightVector.lua.h"
+#include "MaterialExpressionBlackBody.lua.h"
 #include "MaterialExpressionBlendMaterialAttributes.lua.h"
 #include "MaterialExpressionBreakMaterialAttributes.lua.h"
 #include "MaterialExpressionBumpOffset.lua.h"
+#include "MaterialExpressionCameraPositionWS.lua.h"
 #include "MaterialExpressionCameraVectorWS.lua.h"
+#include "MaterialExpressionCeil.lua.h"
 #include "MaterialExpressionClamp.lua.h"
 #include "MaterialExpressionCollectionParameter.lua.h"
 #include "MaterialExpressionComment.lua.h"
@@ -503,34 +555,71 @@
 #include "MaterialExpressionCrossProduct.lua.h"
 #include "MaterialExpressionCustom.lua.h"
 #include "MaterialExpressionCustomOutput.lua.h"
+#include "MaterialExpressionDDX.lua.h"
+#include "MaterialExpressionDDY.lua.h"
+#include "MaterialExpressionDecalDerivative.lua.h"
+#include "MaterialExpressionDecalLifetimeOpacity.lua.h"
+#include "MaterialExpressionDecalMipmapLevel.lua.h"
+#include "MaterialExpressionDepthFade.lua.h"
+#include "MaterialExpressionDepthOfFieldFunction.lua.h"
+#include "MaterialExpressionDeriveNormalZ.lua.h"
+#include "MaterialExpressionDesaturation.lua.h"
+#include "MaterialExpressionDistance.lua.h"
+#include "MaterialExpressionDistanceCullFade.lua.h"
+#include "MaterialExpressionDistanceFieldGradient.lua.h"
+#include "MaterialExpressionDistanceToNearestSurface.lua.h"
 #include "MaterialExpressionDivide.lua.h"
 #include "MaterialExpressionDotProduct.lua.h"
 #include "MaterialExpressionDynamicParameter.lua.h"
+#include "MaterialExpressionEyeAdaptation.lua.h"
 #include "MaterialExpressionFeatureLevelSwitch.lua.h"
 #include "MaterialExpressionFloor.lua.h"
 #include "MaterialExpressionFmod.lua.h"
 #include "MaterialExpressionFontSample.lua.h"
+#include "MaterialExpressionFrac.lua.h"
 #include "MaterialExpressionFresnel.lua.h"
 #include "MaterialExpressionFunctionInput.lua.h"
 #include "MaterialExpressionFunctionOutput.lua.h"
 #include "MaterialExpressionGetMaterialAttributes.lua.h"
+#include "MaterialExpressionGIReplace.lua.h"
 #include "MaterialExpressionIf.lua.h"
+#include "MaterialExpressionLightmapUVs.lua.h"
+#include "MaterialExpressionLightmassReplace.lua.h"
+#include "MaterialExpressionLightVector.lua.h"
 #include "MaterialExpressionLinearInterpolate.lua.h"
 #include "MaterialExpressionLogarithm10.lua.h"
 #include "MaterialExpressionLogarithm2.lua.h"
 #include "MaterialExpressionMakeMaterialAttributes.lua.h"
 #include "MaterialExpressionMaterialFunctionCall.lua.h"
+#include "MaterialExpressionMaterialProxyReplace.lua.h"
 #include "MaterialExpressionMax.lua.h"
 #include "MaterialExpressionMin.lua.h"
 #include "MaterialExpressionMultiply.lua.h"
 #include "MaterialExpressionNoise.lua.h"
 #include "MaterialExpressionNormalize.lua.h"
+#include "MaterialExpressionObjectBounds.lua.h"
 #include "MaterialExpressionObjectOrientation.lua.h"
+#include "MaterialExpressionObjectPositionWS.lua.h"
+#include "MaterialExpressionObjectRadius.lua.h"
 #include "MaterialExpressionOneMinus.lua.h"
 #include "MaterialExpressionPanner.lua.h"
 #include "MaterialExpressionParameter.lua.h"
+#include "MaterialExpressionParticleColor.lua.h"
+#include "MaterialExpressionParticleDirection.lua.h"
+#include "MaterialExpressionParticleMacroUV.lua.h"
+#include "MaterialExpressionParticleMotionBlurFade.lua.h"
+#include "MaterialExpressionParticlePositionWS.lua.h"
+#include "MaterialExpressionParticleRadius.lua.h"
+#include "MaterialExpressionParticleRandom.lua.h"
+#include "MaterialExpressionParticleRelativeTime.lua.h"
+#include "MaterialExpressionParticleSize.lua.h"
+#include "MaterialExpressionParticleSpeed.lua.h"
+#include "MaterialExpressionPerInstanceFadeAmount.lua.h"
+#include "MaterialExpressionPerInstanceRandom.lua.h"
+#include "MaterialExpressionPixelDepth.lua.h"
 #include "MaterialExpressionPixelNormalWS.lua.h"
 #include "MaterialExpressionPower.lua.h"
+#include "MaterialExpressionPrecomputedAOMask.lua.h"
 #include "MaterialExpressionPreSkinnedNormal.lua.h"
 #include "MaterialExpressionPreSkinnedPosition.lua.h"
 #include "MaterialExpressionPreviousFrameSwitch.lua.h"
@@ -538,27 +627,45 @@
 #include "MaterialExpressionReflectionVectorWS.lua.h"
 #include "MaterialExpressionReroute.lua.h"
 #include "MaterialExpressionRotateAboutAxis.lua.h"
+#include "MaterialExpressionRotator.lua.h"
+#include "MaterialExpressionRound.lua.h"
+#include "MaterialExpressionSaturate.lua.h"
+#include "MaterialExpressionSceneColor.lua.h"
+#include "MaterialExpressionSceneDepth.lua.h"
+#include "MaterialExpressionSceneTexelSize.lua.h"
+#include "MaterialExpressionSceneTexture.lua.h"
+#include "MaterialExpressionScreenPosition.lua.h"
 #include "MaterialExpressionSetMaterialAttributes.lua.h"
+#include "MaterialExpressionSign.lua.h"
 #include "MaterialExpressionSine.lua.h"
 #include "MaterialExpressionSobol.lua.h"
 #include "MaterialExpressionSpeedTree.lua.h"
+#include "MaterialExpressionSphereMask.lua.h"
+#include "MaterialExpressionSphericalParticleOpacity.lua.h"
 #include "MaterialExpressionSquareRoot.lua.h"
 #include "MaterialExpressionStaticBool.lua.h"
 #include "MaterialExpressionStaticSwitch.lua.h"
 #include "MaterialExpressionSubtract.lua.h"
+#include "MaterialExpressionTangent.lua.h"
 #include "MaterialExpressionTemporalSobol.lua.h"
 #include "MaterialExpressionTextureBase.lua.h"
 #include "MaterialExpressionTextureCoordinate.lua.h"
 #include "MaterialExpressionTextureProperty.lua.h"
+#include "MaterialExpressionTime.lua.h"
 #include "MaterialExpressionTransform.lua.h"
 #include "MaterialExpressionTransformPosition.lua.h"
+#include "MaterialExpressionTruncate.lua.h"
 #include "MaterialExpressionTwoSidedSign.lua.h"
 #include "MaterialExpressionVectorNoise.lua.h"
 #include "MaterialExpressionVertexColor.lua.h"
 #include "MaterialExpressionVertexNormalWS.lua.h"
 #include "MaterialExpressionViewProperty.lua.h"
+#include "MaterialExpressionViewSize.lua.h"
 #include "MaterialExpressionWorldPosition.lua.h"
+#include "MaterialExpressionBentNormalCustomOutput.lua.h"
+#include "MaterialExpressionClearCoatNormalCustomOutput.lua.h"
 #include "MaterialExpressionTangentOutput.lua.h"
+#include "MaterialExpressionVertexInterpolator.lua.h"
 #include "MaterialExpressionFontSampleParameter.lua.h"
 #include "MaterialExpressionScalarParameter.lua.h"
 #include "MaterialExpressionStaticBoolParameter.lua.h"
@@ -588,27 +695,59 @@
 #include "RecastFilter_UseDefaultArea.lua.h"
 #include "NavLinkTrivial.lua.h"
 #include "ParticleSpriteEmitter.lua.h"
+#include "ParticleModuleAccelerationBase.lua.h"
+#include "ParticleModuleAttractorBase.lua.h"
+#include "ParticleModuleBeamBase.lua.h"
+#include "ParticleModuleCameraBase.lua.h"
+#include "ParticleModuleCollisionBase.lua.h"
 #include "ParticleModuleColorBase.lua.h"
+#include "ParticleModuleEventBase.lua.h"
+#include "ParticleModuleKillBase.lua.h"
+#include "ParticleModuleLifetimeBase.lua.h"
+#include "ParticleModuleLightBase.lua.h"
 #include "ParticleModuleLocationBase.lua.h"
+#include "ParticleModuleMaterialBase.lua.h"
+#include "ParticleModuleOrbitBase.lua.h"
+#include "ParticleModuleOrientationBase.lua.h"
+#include "ParticleModuleParameterBase.lua.h"
 #include "ParticleModuleRequired.lua.h"
+#include "ParticleModuleRotationBase.lua.h"
+#include "ParticleModuleRotationRateBase.lua.h"
+#include "ParticleModuleSizeBase.lua.h"
+#include "ParticleModuleSpawnBase.lua.h"
+#include "ParticleModuleSubUVBase.lua.h"
+#include "ParticleModuleTrailBase.lua.h"
 #include "ParticleModuleTypeDataBase.lua.h"
+#include "ParticleModuleVectorFieldBase.lua.h"
+#include "ParticleModuleVelocityBase.lua.h"
 #include "ParticleModuleAcceleration.lua.h"
+#include "ParticleModuleAccelerationConstant.lua.h"
 #include "ParticleModuleAccelerationDrag.lua.h"
 #include "ParticleModuleAccelerationDragScaleOverLife.lua.h"
 #include "ParticleModuleAccelerationOverLifetime.lua.h"
 #include "ParticleModuleAttractorLine.lua.h"
 #include "ParticleModuleAttractorParticle.lua.h"
 #include "ParticleModuleAttractorPoint.lua.h"
+#include "ParticleModuleAttractorPointGravity.lua.h"
+#include "ParticleModuleBeamModifier.lua.h"
 #include "ParticleModuleBeamNoise.lua.h"
 #include "ParticleModuleBeamSource.lua.h"
 #include "ParticleModuleBeamTarget.lua.h"
+#include "ParticleModuleCameraOffset.lua.h"
 #include "ParticleModuleCollision.lua.h"
 #include "ParticleModuleCollisionGPU.lua.h"
 #include "ParticleModuleColor.lua.h"
 #include "ParticleModuleColorOverLife.lua.h"
 #include "ParticleModuleColorScaleOverLife.lua.h"
+#include "ParticleModuleColor_Seeded.lua.h"
 #include "ParticleModuleEventGenerator.lua.h"
+#include "ParticleModuleEventReceiverBase.lua.h"
+#include "ParticleModuleEventReceiverKillParticles.lua.h"
+#include "ParticleModuleEventReceiverSpawn.lua.h"
+#include "ParticleModuleKillBox.lua.h"
+#include "ParticleModuleKillHeight.lua.h"
 #include "ParticleModuleLifetime.lua.h"
+#include "ParticleModuleLifetime_Seeded.lua.h"
 #include "ParticleModuleLight.lua.h"
 #include "ParticleModuleLight_Seeded.lua.h"
 #include "ParticleModuleLocation.lua.h"
@@ -632,31 +771,50 @@
 #include "ParticleModuleOrbit.lua.h"
 #include "ParticleModuleOrientationAxisLock.lua.h"
 #include "ParticleModuleParameterDynamic.lua.h"
+#include "ParticleModuleParameterDynamic_Seeded.lua.h"
 #include "ParticleModuleMeshRotation.lua.h"
 #include "ParticleModuleRotation.lua.h"
 #include "ParticleModuleRotationOverLifetime.lua.h"
+#include "ParticleModuleMeshRotation_Seeded.lua.h"
+#include "ParticleModuleRotation_Seeded.lua.h"
 #include "ParticleModuleMeshRotationRate.lua.h"
+#include "ParticleModuleMeshRotationRateMultiplyLife.lua.h"
+#include "ParticleModuleMeshRotationRateOverLife.lua.h"
 #include "ParticleModuleRotationRate.lua.h"
 #include "ParticleModuleRotationRateMultiplyLife.lua.h"
+#include "ParticleModuleMeshRotationRate_Seeded.lua.h"
+#include "ParticleModuleRotationRate_Seeded.lua.h"
 #include "ParticleModuleSize.lua.h"
 #include "ParticleModuleSizeMultiplyLife.lua.h"
 #include "ParticleModuleSizeScale.lua.h"
+#include "ParticleModuleSizeScaleBySpeed.lua.h"
+#include "ParticleModuleSize_Seeded.lua.h"
 #include "ParticleModuleSpawn.lua.h"
 #include "ParticleModuleSpawnPerUnit.lua.h"
 #include "ParticleModuleSubUV.lua.h"
+#include "ParticleModuleSubUVMovie.lua.h"
 #include "ParticleModuleTrailSource.lua.h"
 #include "ParticleModuleTypeDataAnimTrail.lua.h"
 #include "ParticleModuleTypeDataBeam2.lua.h"
 #include "ParticleModuleTypeDataGpu.lua.h"
 #include "ParticleModuleTypeDataMesh.lua.h"
 #include "ParticleModuleTypeDataRibbon.lua.h"
+#include "ParticleModuleVectorFieldGlobal.lua.h"
 #include "ParticleModuleVectorFieldLocal.lua.h"
+#include "ParticleModuleVectorFieldRotation.lua.h"
+#include "ParticleModuleVectorFieldRotationRate.lua.h"
 #include "ParticleModuleVectorFieldScale.lua.h"
 #include "ParticleModuleVectorFieldScaleOverLife.lua.h"
 #include "ParticleModuleVelocity.lua.h"
 #include "ParticleModuleVelocityCone.lua.h"
 #include "ParticleModuleVelocityInheritParent.lua.h"
 #include "ParticleModuleVelocityOverLifetime.lua.h"
+#include "ParticleModuleVelocity_Seeded.lua.h"
+#include "DemoPendingNetGame.lua.h"
+#include "CloudStorageBase.lua.h"
+#include "InGameAdManager.lua.h"
+#include "MicroTransactionBase.lua.h"
+#include "TwitterIntegrationBase.lua.h"
 #include "LocalPlayer.lua.h"
 #include "NetConnection.lua.h"
 #include "ChildConnection.lua.h"
@@ -664,6 +822,7 @@
 #include "ReporterGraph.lua.h"
 #include "GameViewportClient.lua.h"
 #include "DestructibleMesh.lua.h"
+#include "DialogueSoundWaveProxy.lua.h"
 #include "SoundCue.lua.h"
 #include "SoundWave.lua.h"
 #include "SoundWaveProcedural.lua.h"
@@ -676,12 +835,15 @@
 #include "SoundNodeDelay.lua.h"
 #include "SoundNodeDialoguePlayer.lua.h"
 #include "SoundNodeDistanceCrossFade.lua.h"
+#include "SoundNodeDoppler.lua.h"
 #include "SoundNodeEnveloper.lua.h"
 #include "SoundNodeGroupControl.lua.h"
 #include "SoundNodeLooping.lua.h"
 #include "SoundNodeMature.lua.h"
 #include "SoundNodeMixer.lua.h"
 #include "SoundNodeModulator.lua.h"
+#include "SoundNodeModulatorContinuous.lua.h"
+#include "SoundNodeOscillator.lua.h"
 #include "SoundNodeQualityLevel.lua.h"
 #include "SoundNodeRandom.lua.h"
 #include "SoundNodeSoundClass.lua.h"
@@ -711,20 +873,19 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AISystemBase_Lib, "UAISystemBase");
 		UTableUtil::loadlib(AnimationAsset_Lib, "UAnimationAsset");
 		UTableUtil::loadlib(AnimClassData_Lib, "UAnimClassData");
-		UTableUtil::loadlib(AnimClassInterface_Lib, "IAnimClassInterface");
 		UTableUtil::loadlib(AnimCompress_Lib, "UAnimCompress");
 		UTableUtil::loadlib(AnimInstance_Lib, "UAnimInstance");
 		UTableUtil::loadlib(AnimMetaData_Lib, "UAnimMetaData");
 		UTableUtil::loadlib(AnimNotify_Lib, "UAnimNotify");
 		UTableUtil::loadlib(AnimNotifyState_Lib, "UAnimNotifyState");
 		UTableUtil::loadlib(AnimSet_Lib, "UAnimSet");
+		UTableUtil::loadlib(AnimStateMachineTypes_Lib, "UAnimStateMachineTypes");
 		UTableUtil::loadlib(AssetImportData_Lib, "UAssetImportData");
 		UTableUtil::loadlib(AssetManager_Lib, "UAssetManager");
 		UTableUtil::loadlib(AssetMappingTable_Lib, "UAssetMappingTable");
 		UTableUtil::loadlib(AssetUserData_Lib, "UAssetUserData");
 		UTableUtil::loadlib(AutomationTestSettings_Lib, "UAutomationTestSettings");
 		UTableUtil::loadlib(AvoidanceManager_Lib, "UAvoidanceManager");
-		UTableUtil::loadlib(BlendableInterface_Lib, "IBlendableInterface");
 		UTableUtil::loadlib(BlendProfile_Lib, "UBlendProfile");
 		UTableUtil::loadlib(BlueprintAsyncActionBase_Lib, "UBlueprintAsyncActionBase");
 		UTableUtil::loadlib(BlueprintCore_Lib, "UBlueprintCore");
@@ -733,6 +894,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(BodySetup_Lib, "UBodySetup");
 		UTableUtil::loadlib(BoneMaskFilter_Lib, "UBoneMaskFilter");
 		UTableUtil::loadlib(BookMark_Lib, "UBookMark");
+		UTableUtil::loadlib(BookMark2D_Lib, "UBookMark2D");
 		UTableUtil::loadlib(Breakpoint_Lib, "UBreakpoint");
 		UTableUtil::loadlib(BrushBuilder_Lib, "UBrushBuilder");
 		UTableUtil::loadlib(ButtonStyleAsset_Lib, "UButtonStyleAsset");
@@ -746,10 +908,9 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(CheckBoxStyleAsset_Lib, "UCheckBoxStyleAsset");
 		UTableUtil::loadlib(Commandlet_Lib, "UCommandlet");
 		UTableUtil::loadlib(Console_Lib, "UConsole");
-		UTableUtil::loadlib(ControlRigInterface_Lib, "IControlRigInterface");
 		UTableUtil::loadlib(CrowdManagerBase_Lib, "UCrowdManagerBase");
 		UTableUtil::loadlib(CurveBase_Lib, "UCurveBase");
-		UTableUtil::loadlib(CurveSourceInterface_Lib, "ICurveSourceInterface");
+		UTableUtil::loadlib(CurveEdPresetCurve_Lib, "UDEPRECATED_CurveEdPresetCurve");
 		UTableUtil::loadlib(CurveTable_Lib, "UCurveTable");
 		UTableUtil::loadlib(DamageType_Lib, "UDamageType");
 		UTableUtil::loadlib(DataAsset_Lib, "UDataAsset");
@@ -768,6 +929,8 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(EdGraphSchema_Lib, "UEdGraphSchema");
 		UTableUtil::loadlib(EndUserSettings_Lib, "UEndUserSettings");
 		UTableUtil::loadlib(Engine_Lib, "UEngine");
+		UTableUtil::loadlib(EngineBaseTypes_Lib, "UEngineBaseTypes");
+		UTableUtil::loadlib(EngineHandlerComponentFactory_Lib, "UEngineHandlerComponentFactory");
 		UTableUtil::loadlib(EngineTypes_Lib, "UEngineTypes");
 		UTableUtil::loadlib(Exporter_Lib, "UExporter");
 		UTableUtil::loadlib(Font_Lib, "UFont");
@@ -778,13 +941,11 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(GameInstance_Lib, "UGameInstance");
 		UTableUtil::loadlib(GameUserSettings_Lib, "UGameUserSettings");
 		UTableUtil::loadlib(HapticFeedbackEffect_Base_Lib, "UHapticFeedbackEffect_Base");
-		UTableUtil::loadlib(ImportantToggleSettingInterface_Lib, "IImportantToggleSettingInterface");
 		UTableUtil::loadlib(InheritableComponentHandler_Lib, "UInheritableComponentHandler");
 		UTableUtil::loadlib(InputSettings_Lib, "UInputSettings");
-		UTableUtil::loadlib(Interface_AssetUserData_Lib, "IInterface_AssetUserData");
-		UTableUtil::loadlib(Interface_PostProcessVolume_Lib, "IInterface_PostProcessVolume");
 		UTableUtil::loadlib(InterpCurveEdSetup_Lib, "UInterpCurveEdSetup");
 		UTableUtil::loadlib(InterpData_Lib, "UInterpData");
+		UTableUtil::loadlib(InterpFilter_Lib, "UInterpFilter");
 		UTableUtil::loadlib(InterpGroup_Lib, "UInterpGroup");
 		UTableUtil::loadlib(InterpGroupInst_Lib, "UInterpGroupInst");
 		UTableUtil::loadlib(InterpTrack_Lib, "UInterpTrack");
@@ -803,27 +964,18 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialInterface_Lib, "UMaterialInterface");
 		UTableUtil::loadlib(MaterialParameterCollection_Lib, "UMaterialParameterCollection");
 		UTableUtil::loadlib(MaterialParameterCollectionInstance_Lib, "UMaterialParameterCollectionInstance");
-		UTableUtil::loadlib(MatineeAnimInterface_Lib, "IMatineeAnimInterface");
 		UTableUtil::loadlib(MorphTarget_Lib, "UMorphTarget");
-		UTableUtil::loadlib(NavAgentInterface_Lib, "INavAgentInterface");
 		UTableUtil::loadlib(NavArea_Lib, "UNavArea");
 		UTableUtil::loadlib(NavCollision_Lib, "UNavCollision");
-		UTableUtil::loadlib(NavEdgeProviderInterface_Lib, "INavEdgeProviderInterface");
 		UTableUtil::loadlib(NavigationDataChunk_Lib, "UNavigationDataChunk");
 		UTableUtil::loadlib(NavigationPath_Lib, "UNavigationPath");
-		UTableUtil::loadlib(NavigationPathGenerator_Lib, "INavigationPathGenerator");
 		UTableUtil::loadlib(NavigationQueryFilter_Lib, "UNavigationQueryFilter");
-		UTableUtil::loadlib(NavLinkCustomInterface_Lib, "INavLinkCustomInterface");
+		UTableUtil::loadlib(NavigationTypes_Lib, "UNavigationTypes");
 		UTableUtil::loadlib(NavLinkDefinition_Lib, "UNavLinkDefinition");
-		UTableUtil::loadlib(NavLinkHostInterface_Lib, "INavLinkHostInterface");
-		UTableUtil::loadlib(NavNodeInterface_Lib, "INavNodeInterface");
-		UTableUtil::loadlib(NavPathObserverInterface_Lib, "INavPathObserverInterface");
-		UTableUtil::loadlib(NavRelevantInterface_Lib, "INavRelevantInterface");
 		UTableUtil::loadlib(NetDriver_Lib, "UNetDriver");
-		UTableUtil::loadlib(NetworkPredictionInterface_Lib, "INetworkPredictionInterface");
 		UTableUtil::loadlib(NodeMappingContainer_Lib, "UNodeMappingContainer");
-		UTableUtil::loadlib(NodeMappingProviderInterface_Lib, "INodeMappingProviderInterface");
 		UTableUtil::loadlib(ObjectLibrary_Lib, "UObjectLibrary");
+		UTableUtil::loadlib(ObjectReferencer_Lib, "UObjectReferencer");
 		UTableUtil::loadlib(OcclusionPluginSourceSettingsBase_Lib, "UOcclusionPluginSourceSettingsBase");
 		UTableUtil::loadlib(OnlineBlueprintCallProxyBase_Lib, "UOnlineBlueprintCallProxyBase");
 		UTableUtil::loadlib(OnlineEngineInterface_Lib, "UOnlineEngineInterface");
@@ -832,7 +984,10 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(ParticleEmitter_Lib, "UParticleEmitter");
 		UTableUtil::loadlib(ParticleLODLevel_Lib, "UParticleLODLevel");
 		UTableUtil::loadlib(ParticleModule_Lib, "UParticleModule");
+		UTableUtil::loadlib(ParticleModuleEventSendToGame_Lib, "UParticleModuleEventSendToGame");
 		UTableUtil::loadlib(ParticleSystem_Lib, "UParticleSystem");
+		UTableUtil::loadlib(ParticleSystemReplay_Lib, "UParticleSystemReplay");
+		UTableUtil::loadlib(PendingNetGame_Lib, "UPendingNetGame");
 		UTableUtil::loadlib(PhysicalMaterial_Lib, "UPhysicalMaterial");
 		UTableUtil::loadlib(PhysicalMaterialPropertyBase_Lib, "UDEPRECATED_PhysicalMaterialPropertyBase");
 		UTableUtil::loadlib(PhysicsAsset_Lib, "UPhysicsAsset");
@@ -845,12 +1000,13 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(PlayerInput_Lib, "UPlayerInput");
 		UTableUtil::loadlib(Polys_Lib, "UPolys");
 		UTableUtil::loadlib(PoseWatch_Lib, "UPoseWatch");
-		UTableUtil::loadlib(PreviewCollectionInterface_Lib, "IPreviewCollectionInterface");
+		UTableUtil::loadlib(ReporterBase_Lib, "UReporterBase");
 		UTableUtil::loadlib(ReverbEffect_Lib, "UReverbEffect");
 		UTableUtil::loadlib(ReverbPluginSourceSettingsBase_Lib, "UReverbPluginSourceSettingsBase");
 		UTableUtil::loadlib(Rig_Lib, "URig");
-		UTableUtil::loadlib(RVOAvoidanceInterface_Lib, "IRVOAvoidanceInterface");
 		UTableUtil::loadlib(SaveGame_Lib, "USaveGame");
+		UTableUtil::loadlib(Scene_Lib, "UScene");
+		UTableUtil::loadlib(ScriptViewportClient_Lib, "UScriptViewportClient");
 		UTableUtil::loadlib(SCS_Node_Lib, "USCS_Node");
 		UTableUtil::loadlib(Selection_Lib, "USelection");
 		UTableUtil::loadlib(SimpleConstructionScript_Lib, "USimpleConstructionScript");
@@ -859,13 +1015,13 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(SkeletalMeshSocket_Lib, "USkeletalMeshSocket");
 		UTableUtil::loadlib(Skeleton_Lib, "USkeleton");
 		UTableUtil::loadlib(SlateBrushAsset_Lib, "USlateBrushAsset");
-		UTableUtil::loadlib(SlateTextureAtlasInterface_Lib, "ISlateTextureAtlasInterface");
 		UTableUtil::loadlib(SoundAttenuation_Lib, "USoundAttenuation");
 		UTableUtil::loadlib(SoundBase_Lib, "USoundBase");
 		UTableUtil::loadlib(SoundClass_Lib, "USoundClass");
 		UTableUtil::loadlib(SoundConcurrency_Lib, "USoundConcurrency");
 		UTableUtil::loadlib(SoundEffectPreset_Lib, "USoundEffectPreset");
 		UTableUtil::loadlib(SoundEffectSourcePresetChain_Lib, "USoundEffectSourcePresetChain");
+		UTableUtil::loadlib(SoundGroups_Lib, "USoundGroups");
 		UTableUtil::loadlib(SoundMix_Lib, "USoundMix");
 		UTableUtil::loadlib(SoundNode_Lib, "USoundNode");
 		UTableUtil::loadlib(SoundSubmix_Lib, "USoundSubmix");
@@ -875,6 +1031,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(StringTable_Lib, "UStringTable");
 		UTableUtil::loadlib(SubsurfaceProfile_Lib, "USubsurfaceProfile");
 		UTableUtil::loadlib(SubUVAnimation_Lib, "USubUVAnimation");
+		UTableUtil::loadlib(TextPropertyTestObject_Lib, "UTextPropertyTestObject");
 		UTableUtil::loadlib(Texture_Lib, "UTexture");
 		UTableUtil::loadlib(TextureLODSettings_Lib, "UTextureLODSettings");
 		UTableUtil::loadlib(ThumbnailInfo_Lib, "UThumbnailInfo");
@@ -883,7 +1040,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(UserDefinedEnum_Lib, "UUserDefinedEnum");
 		UTableUtil::loadlib(UserDefinedStruct_Lib, "UUserDefinedStruct");
 		UTableUtil::loadlib(VectorField_Lib, "UVectorField");
-		UTableUtil::loadlib(VisualLoggerDebugSnapshotInterface_Lib, "IVisualLoggerDebugSnapshotInterface");
+		UTableUtil::loadlib(VisualLoggerAutomationTests_Lib, "UVisualLoggerAutomationTests");
 		UTableUtil::loadlib(World_Lib, "UWorld");
 		UTableUtil::loadlib(WorldComposition_Lib, "UWorldComposition");
 		UTableUtil::loadlib(AmbientSound_Lib, "AAmbientSound");
@@ -909,6 +1066,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(NavigationTestingActor_Lib, "ANavigationTestingActor");
 		UTableUtil::loadlib(NavLinkProxy_Lib, "ANavLinkProxy");
 		UTableUtil::loadlib(Note_Lib, "ANote");
+		UTableUtil::loadlib(ParticleEventManager_Lib, "AParticleEventManager");
 		UTableUtil::loadlib(Pawn_Lib, "APawn");
 		UTableUtil::loadlib(PlayerCameraManager_Lib, "APlayerCameraManager");
 		UTableUtil::loadlib(ReflectionCapture_Lib, "AReflectionCapture");
@@ -926,6 +1084,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AudioVolume_Lib, "AAudioVolume");
 		UTableUtil::loadlib(BlockingVolume_Lib, "ABlockingVolume");
 		UTableUtil::loadlib(CameraBlockingVolume_Lib, "ACameraBlockingVolume");
+		UTableUtil::loadlib(CullDistanceVolume_Lib, "ACullDistanceVolume");
 		UTableUtil::loadlib(LevelStreamingVolume_Lib, "ALevelStreamingVolume");
 		UTableUtil::loadlib(LightmassCharacterIndirectDetailVolume_Lib, "ALightmassCharacterIndirectDetailVolume");
 		UTableUtil::loadlib(LightmassImportanceVolume_Lib, "ALightmassImportanceVolume");
@@ -973,6 +1132,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(PlaneReflectionCapture_Lib, "APlaneReflectionCapture");
 		UTableUtil::loadlib(SphereReflectionCapture_Lib, "ASphereReflectionCapture");
 		UTableUtil::loadlib(PhysicsConstraintActor_Lib, "APhysicsConstraintActor");
+		UTableUtil::loadlib(PhysicsThruster_Lib, "APhysicsThruster");
 		UTableUtil::loadlib(RadialForceActor_Lib, "ARadialForceActor");
 		UTableUtil::loadlib(PlanarReflection_Lib, "APlanarReflection");
 		UTableUtil::loadlib(SceneCapture2D_Lib, "ASceneCapture2D");
@@ -1021,6 +1181,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(SceneCaptureComponent_Lib, "USceneCaptureComponent");
 		UTableUtil::loadlib(SpringArmComponent_Lib, "USpringArmComponent");
 		UTableUtil::loadlib(StereoLayerComponent_Lib, "UStereoLayerComponent");
+		UTableUtil::loadlib(WindDirectionalSourceComponent_Lib, "UWindDirectionalSourceComponent");
 		UTableUtil::loadlib(LightComponent_Lib, "ULightComponent");
 		UTableUtil::loadlib(SkyLightComponent_Lib, "USkyLightComponent");
 		UTableUtil::loadlib(DirectionalLightComponent_Lib, "UDirectionalLightComponent");
@@ -1037,6 +1198,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(NavLinkComponent_Lib, "UNavLinkComponent");
 		UTableUtil::loadlib(NavLinkRenderingComponent_Lib, "UNavLinkRenderingComponent");
 		UTableUtil::loadlib(NavMeshRenderingComponent_Lib, "UNavMeshRenderingComponent");
+		UTableUtil::loadlib(NavTestRenderingComponent_Lib, "UNavTestRenderingComponent");
 		UTableUtil::loadlib(ParticleSystemComponent_Lib, "UParticleSystemComponent");
 		UTableUtil::loadlib(ShapeComponent_Lib, "UShapeComponent");
 		UTableUtil::loadlib(SplineComponent_Lib, "USplineComponent");
@@ -1073,9 +1235,11 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AimOffsetBlendSpace1D_Lib, "UAimOffsetBlendSpace1D");
 		UTableUtil::loadlib(AnimCompress_Automatic_Lib, "UAnimCompress_Automatic");
 		UTableUtil::loadlib(AnimCompress_BitwiseCompressOnly_Lib, "UAnimCompress_BitwiseCompressOnly");
+		UTableUtil::loadlib(AnimCompress_LeastDestructive_Lib, "UAnimCompress_LeastDestructive");
 		UTableUtil::loadlib(AnimCompress_RemoveEverySecondKey_Lib, "UAnimCompress_RemoveEverySecondKey");
 		UTableUtil::loadlib(AnimCompress_RemoveLinearKeys_Lib, "UAnimCompress_RemoveLinearKeys");
 		UTableUtil::loadlib(AnimCompress_RemoveTrivialKeys_Lib, "UAnimCompress_RemoveTrivialKeys");
+		UTableUtil::loadlib(AnimCompress_PerTrackCompression_Lib, "UAnimCompress_PerTrackCompression");
 		UTableUtil::loadlib(AnimSingleNodeInstance_Lib, "UAnimSingleNodeInstance");
 		UTableUtil::loadlib(AnimNotify_PlayParticleEffect_Lib, "UAnimNotify_PlayParticleEffect");
 		UTableUtil::loadlib(AnimNotify_PlaySound_Lib, "UAnimNotify_PlaySound");
@@ -1083,6 +1247,12 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AnimNotifyState_DisableRootMotion_Lib, "UAnimNotifyState_DisableRootMotion");
 		UTableUtil::loadlib(AnimNotifyState_TimedParticleEffect_Lib, "UAnimNotifyState_TimedParticleEffect");
 		UTableUtil::loadlib(AnimNotifyState_Trail_Lib, "UAnimNotifyState_Trail");
+		UTableUtil::loadlib(AsyncActionLoadPrimaryAssetBase_Lib, "UAsyncActionLoadPrimaryAssetBase");
+		UTableUtil::loadlib(AsyncActionChangePrimaryAssetBundles_Lib, "UAsyncActionChangePrimaryAssetBundles");
+		UTableUtil::loadlib(AsyncActionLoadPrimaryAsset_Lib, "UAsyncActionLoadPrimaryAsset");
+		UTableUtil::loadlib(AsyncActionLoadPrimaryAssetClass_Lib, "UAsyncActionLoadPrimaryAssetClass");
+		UTableUtil::loadlib(AsyncActionLoadPrimaryAssetClassList_Lib, "UAsyncActionLoadPrimaryAssetClassList");
+		UTableUtil::loadlib(AsyncActionLoadPrimaryAssetList_Lib, "UAsyncActionLoadPrimaryAssetList");
 		UTableUtil::loadlib(Blueprint_Lib, "UBlueprint");
 		UTableUtil::loadlib(AnimBlueprint_Lib, "UAnimBlueprint");
 		UTableUtil::loadlib(LevelScriptBlueprint_Lib, "ULevelScriptBlueprint");
@@ -1113,6 +1283,8 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(ActorChannel_Lib, "UActorChannel");
 		UTableUtil::loadlib(ControlChannel_Lib, "UControlChannel");
 		UTableUtil::loadlib(VoiceChannel_Lib, "UVoiceChannel");
+		UTableUtil::loadlib(PluginCommandlet_Lib, "UPluginCommandlet");
+		UTableUtil::loadlib(SmokeTestCommandlet_Lib, "USmokeTestCommandlet");
 		UTableUtil::loadlib(CurveFloat_Lib, "UCurveFloat");
 		UTableUtil::loadlib(CurveLinearColor_Lib, "UCurveLinearColor");
 		UTableUtil::loadlib(CurveVector_Lib, "UCurveVector");
@@ -1125,6 +1297,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AudioSettings_Lib, "UAudioSettings");
 		UTableUtil::loadlib(CollisionProfile_Lib, "UCollisionProfile");
 		UTableUtil::loadlib(GarbageCollectionSettings_Lib, "UGarbageCollectionSettings");
+		UTableUtil::loadlib(MeshSimplificationSettings_Lib, "UMeshSimplificationSettings");
 		UTableUtil::loadlib(NetworkSettings_Lib, "UNetworkSettings");
 		UTableUtil::loadlib(PhysicsSettings_Lib, "UPhysicsSettings");
 		UTableUtil::loadlib(RendererOverrideSettings_Lib, "URendererOverrideSettings");
@@ -1159,9 +1332,11 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(HapticFeedbackEffect_Buffer_Lib, "UHapticFeedbackEffect_Buffer");
 		UTableUtil::loadlib(HapticFeedbackEffect_Curve_Lib, "UHapticFeedbackEffect_Curve");
 		UTableUtil::loadlib(HapticFeedbackEffect_SoundWave_Lib, "UHapticFeedbackEffect_SoundWave");
+		UTableUtil::loadlib(InterpFilter_Classes_Lib, "UInterpFilter_Classes");
 		UTableUtil::loadlib(InterpFilter_Custom_Lib, "UInterpFilter_Custom");
 		UTableUtil::loadlib(InterpGroupCamera_Lib, "UInterpGroupCamera");
 		UTableUtil::loadlib(InterpGroupDirector_Lib, "UInterpGroupDirector");
+		UTableUtil::loadlib(InterpGroupInstCamera_Lib, "UInterpGroupInstCamera");
 		UTableUtil::loadlib(InterpGroupInstDirector_Lib, "UInterpGroupInstDirector");
 		UTableUtil::loadlib(InterpTrackBoolProp_Lib, "UInterpTrackBoolProp");
 		UTableUtil::loadlib(InterpTrackDirector_Lib, "UInterpTrackDirector");
@@ -1174,29 +1349,68 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(InterpTrackVectorBase_Lib, "UInterpTrackVectorBase");
 		UTableUtil::loadlib(InterpTrackVisibility_Lib, "UInterpTrackVisibility");
 		UTableUtil::loadlib(InterpTrackAnimControl_Lib, "UInterpTrackAnimControl");
+		UTableUtil::loadlib(InterpTrackFade_Lib, "UInterpTrackFade");
+		UTableUtil::loadlib(InterpTrackFloatAnimBPParam_Lib, "UInterpTrackFloatAnimBPParam");
+		UTableUtil::loadlib(InterpTrackFloatMaterialParam_Lib, "UInterpTrackFloatMaterialParam");
+		UTableUtil::loadlib(InterpTrackFloatParticleParam_Lib, "UInterpTrackFloatParticleParam");
 		UTableUtil::loadlib(InterpTrackFloatProp_Lib, "UInterpTrackFloatProp");
 		UTableUtil::loadlib(InterpTrackMoveAxis_Lib, "UInterpTrackMoveAxis");
+		UTableUtil::loadlib(InterpTrackSlomo_Lib, "UInterpTrackSlomo");
 		UTableUtil::loadlib(InterpTrackLinearColorProp_Lib, "UInterpTrackLinearColorProp");
 		UTableUtil::loadlib(InterpTrackAudioMaster_Lib, "UInterpTrackAudioMaster");
 		UTableUtil::loadlib(InterpTrackColorProp_Lib, "UInterpTrackColorProp");
+		UTableUtil::loadlib(InterpTrackColorScale_Lib, "UInterpTrackColorScale");
 		UTableUtil::loadlib(InterpTrackSound_Lib, "UInterpTrackSound");
 		UTableUtil::loadlib(InterpTrackVectorMaterialParam_Lib, "UInterpTrackVectorMaterialParam");
 		UTableUtil::loadlib(InterpTrackVectorProp_Lib, "UInterpTrackVectorProp");
 		UTableUtil::loadlib(InterpTrackInstAnimControl_Lib, "UInterpTrackInstAnimControl");
+		UTableUtil::loadlib(InterpTrackInstAudioMaster_Lib, "UInterpTrackInstAudioMaster");
+		UTableUtil::loadlib(InterpTrackInstColorScale_Lib, "UInterpTrackInstColorScale");
 		UTableUtil::loadlib(InterpTrackInstDirector_Lib, "UInterpTrackInstDirector");
 		UTableUtil::loadlib(InterpTrackInstEvent_Lib, "UInterpTrackInstEvent");
+		UTableUtil::loadlib(InterpTrackInstFade_Lib, "UInterpTrackInstFade");
+		UTableUtil::loadlib(InterpTrackInstFloatAnimBPParam_Lib, "UInterpTrackInstFloatAnimBPParam");
+		UTableUtil::loadlib(InterpTrackInstFloatMaterialParam_Lib, "UInterpTrackInstFloatMaterialParam");
+		UTableUtil::loadlib(InterpTrackInstFloatParticleParam_Lib, "UInterpTrackInstFloatParticleParam");
 		UTableUtil::loadlib(InterpTrackInstMove_Lib, "UInterpTrackInstMove");
+		UTableUtil::loadlib(InterpTrackInstParticleReplay_Lib, "UInterpTrackInstParticleReplay");
+		UTableUtil::loadlib(InterpTrackInstProperty_Lib, "UInterpTrackInstProperty");
+		UTableUtil::loadlib(InterpTrackInstSlomo_Lib, "UInterpTrackInstSlomo");
+		UTableUtil::loadlib(InterpTrackInstSound_Lib, "UInterpTrackInstSound");
+		UTableUtil::loadlib(InterpTrackInstToggle_Lib, "UInterpTrackInstToggle");
+		UTableUtil::loadlib(InterpTrackInstVectorMaterialParam_Lib, "UInterpTrackInstVectorMaterialParam");
+		UTableUtil::loadlib(InterpTrackInstVisibility_Lib, "UInterpTrackInstVisibility");
+		UTableUtil::loadlib(InterpTrackInstBoolProp_Lib, "UInterpTrackInstBoolProp");
+		UTableUtil::loadlib(InterpTrackInstColorProp_Lib, "UInterpTrackInstColorProp");
 		UTableUtil::loadlib(InterpTrackInstFloatProp_Lib, "UInterpTrackInstFloatProp");
+		UTableUtil::loadlib(InterpTrackInstLinearColorProp_Lib, "UInterpTrackInstLinearColorProp");
+		UTableUtil::loadlib(InterpTrackInstVectorProp_Lib, "UInterpTrackInstVectorProp");
 		UTableUtil::loadlib(LevelStreamingAlwaysLoaded_Lib, "ULevelStreamingAlwaysLoaded");
 		UTableUtil::loadlib(LevelStreamingKismet_Lib, "ULevelStreamingKismet");
+		UTableUtil::loadlib(LevelStreamingPersistent_Lib, "ULevelStreamingPersistent");
 		UTableUtil::loadlib(EngineMessage_Lib, "UEngineMessage");
 		UTableUtil::loadlib(MaterialExpressionAbs_Lib, "UMaterialExpressionAbs");
+		UTableUtil::loadlib(MaterialExpressionActorPositionWS_Lib, "UMaterialExpressionActorPositionWS");
 		UTableUtil::loadlib(MaterialExpressionAdd_Lib, "UMaterialExpressionAdd");
 		UTableUtil::loadlib(MaterialExpressionAppendVector_Lib, "UMaterialExpressionAppendVector");
+		UTableUtil::loadlib(MaterialExpressionArccosine_Lib, "UMaterialExpressionArccosine");
+		UTableUtil::loadlib(MaterialExpressionArccosineFast_Lib, "UMaterialExpressionArccosineFast");
+		UTableUtil::loadlib(MaterialExpressionArcsine_Lib, "UMaterialExpressionArcsine");
+		UTableUtil::loadlib(MaterialExpressionArcsineFast_Lib, "UMaterialExpressionArcsineFast");
+		UTableUtil::loadlib(MaterialExpressionArctangent_Lib, "UMaterialExpressionArctangent");
+		UTableUtil::loadlib(MaterialExpressionArctangent2_Lib, "UMaterialExpressionArctangent2");
+		UTableUtil::loadlib(MaterialExpressionArctangent2Fast_Lib, "UMaterialExpressionArctangent2Fast");
+		UTableUtil::loadlib(MaterialExpressionArctangentFast_Lib, "UMaterialExpressionArctangentFast");
+		UTableUtil::loadlib(MaterialExpressionAtmosphericFogColor_Lib, "UMaterialExpressionAtmosphericFogColor");
+		UTableUtil::loadlib(MaterialExpressionAtmosphericLightColor_Lib, "UMaterialExpressionAtmosphericLightColor");
+		UTableUtil::loadlib(MaterialExpressionAtmosphericLightVector_Lib, "UMaterialExpressionAtmosphericLightVector");
+		UTableUtil::loadlib(MaterialExpressionBlackBody_Lib, "UMaterialExpressionBlackBody");
 		UTableUtil::loadlib(MaterialExpressionBlendMaterialAttributes_Lib, "UMaterialExpressionBlendMaterialAttributes");
 		UTableUtil::loadlib(MaterialExpressionBreakMaterialAttributes_Lib, "UMaterialExpressionBreakMaterialAttributes");
 		UTableUtil::loadlib(MaterialExpressionBumpOffset_Lib, "UMaterialExpressionBumpOffset");
+		UTableUtil::loadlib(MaterialExpressionCameraPositionWS_Lib, "UMaterialExpressionCameraPositionWS");
 		UTableUtil::loadlib(MaterialExpressionCameraVectorWS_Lib, "UMaterialExpressionCameraVectorWS");
+		UTableUtil::loadlib(MaterialExpressionCeil_Lib, "UMaterialExpressionCeil");
 		UTableUtil::loadlib(MaterialExpressionClamp_Lib, "UMaterialExpressionClamp");
 		UTableUtil::loadlib(MaterialExpressionCollectionParameter_Lib, "UMaterialExpressionCollectionParameter");
 		UTableUtil::loadlib(MaterialExpressionComment_Lib, "UMaterialExpressionComment");
@@ -1210,34 +1424,71 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialExpressionCrossProduct_Lib, "UMaterialExpressionCrossProduct");
 		UTableUtil::loadlib(MaterialExpressionCustom_Lib, "UMaterialExpressionCustom");
 		UTableUtil::loadlib(MaterialExpressionCustomOutput_Lib, "UMaterialExpressionCustomOutput");
+		UTableUtil::loadlib(MaterialExpressionDDX_Lib, "UMaterialExpressionDDX");
+		UTableUtil::loadlib(MaterialExpressionDDY_Lib, "UMaterialExpressionDDY");
+		UTableUtil::loadlib(MaterialExpressionDecalDerivative_Lib, "UMaterialExpressionDecalDerivative");
+		UTableUtil::loadlib(MaterialExpressionDecalLifetimeOpacity_Lib, "UMaterialExpressionDecalLifetimeOpacity");
+		UTableUtil::loadlib(MaterialExpressionDecalMipmapLevel_Lib, "UMaterialExpressionDecalMipmapLevel");
+		UTableUtil::loadlib(MaterialExpressionDepthFade_Lib, "UMaterialExpressionDepthFade");
+		UTableUtil::loadlib(MaterialExpressionDepthOfFieldFunction_Lib, "UMaterialExpressionDepthOfFieldFunction");
+		UTableUtil::loadlib(MaterialExpressionDeriveNormalZ_Lib, "UMaterialExpressionDeriveNormalZ");
+		UTableUtil::loadlib(MaterialExpressionDesaturation_Lib, "UMaterialExpressionDesaturation");
+		UTableUtil::loadlib(MaterialExpressionDistance_Lib, "UMaterialExpressionDistance");
+		UTableUtil::loadlib(MaterialExpressionDistanceCullFade_Lib, "UMaterialExpressionDistanceCullFade");
+		UTableUtil::loadlib(MaterialExpressionDistanceFieldGradient_Lib, "UMaterialExpressionDistanceFieldGradient");
+		UTableUtil::loadlib(MaterialExpressionDistanceToNearestSurface_Lib, "UMaterialExpressionDistanceToNearestSurface");
 		UTableUtil::loadlib(MaterialExpressionDivide_Lib, "UMaterialExpressionDivide");
 		UTableUtil::loadlib(MaterialExpressionDotProduct_Lib, "UMaterialExpressionDotProduct");
 		UTableUtil::loadlib(MaterialExpressionDynamicParameter_Lib, "UMaterialExpressionDynamicParameter");
+		UTableUtil::loadlib(MaterialExpressionEyeAdaptation_Lib, "UMaterialExpressionEyeAdaptation");
 		UTableUtil::loadlib(MaterialExpressionFeatureLevelSwitch_Lib, "UMaterialExpressionFeatureLevelSwitch");
 		UTableUtil::loadlib(MaterialExpressionFloor_Lib, "UMaterialExpressionFloor");
 		UTableUtil::loadlib(MaterialExpressionFmod_Lib, "UMaterialExpressionFmod");
 		UTableUtil::loadlib(MaterialExpressionFontSample_Lib, "UMaterialExpressionFontSample");
+		UTableUtil::loadlib(MaterialExpressionFrac_Lib, "UMaterialExpressionFrac");
 		UTableUtil::loadlib(MaterialExpressionFresnel_Lib, "UMaterialExpressionFresnel");
 		UTableUtil::loadlib(MaterialExpressionFunctionInput_Lib, "UMaterialExpressionFunctionInput");
 		UTableUtil::loadlib(MaterialExpressionFunctionOutput_Lib, "UMaterialExpressionFunctionOutput");
 		UTableUtil::loadlib(MaterialExpressionGetMaterialAttributes_Lib, "UMaterialExpressionGetMaterialAttributes");
+		UTableUtil::loadlib(MaterialExpressionGIReplace_Lib, "UMaterialExpressionGIReplace");
 		UTableUtil::loadlib(MaterialExpressionIf_Lib, "UMaterialExpressionIf");
+		UTableUtil::loadlib(MaterialExpressionLightmapUVs_Lib, "UMaterialExpressionLightmapUVs");
+		UTableUtil::loadlib(MaterialExpressionLightmassReplace_Lib, "UMaterialExpressionLightmassReplace");
+		UTableUtil::loadlib(MaterialExpressionLightVector_Lib, "UMaterialExpressionLightVector");
 		UTableUtil::loadlib(MaterialExpressionLinearInterpolate_Lib, "UMaterialExpressionLinearInterpolate");
 		UTableUtil::loadlib(MaterialExpressionLogarithm10_Lib, "UMaterialExpressionLogarithm10");
 		UTableUtil::loadlib(MaterialExpressionLogarithm2_Lib, "UMaterialExpressionLogarithm2");
 		UTableUtil::loadlib(MaterialExpressionMakeMaterialAttributes_Lib, "UMaterialExpressionMakeMaterialAttributes");
 		UTableUtil::loadlib(MaterialExpressionMaterialFunctionCall_Lib, "UMaterialExpressionMaterialFunctionCall");
+		UTableUtil::loadlib(MaterialExpressionMaterialProxyReplace_Lib, "UMaterialExpressionMaterialProxyReplace");
 		UTableUtil::loadlib(MaterialExpressionMax_Lib, "UMaterialExpressionMax");
 		UTableUtil::loadlib(MaterialExpressionMin_Lib, "UMaterialExpressionMin");
 		UTableUtil::loadlib(MaterialExpressionMultiply_Lib, "UMaterialExpressionMultiply");
 		UTableUtil::loadlib(MaterialExpressionNoise_Lib, "UMaterialExpressionNoise");
 		UTableUtil::loadlib(MaterialExpressionNormalize_Lib, "UMaterialExpressionNormalize");
+		UTableUtil::loadlib(MaterialExpressionObjectBounds_Lib, "UMaterialExpressionObjectBounds");
 		UTableUtil::loadlib(MaterialExpressionObjectOrientation_Lib, "UMaterialExpressionObjectOrientation");
+		UTableUtil::loadlib(MaterialExpressionObjectPositionWS_Lib, "UMaterialExpressionObjectPositionWS");
+		UTableUtil::loadlib(MaterialExpressionObjectRadius_Lib, "UMaterialExpressionObjectRadius");
 		UTableUtil::loadlib(MaterialExpressionOneMinus_Lib, "UMaterialExpressionOneMinus");
 		UTableUtil::loadlib(MaterialExpressionPanner_Lib, "UMaterialExpressionPanner");
 		UTableUtil::loadlib(MaterialExpressionParameter_Lib, "UMaterialExpressionParameter");
+		UTableUtil::loadlib(MaterialExpressionParticleColor_Lib, "UMaterialExpressionParticleColor");
+		UTableUtil::loadlib(MaterialExpressionParticleDirection_Lib, "UMaterialExpressionParticleDirection");
+		UTableUtil::loadlib(MaterialExpressionParticleMacroUV_Lib, "UMaterialExpressionParticleMacroUV");
+		UTableUtil::loadlib(MaterialExpressionParticleMotionBlurFade_Lib, "UMaterialExpressionParticleMotionBlurFade");
+		UTableUtil::loadlib(MaterialExpressionParticlePositionWS_Lib, "UMaterialExpressionParticlePositionWS");
+		UTableUtil::loadlib(MaterialExpressionParticleRadius_Lib, "UMaterialExpressionParticleRadius");
+		UTableUtil::loadlib(MaterialExpressionParticleRandom_Lib, "UMaterialExpressionParticleRandom");
+		UTableUtil::loadlib(MaterialExpressionParticleRelativeTime_Lib, "UMaterialExpressionParticleRelativeTime");
+		UTableUtil::loadlib(MaterialExpressionParticleSize_Lib, "UMaterialExpressionParticleSize");
+		UTableUtil::loadlib(MaterialExpressionParticleSpeed_Lib, "UMaterialExpressionParticleSpeed");
+		UTableUtil::loadlib(MaterialExpressionPerInstanceFadeAmount_Lib, "UMaterialExpressionPerInstanceFadeAmount");
+		UTableUtil::loadlib(MaterialExpressionPerInstanceRandom_Lib, "UMaterialExpressionPerInstanceRandom");
+		UTableUtil::loadlib(MaterialExpressionPixelDepth_Lib, "UMaterialExpressionPixelDepth");
 		UTableUtil::loadlib(MaterialExpressionPixelNormalWS_Lib, "UMaterialExpressionPixelNormalWS");
 		UTableUtil::loadlib(MaterialExpressionPower_Lib, "UMaterialExpressionPower");
+		UTableUtil::loadlib(MaterialExpressionPrecomputedAOMask_Lib, "UMaterialExpressionPrecomputedAOMask");
 		UTableUtil::loadlib(MaterialExpressionPreSkinnedNormal_Lib, "UMaterialExpressionPreSkinnedNormal");
 		UTableUtil::loadlib(MaterialExpressionPreSkinnedPosition_Lib, "UMaterialExpressionPreSkinnedPosition");
 		UTableUtil::loadlib(MaterialExpressionPreviousFrameSwitch_Lib, "UMaterialExpressionPreviousFrameSwitch");
@@ -1245,27 +1496,45 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialExpressionReflectionVectorWS_Lib, "UMaterialExpressionReflectionVectorWS");
 		UTableUtil::loadlib(MaterialExpressionReroute_Lib, "UMaterialExpressionReroute");
 		UTableUtil::loadlib(MaterialExpressionRotateAboutAxis_Lib, "UMaterialExpressionRotateAboutAxis");
+		UTableUtil::loadlib(MaterialExpressionRotator_Lib, "UMaterialExpressionRotator");
+		UTableUtil::loadlib(MaterialExpressionRound_Lib, "UMaterialExpressionRound");
+		UTableUtil::loadlib(MaterialExpressionSaturate_Lib, "UMaterialExpressionSaturate");
+		UTableUtil::loadlib(MaterialExpressionSceneColor_Lib, "UMaterialExpressionSceneColor");
+		UTableUtil::loadlib(MaterialExpressionSceneDepth_Lib, "UMaterialExpressionSceneDepth");
+		UTableUtil::loadlib(MaterialExpressionSceneTexelSize_Lib, "UMaterialExpressionSceneTexelSize");
+		UTableUtil::loadlib(MaterialExpressionSceneTexture_Lib, "UMaterialExpressionSceneTexture");
+		UTableUtil::loadlib(MaterialExpressionScreenPosition_Lib, "UMaterialExpressionScreenPosition");
 		UTableUtil::loadlib(MaterialExpressionSetMaterialAttributes_Lib, "UMaterialExpressionSetMaterialAttributes");
+		UTableUtil::loadlib(MaterialExpressionSign_Lib, "UMaterialExpressionSign");
 		UTableUtil::loadlib(MaterialExpressionSine_Lib, "UMaterialExpressionSine");
 		UTableUtil::loadlib(MaterialExpressionSobol_Lib, "UMaterialExpressionSobol");
 		UTableUtil::loadlib(MaterialExpressionSpeedTree_Lib, "UMaterialExpressionSpeedTree");
+		UTableUtil::loadlib(MaterialExpressionSphereMask_Lib, "UMaterialExpressionSphereMask");
+		UTableUtil::loadlib(MaterialExpressionSphericalParticleOpacity_Lib, "UMaterialExpressionSphericalParticleOpacity");
 		UTableUtil::loadlib(MaterialExpressionSquareRoot_Lib, "UMaterialExpressionSquareRoot");
 		UTableUtil::loadlib(MaterialExpressionStaticBool_Lib, "UMaterialExpressionStaticBool");
 		UTableUtil::loadlib(MaterialExpressionStaticSwitch_Lib, "UMaterialExpressionStaticSwitch");
 		UTableUtil::loadlib(MaterialExpressionSubtract_Lib, "UMaterialExpressionSubtract");
+		UTableUtil::loadlib(MaterialExpressionTangent_Lib, "UMaterialExpressionTangent");
 		UTableUtil::loadlib(MaterialExpressionTemporalSobol_Lib, "UMaterialExpressionTemporalSobol");
 		UTableUtil::loadlib(MaterialExpressionTextureBase_Lib, "UMaterialExpressionTextureBase");
 		UTableUtil::loadlib(MaterialExpressionTextureCoordinate_Lib, "UMaterialExpressionTextureCoordinate");
 		UTableUtil::loadlib(MaterialExpressionTextureProperty_Lib, "UMaterialExpressionTextureProperty");
+		UTableUtil::loadlib(MaterialExpressionTime_Lib, "UMaterialExpressionTime");
 		UTableUtil::loadlib(MaterialExpressionTransform_Lib, "UMaterialExpressionTransform");
 		UTableUtil::loadlib(MaterialExpressionTransformPosition_Lib, "UMaterialExpressionTransformPosition");
+		UTableUtil::loadlib(MaterialExpressionTruncate_Lib, "UMaterialExpressionTruncate");
 		UTableUtil::loadlib(MaterialExpressionTwoSidedSign_Lib, "UMaterialExpressionTwoSidedSign");
 		UTableUtil::loadlib(MaterialExpressionVectorNoise_Lib, "UMaterialExpressionVectorNoise");
 		UTableUtil::loadlib(MaterialExpressionVertexColor_Lib, "UMaterialExpressionVertexColor");
 		UTableUtil::loadlib(MaterialExpressionVertexNormalWS_Lib, "UMaterialExpressionVertexNormalWS");
 		UTableUtil::loadlib(MaterialExpressionViewProperty_Lib, "UMaterialExpressionViewProperty");
+		UTableUtil::loadlib(MaterialExpressionViewSize_Lib, "UMaterialExpressionViewSize");
 		UTableUtil::loadlib(MaterialExpressionWorldPosition_Lib, "UMaterialExpressionWorldPosition");
+		UTableUtil::loadlib(MaterialExpressionBentNormalCustomOutput_Lib, "UMaterialExpressionBentNormalCustomOutput");
+		UTableUtil::loadlib(MaterialExpressionClearCoatNormalCustomOutput_Lib, "UMaterialExpressionClearCoatNormalCustomOutput");
 		UTableUtil::loadlib(MaterialExpressionTangentOutput_Lib, "UMaterialExpressionTangentOutput");
+		UTableUtil::loadlib(MaterialExpressionVertexInterpolator_Lib, "UMaterialExpressionVertexInterpolator");
 		UTableUtil::loadlib(MaterialExpressionFontSampleParameter_Lib, "UMaterialExpressionFontSampleParameter");
 		UTableUtil::loadlib(MaterialExpressionScalarParameter_Lib, "UMaterialExpressionScalarParameter");
 		UTableUtil::loadlib(MaterialExpressionStaticBoolParameter_Lib, "UMaterialExpressionStaticBoolParameter");
@@ -1295,27 +1564,59 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(RecastFilter_UseDefaultArea_Lib, "URecastFilter_UseDefaultArea");
 		UTableUtil::loadlib(NavLinkTrivial_Lib, "UNavLinkTrivial");
 		UTableUtil::loadlib(ParticleSpriteEmitter_Lib, "UParticleSpriteEmitter");
+		UTableUtil::loadlib(ParticleModuleAccelerationBase_Lib, "UParticleModuleAccelerationBase");
+		UTableUtil::loadlib(ParticleModuleAttractorBase_Lib, "UParticleModuleAttractorBase");
+		UTableUtil::loadlib(ParticleModuleBeamBase_Lib, "UParticleModuleBeamBase");
+		UTableUtil::loadlib(ParticleModuleCameraBase_Lib, "UParticleModuleCameraBase");
+		UTableUtil::loadlib(ParticleModuleCollisionBase_Lib, "UParticleModuleCollisionBase");
 		UTableUtil::loadlib(ParticleModuleColorBase_Lib, "UParticleModuleColorBase");
+		UTableUtil::loadlib(ParticleModuleEventBase_Lib, "UParticleModuleEventBase");
+		UTableUtil::loadlib(ParticleModuleKillBase_Lib, "UParticleModuleKillBase");
+		UTableUtil::loadlib(ParticleModuleLifetimeBase_Lib, "UParticleModuleLifetimeBase");
+		UTableUtil::loadlib(ParticleModuleLightBase_Lib, "UParticleModuleLightBase");
 		UTableUtil::loadlib(ParticleModuleLocationBase_Lib, "UParticleModuleLocationBase");
+		UTableUtil::loadlib(ParticleModuleMaterialBase_Lib, "UParticleModuleMaterialBase");
+		UTableUtil::loadlib(ParticleModuleOrbitBase_Lib, "UParticleModuleOrbitBase");
+		UTableUtil::loadlib(ParticleModuleOrientationBase_Lib, "UParticleModuleOrientationBase");
+		UTableUtil::loadlib(ParticleModuleParameterBase_Lib, "UParticleModuleParameterBase");
 		UTableUtil::loadlib(ParticleModuleRequired_Lib, "UParticleModuleRequired");
+		UTableUtil::loadlib(ParticleModuleRotationBase_Lib, "UParticleModuleRotationBase");
+		UTableUtil::loadlib(ParticleModuleRotationRateBase_Lib, "UParticleModuleRotationRateBase");
+		UTableUtil::loadlib(ParticleModuleSizeBase_Lib, "UParticleModuleSizeBase");
+		UTableUtil::loadlib(ParticleModuleSpawnBase_Lib, "UParticleModuleSpawnBase");
+		UTableUtil::loadlib(ParticleModuleSubUVBase_Lib, "UParticleModuleSubUVBase");
+		UTableUtil::loadlib(ParticleModuleTrailBase_Lib, "UParticleModuleTrailBase");
 		UTableUtil::loadlib(ParticleModuleTypeDataBase_Lib, "UParticleModuleTypeDataBase");
+		UTableUtil::loadlib(ParticleModuleVectorFieldBase_Lib, "UParticleModuleVectorFieldBase");
+		UTableUtil::loadlib(ParticleModuleVelocityBase_Lib, "UParticleModuleVelocityBase");
 		UTableUtil::loadlib(ParticleModuleAcceleration_Lib, "UParticleModuleAcceleration");
+		UTableUtil::loadlib(ParticleModuleAccelerationConstant_Lib, "UParticleModuleAccelerationConstant");
 		UTableUtil::loadlib(ParticleModuleAccelerationDrag_Lib, "UParticleModuleAccelerationDrag");
 		UTableUtil::loadlib(ParticleModuleAccelerationDragScaleOverLife_Lib, "UParticleModuleAccelerationDragScaleOverLife");
 		UTableUtil::loadlib(ParticleModuleAccelerationOverLifetime_Lib, "UParticleModuleAccelerationOverLifetime");
 		UTableUtil::loadlib(ParticleModuleAttractorLine_Lib, "UParticleModuleAttractorLine");
 		UTableUtil::loadlib(ParticleModuleAttractorParticle_Lib, "UParticleModuleAttractorParticle");
 		UTableUtil::loadlib(ParticleModuleAttractorPoint_Lib, "UParticleModuleAttractorPoint");
+		UTableUtil::loadlib(ParticleModuleAttractorPointGravity_Lib, "UParticleModuleAttractorPointGravity");
+		UTableUtil::loadlib(ParticleModuleBeamModifier_Lib, "UParticleModuleBeamModifier");
 		UTableUtil::loadlib(ParticleModuleBeamNoise_Lib, "UParticleModuleBeamNoise");
 		UTableUtil::loadlib(ParticleModuleBeamSource_Lib, "UParticleModuleBeamSource");
 		UTableUtil::loadlib(ParticleModuleBeamTarget_Lib, "UParticleModuleBeamTarget");
+		UTableUtil::loadlib(ParticleModuleCameraOffset_Lib, "UParticleModuleCameraOffset");
 		UTableUtil::loadlib(ParticleModuleCollision_Lib, "UParticleModuleCollision");
 		UTableUtil::loadlib(ParticleModuleCollisionGPU_Lib, "UParticleModuleCollisionGPU");
 		UTableUtil::loadlib(ParticleModuleColor_Lib, "UParticleModuleColor");
 		UTableUtil::loadlib(ParticleModuleColorOverLife_Lib, "UParticleModuleColorOverLife");
 		UTableUtil::loadlib(ParticleModuleColorScaleOverLife_Lib, "UParticleModuleColorScaleOverLife");
+		UTableUtil::loadlib(ParticleModuleColor_Seeded_Lib, "UParticleModuleColor_Seeded");
 		UTableUtil::loadlib(ParticleModuleEventGenerator_Lib, "UParticleModuleEventGenerator");
+		UTableUtil::loadlib(ParticleModuleEventReceiverBase_Lib, "UParticleModuleEventReceiverBase");
+		UTableUtil::loadlib(ParticleModuleEventReceiverKillParticles_Lib, "UParticleModuleEventReceiverKillParticles");
+		UTableUtil::loadlib(ParticleModuleEventReceiverSpawn_Lib, "UParticleModuleEventReceiverSpawn");
+		UTableUtil::loadlib(ParticleModuleKillBox_Lib, "UParticleModuleKillBox");
+		UTableUtil::loadlib(ParticleModuleKillHeight_Lib, "UParticleModuleKillHeight");
 		UTableUtil::loadlib(ParticleModuleLifetime_Lib, "UParticleModuleLifetime");
+		UTableUtil::loadlib(ParticleModuleLifetime_Seeded_Lib, "UParticleModuleLifetime_Seeded");
 		UTableUtil::loadlib(ParticleModuleLight_Lib, "UParticleModuleLight");
 		UTableUtil::loadlib(ParticleModuleLight_Seeded_Lib, "UParticleModuleLight_Seeded");
 		UTableUtil::loadlib(ParticleModuleLocation_Lib, "UParticleModuleLocation");
@@ -1339,31 +1640,50 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(ParticleModuleOrbit_Lib, "UParticleModuleOrbit");
 		UTableUtil::loadlib(ParticleModuleOrientationAxisLock_Lib, "UParticleModuleOrientationAxisLock");
 		UTableUtil::loadlib(ParticleModuleParameterDynamic_Lib, "UParticleModuleParameterDynamic");
+		UTableUtil::loadlib(ParticleModuleParameterDynamic_Seeded_Lib, "UParticleModuleParameterDynamic_Seeded");
 		UTableUtil::loadlib(ParticleModuleMeshRotation_Lib, "UParticleModuleMeshRotation");
 		UTableUtil::loadlib(ParticleModuleRotation_Lib, "UParticleModuleRotation");
 		UTableUtil::loadlib(ParticleModuleRotationOverLifetime_Lib, "UParticleModuleRotationOverLifetime");
+		UTableUtil::loadlib(ParticleModuleMeshRotation_Seeded_Lib, "UParticleModuleMeshRotation_Seeded");
+		UTableUtil::loadlib(ParticleModuleRotation_Seeded_Lib, "UParticleModuleRotation_Seeded");
 		UTableUtil::loadlib(ParticleModuleMeshRotationRate_Lib, "UParticleModuleMeshRotationRate");
+		UTableUtil::loadlib(ParticleModuleMeshRotationRateMultiplyLife_Lib, "UParticleModuleMeshRotationRateMultiplyLife");
+		UTableUtil::loadlib(ParticleModuleMeshRotationRateOverLife_Lib, "UParticleModuleMeshRotationRateOverLife");
 		UTableUtil::loadlib(ParticleModuleRotationRate_Lib, "UParticleModuleRotationRate");
 		UTableUtil::loadlib(ParticleModuleRotationRateMultiplyLife_Lib, "UParticleModuleRotationRateMultiplyLife");
+		UTableUtil::loadlib(ParticleModuleMeshRotationRate_Seeded_Lib, "UParticleModuleMeshRotationRate_Seeded");
+		UTableUtil::loadlib(ParticleModuleRotationRate_Seeded_Lib, "UParticleModuleRotationRate_Seeded");
 		UTableUtil::loadlib(ParticleModuleSize_Lib, "UParticleModuleSize");
 		UTableUtil::loadlib(ParticleModuleSizeMultiplyLife_Lib, "UParticleModuleSizeMultiplyLife");
 		UTableUtil::loadlib(ParticleModuleSizeScale_Lib, "UParticleModuleSizeScale");
+		UTableUtil::loadlib(ParticleModuleSizeScaleBySpeed_Lib, "UParticleModuleSizeScaleBySpeed");
+		UTableUtil::loadlib(ParticleModuleSize_Seeded_Lib, "UParticleModuleSize_Seeded");
 		UTableUtil::loadlib(ParticleModuleSpawn_Lib, "UParticleModuleSpawn");
 		UTableUtil::loadlib(ParticleModuleSpawnPerUnit_Lib, "UParticleModuleSpawnPerUnit");
 		UTableUtil::loadlib(ParticleModuleSubUV_Lib, "UParticleModuleSubUV");
+		UTableUtil::loadlib(ParticleModuleSubUVMovie_Lib, "UParticleModuleSubUVMovie");
 		UTableUtil::loadlib(ParticleModuleTrailSource_Lib, "UParticleModuleTrailSource");
 		UTableUtil::loadlib(ParticleModuleTypeDataAnimTrail_Lib, "UParticleModuleTypeDataAnimTrail");
 		UTableUtil::loadlib(ParticleModuleTypeDataBeam2_Lib, "UParticleModuleTypeDataBeam2");
 		UTableUtil::loadlib(ParticleModuleTypeDataGpu_Lib, "UParticleModuleTypeDataGpu");
 		UTableUtil::loadlib(ParticleModuleTypeDataMesh_Lib, "UParticleModuleTypeDataMesh");
 		UTableUtil::loadlib(ParticleModuleTypeDataRibbon_Lib, "UParticleModuleTypeDataRibbon");
+		UTableUtil::loadlib(ParticleModuleVectorFieldGlobal_Lib, "UParticleModuleVectorFieldGlobal");
 		UTableUtil::loadlib(ParticleModuleVectorFieldLocal_Lib, "UParticleModuleVectorFieldLocal");
+		UTableUtil::loadlib(ParticleModuleVectorFieldRotation_Lib, "UParticleModuleVectorFieldRotation");
+		UTableUtil::loadlib(ParticleModuleVectorFieldRotationRate_Lib, "UParticleModuleVectorFieldRotationRate");
 		UTableUtil::loadlib(ParticleModuleVectorFieldScale_Lib, "UParticleModuleVectorFieldScale");
 		UTableUtil::loadlib(ParticleModuleVectorFieldScaleOverLife_Lib, "UParticleModuleVectorFieldScaleOverLife");
 		UTableUtil::loadlib(ParticleModuleVelocity_Lib, "UParticleModuleVelocity");
 		UTableUtil::loadlib(ParticleModuleVelocityCone_Lib, "UParticleModuleVelocityCone");
 		UTableUtil::loadlib(ParticleModuleVelocityInheritParent_Lib, "UParticleModuleVelocityInheritParent");
 		UTableUtil::loadlib(ParticleModuleVelocityOverLifetime_Lib, "UParticleModuleVelocityOverLifetime");
+		UTableUtil::loadlib(ParticleModuleVelocity_Seeded_Lib, "UParticleModuleVelocity_Seeded");
+		UTableUtil::loadlib(DemoPendingNetGame_Lib, "UDemoPendingNetGame");
+		UTableUtil::loadlib(CloudStorageBase_Lib, "UCloudStorageBase");
+		UTableUtil::loadlib(InGameAdManager_Lib, "UInGameAdManager");
+		UTableUtil::loadlib(MicroTransactionBase_Lib, "UMicroTransactionBase");
+		UTableUtil::loadlib(TwitterIntegrationBase_Lib, "UTwitterIntegrationBase");
 		UTableUtil::loadlib(LocalPlayer_Lib, "ULocalPlayer");
 		UTableUtil::loadlib(NetConnection_Lib, "UNetConnection");
 		UTableUtil::loadlib(ChildConnection_Lib, "UChildConnection");
@@ -1371,6 +1691,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(ReporterGraph_Lib, "UReporterGraph");
 		UTableUtil::loadlib(GameViewportClient_Lib, "UGameViewportClient");
 		UTableUtil::loadlib(DestructibleMesh_Lib, "UDestructibleMesh");
+		UTableUtil::loadlib(DialogueSoundWaveProxy_Lib, "UDialogueSoundWaveProxy");
 		UTableUtil::loadlib(SoundCue_Lib, "USoundCue");
 		UTableUtil::loadlib(SoundWave_Lib, "USoundWave");
 		UTableUtil::loadlib(SoundWaveProcedural_Lib, "USoundWaveProcedural");
@@ -1383,12 +1704,15 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(SoundNodeDelay_Lib, "USoundNodeDelay");
 		UTableUtil::loadlib(SoundNodeDialoguePlayer_Lib, "USoundNodeDialoguePlayer");
 		UTableUtil::loadlib(SoundNodeDistanceCrossFade_Lib, "USoundNodeDistanceCrossFade");
+		UTableUtil::loadlib(SoundNodeDoppler_Lib, "USoundNodeDoppler");
 		UTableUtil::loadlib(SoundNodeEnveloper_Lib, "USoundNodeEnveloper");
 		UTableUtil::loadlib(SoundNodeGroupControl_Lib, "USoundNodeGroupControl");
 		UTableUtil::loadlib(SoundNodeLooping_Lib, "USoundNodeLooping");
 		UTableUtil::loadlib(SoundNodeMature_Lib, "USoundNodeMature");
 		UTableUtil::loadlib(SoundNodeMixer_Lib, "USoundNodeMixer");
 		UTableUtil::loadlib(SoundNodeModulator_Lib, "USoundNodeModulator");
+		UTableUtil::loadlib(SoundNodeModulatorContinuous_Lib, "USoundNodeModulatorContinuous");
+		UTableUtil::loadlib(SoundNodeOscillator_Lib, "USoundNodeOscillator");
 		UTableUtil::loadlib(SoundNodeQualityLevel_Lib, "USoundNodeQualityLevel");
 		UTableUtil::loadlib(SoundNodeRandom_Lib, "USoundNodeRandom");
 		UTableUtil::loadlib(SoundNodeSoundClass_Lib, "USoundNodeSoundClass");

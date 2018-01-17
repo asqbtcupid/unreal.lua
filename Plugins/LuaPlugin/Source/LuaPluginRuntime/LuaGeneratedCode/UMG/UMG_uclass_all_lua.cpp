@@ -6,7 +6,6 @@
 #include "MovieSceneMarginSection.lua.h"
 #include "MovieSceneMarginTrack.lua.h"
 #include "MovieSceneWidgetMaterialTrack.lua.h"
-#include "NamedSlotInterface.lua.h"
 #include "PropertyBinding.lua.h"
 #include "RichTextBlockDecorator.lua.h"
 #include "SlateBlueprintLibrary.lua.h"
@@ -41,6 +40,7 @@
 #include "GridSlot.lua.h"
 #include "HorizontalBoxSlot.lua.h"
 #include "OverlaySlot.lua.h"
+#include "SafeZoneSlot.lua.h"
 #include "ScaleBoxSlot.lua.h"
 #include "ScrollBoxSlot.lua.h"
 #include "SizeBoxSlot.lua.h"
@@ -108,7 +108,6 @@ struct lua_static_load_UMG_uclass_all_struct
 		UTableUtil::loadlib(MovieSceneMarginSection_Lib, "UMovieSceneMarginSection");
 		UTableUtil::loadlib(MovieSceneMarginTrack_Lib, "UMovieSceneMarginTrack");
 		UTableUtil::loadlib(MovieSceneWidgetMaterialTrack_Lib, "UMovieSceneWidgetMaterialTrack");
-		UTableUtil::loadlib(NamedSlotInterface_Lib, "INamedSlotInterface");
 		UTableUtil::loadlib(PropertyBinding_Lib, "UPropertyBinding");
 		UTableUtil::loadlib(RichTextBlockDecorator_Lib, "URichTextBlockDecorator");
 		UTableUtil::loadlib(SlateBlueprintLibrary_Lib, "USlateBlueprintLibrary");
@@ -143,6 +142,7 @@ struct lua_static_load_UMG_uclass_all_struct
 		UTableUtil::loadlib(GridSlot_Lib, "UGridSlot");
 		UTableUtil::loadlib(HorizontalBoxSlot_Lib, "UHorizontalBoxSlot");
 		UTableUtil::loadlib(OverlaySlot_Lib, "UOverlaySlot");
+		UTableUtil::loadlib(SafeZoneSlot_Lib, "USafeZoneSlot");
 		UTableUtil::loadlib(ScaleBoxSlot_Lib, "UScaleBoxSlot");
 		UTableUtil::loadlib(ScrollBoxSlot_Lib, "UScrollBoxSlot");
 		UTableUtil::loadlib(SizeBoxSlot_Lib, "USizeBoxSlot");

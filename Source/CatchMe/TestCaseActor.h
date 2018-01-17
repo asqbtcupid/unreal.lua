@@ -32,6 +32,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	UClass* testload;
+	UFUNCTION()
+		void TestLoad1();
+	UFUNCTION()
+		void TestLoad2();
 
 	UFUNCTION()
 		void RunCppCallLuaTest();

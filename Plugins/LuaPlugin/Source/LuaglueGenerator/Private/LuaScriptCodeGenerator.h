@@ -89,8 +89,10 @@ protected:
 	FString GetPropertySetFunc(UProperty* Property) const;
 	FString GetPropertyCastType(UProperty* Property);
 	FString GetPropertySetCastType(UProperty* Property);
+	bool isNotCopyStruct(UScriptStruct* thestruct);
+	bool CanCopyProperty(UProperty* Property);
 	bool isStructSupported(UScriptStruct* thestruct) const;
-	FString Push(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue, FString name, bool bConsiderArrayDim = true);
+	FString Push(const FString& ClassNameCPP, UFunction* Function, UProperty* ReturnValue, FString name, UClass* Class, bool bConsiderArrayDim = true);
 	FString GetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class = nullptr, UClass* PropertySuper = nullptr);
 	FString SetterBody(UProperty* Property);
 	FString SetterCode(FString  ClassNameCPP, FString classname, FString FuncName, UProperty* Property, UClass* Class = nullptr, UClass* PropertySuper = nullptr);
@@ -99,7 +101,7 @@ protected:
 	void GenerateDelegateClass();
 	
 	FString GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false, bool bIsInterface = false);
-	FString GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc = false);
+	FString GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, UClass* Class, bool bIsStaticFunc = false);
 	FString InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty = false, FString arrayName = "");
 	void ExportStruct();
 	void ExportEnum();
