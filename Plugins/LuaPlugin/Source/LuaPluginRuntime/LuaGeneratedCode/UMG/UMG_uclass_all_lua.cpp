@@ -6,6 +6,7 @@
 #include "MovieSceneMarginSection.lua.h"
 #include "MovieSceneMarginTrack.lua.h"
 #include "MovieSceneWidgetMaterialTrack.lua.h"
+#include "NamedSlotInterface.lua.h"
 #include "PropertyBinding.lua.h"
 #include "RichTextBlockDecorator.lua.h"
 #include "SlateBlueprintLibrary.lua.h"
@@ -108,6 +109,7 @@ struct lua_static_load_UMG_uclass_all_struct
 		UTableUtil::loadlib(MovieSceneMarginSection_Lib, "UMovieSceneMarginSection");
 		UTableUtil::loadlib(MovieSceneMarginTrack_Lib, "UMovieSceneMarginTrack");
 		UTableUtil::loadlib(MovieSceneWidgetMaterialTrack_Lib, "UMovieSceneWidgetMaterialTrack");
+		UTableUtil::loadlib(NamedSlotInterface_Lib, "INamedSlotInterface");
 		UTableUtil::loadlib(PropertyBinding_Lib, "UPropertyBinding");
 		UTableUtil::loadlib(RichTextBlockDecorator_Lib, "URichTextBlockDecorator");
 		UTableUtil::loadlib(SlateBlueprintLibrary_Lib, "USlateBlueprintLibrary");

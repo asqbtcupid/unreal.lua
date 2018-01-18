@@ -5,14 +5,17 @@
 #include "AIDataProvider.lua.h"
 #include "AIHotSpotManager.lua.h"
 #include "AIPerceptionComponent.lua.h"
+#include "AIPerceptionListenerInterface.lua.h"
 #include "AIPerceptionStimuliSourceComponent.lua.h"
 #include "AIPerceptionSystem.lua.h"
 #include "AIResource_Logic.lua.h"
 #include "AIResource_Movement.lua.h"
+#include "AIResourceInterface.lua.h"
 #include "AISense.lua.h"
 #include "AISenseBlueprintListener.lua.h"
 #include "AISenseConfig.lua.h"
 #include "AISenseEvent.lua.h"
+#include "AISightTargetInterface.lua.h"
 #include "AISystem.lua.h"
 #include "AITask.lua.h"
 #include "BehaviorTree.lua.h"
@@ -24,6 +27,7 @@
 #include "BrainComponent.lua.h"
 #include "BTFunctionLibrary.lua.h"
 #include "BTNode.lua.h"
+#include "CrowdAgentInterface.lua.h"
 #include "CrowdManager.lua.h"
 #include "EnvQuery.lua.h"
 #include "EnvQueryContext.lua.h"
@@ -34,8 +38,10 @@
 #include "EnvQueryNode.lua.h"
 #include "EnvQueryOption.lua.h"
 #include "EnvQueryTypes.lua.h"
+#include "EQSQueryResultSourceInterface.lua.h"
 #include "EQSRenderingComponent.lua.h"
 #include "EQSTestingPawn.lua.h"
+#include "GenericTeamAgentInterface.lua.h"
 #include "NavFilter_AIControllerDefault.lua.h"
 #include "NavLocalGridManager.lua.h"
 #include "PathFollowingComponent.lua.h"
@@ -171,14 +177,17 @@ struct lua_static_load_AIModule_uclass_all_struct
 		UTableUtil::loadlib(AIDataProvider_Lib, "UAIDataProvider");
 		UTableUtil::loadlib(AIHotSpotManager_Lib, "UAIHotSpotManager");
 		UTableUtil::loadlib(AIPerceptionComponent_Lib, "UAIPerceptionComponent");
+		UTableUtil::loadlib(AIPerceptionListenerInterface_Lib, "IAIPerceptionListenerInterface");
 		UTableUtil::loadlib(AIPerceptionStimuliSourceComponent_Lib, "UAIPerceptionStimuliSourceComponent");
 		UTableUtil::loadlib(AIPerceptionSystem_Lib, "UAIPerceptionSystem");
 		UTableUtil::loadlib(AIResource_Logic_Lib, "UAIResource_Logic");
 		UTableUtil::loadlib(AIResource_Movement_Lib, "UAIResource_Movement");
+		UTableUtil::loadlib(AIResourceInterface_Lib, "IAIResourceInterface");
 		UTableUtil::loadlib(AISense_Lib, "UAISense");
 		UTableUtil::loadlib(AISenseBlueprintListener_Lib, "UAISenseBlueprintListener");
 		UTableUtil::loadlib(AISenseConfig_Lib, "UAISenseConfig");
 		UTableUtil::loadlib(AISenseEvent_Lib, "UAISenseEvent");
+		UTableUtil::loadlib(AISightTargetInterface_Lib, "IAISightTargetInterface");
 		UTableUtil::loadlib(AISystem_Lib, "UAISystem");
 		UTableUtil::loadlib(AITask_Lib, "UAITask");
 		UTableUtil::loadlib(BehaviorTree_Lib, "UBehaviorTree");
@@ -190,6 +199,7 @@ struct lua_static_load_AIModule_uclass_all_struct
 		UTableUtil::loadlib(BrainComponent_Lib, "UBrainComponent");
 		UTableUtil::loadlib(BTFunctionLibrary_Lib, "UBTFunctionLibrary");
 		UTableUtil::loadlib(BTNode_Lib, "UBTNode");
+		UTableUtil::loadlib(CrowdAgentInterface_Lib, "ICrowdAgentInterface");
 		UTableUtil::loadlib(CrowdManager_Lib, "UCrowdManager");
 		UTableUtil::loadlib(EnvQuery_Lib, "UEnvQuery");
 		UTableUtil::loadlib(EnvQueryContext_Lib, "UEnvQueryContext");
@@ -200,8 +210,10 @@ struct lua_static_load_AIModule_uclass_all_struct
 		UTableUtil::loadlib(EnvQueryNode_Lib, "UEnvQueryNode");
 		UTableUtil::loadlib(EnvQueryOption_Lib, "UEnvQueryOption");
 		UTableUtil::loadlib(EnvQueryTypes_Lib, "UEnvQueryTypes");
+		UTableUtil::loadlib(EQSQueryResultSourceInterface_Lib, "IEQSQueryResultSourceInterface");
 		UTableUtil::loadlib(EQSRenderingComponent_Lib, "UEQSRenderingComponent");
 		UTableUtil::loadlib(EQSTestingPawn_Lib, "AEQSTestingPawn");
+		UTableUtil::loadlib(GenericTeamAgentInterface_Lib, "IGenericTeamAgentInterface");
 		UTableUtil::loadlib(NavFilter_AIControllerDefault_Lib, "UNavFilter_AIControllerDefault");
 		UTableUtil::loadlib(NavLocalGridManager_Lib, "UNavLocalGridManager");
 		UTableUtil::loadlib(PathFollowingComponent_Lib, "UPathFollowingComponent");

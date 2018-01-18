@@ -303,7 +303,12 @@ public:
 		pushuobject(inL, value.Get());
 		return 1;
 	}
-
+	template<class T>
+	static int push(lua_State*inL, const TScriptInterface<T>& value)
+	{
+		pushuobject(inL, (void*)value.GetObject());
+		return 1;
+	}
 
 	inline static int push(lua_State *inL, uint8 value)
 	{

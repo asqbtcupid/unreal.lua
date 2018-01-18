@@ -1,4 +1,5 @@
 #include "LuaApi.h"
+#include "AssertionMacros.h"
 
 int ue_lua_gettop(lua_State*L)
 {
@@ -108,6 +109,11 @@ int   ue_lua_setfenv(lua_State *L, int idx)
 }
 int   ue_lua_pcall(lua_State *L, int nargs, int nresults, int errfunc)
 {
+#ifdef LuaDebug
+	if (!lua_isfunction(L, -nargs - 1))
+		checkf(0, L"not function, BUG!!!!");
+#endif // LuaDebug
+
 	return lua_pcall(L, nargs, nresults, errfunc);
 }
 const char *ue_lua_tolstring(lua_State *L, int idx, size_t *len)

@@ -96,6 +96,12 @@ FString FScriptCodeGeneratorBase::GetPropertyTypeCPP(UProperty* Property, uint32
 		FString keytype = GetPropertyTypeCPP(p->ElementProp, CPPF_ArgumentOrReturnValue);
 		PropertyType = FString::Printf(L"TSet<%s>", *keytype);
 	}
+	else if (UInterfaceProperty* p = Cast<UInterfaceProperty>(Property))
+	{
+		FString TypeStr;
+		FString TypePrefix = p->GetCPPType(&TypeStr, 0);
+		PropertyType = TypePrefix + TypeStr;
+	}
 	// Strip any forward declaration keywords
 	if (PropertyType.StartsWith(EnumDecl) || PropertyType.StartsWith(StructDecl) || PropertyType.StartsWith(ClassDecl))
 	{
@@ -170,10 +176,10 @@ bool FScriptCodeGeneratorBase::CanExportFunction(const FString& ClassNameCPP, UC
 bool FScriptCodeGeneratorBase::CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property)
 {
 	if (
-		Property->IsA(UDelegateProperty::StaticClass()) ||
+		Property->IsA(UDelegateProperty::StaticClass()) 
 //		Property->IsA(UMulticastDelegateProperty::StaticClass()) ||
 // 		Property->IsA(UWeakObjectProperty::StaticClass()) ||
-		Property->IsA(UInterfaceProperty::StaticClass())
+// 		Property->IsA(UInterfaceProperty::StaticClass())
 		)
 	{
 		return false;

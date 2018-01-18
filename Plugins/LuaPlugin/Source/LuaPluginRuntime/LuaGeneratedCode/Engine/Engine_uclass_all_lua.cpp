@@ -4,6 +4,7 @@
 #include "AISystemBase.lua.h"
 #include "AnimationAsset.lua.h"
 #include "AnimClassData.lua.h"
+#include "AnimClassInterface.lua.h"
 #include "AnimCompress.lua.h"
 #include "AnimInstance.lua.h"
 #include "AnimMetaData.lua.h"
@@ -17,6 +18,7 @@
 #include "AssetUserData.lua.h"
 #include "AutomationTestSettings.lua.h"
 #include "AvoidanceManager.lua.h"
+#include "BlendableInterface.lua.h"
 #include "BlendProfile.lua.h"
 #include "BlueprintAsyncActionBase.lua.h"
 #include "BlueprintCore.lua.h"
@@ -39,9 +41,11 @@
 #include "CheckBoxStyleAsset.lua.h"
 #include "Commandlet.lua.h"
 #include "Console.lua.h"
+#include "ControlRigInterface.lua.h"
 #include "CrowdManagerBase.lua.h"
 #include "CurveBase.lua.h"
 #include "CurveEdPresetCurve.lua.h"
+#include "CurveSourceInterface.lua.h"
 #include "CurveTable.lua.h"
 #include "DamageType.lua.h"
 #include "DataAsset.lua.h"
@@ -72,8 +76,12 @@
 #include "GameInstance.lua.h"
 #include "GameUserSettings.lua.h"
 #include "HapticFeedbackEffect_Base.lua.h"
+#include "ImportantToggleSettingInterface.lua.h"
 #include "InheritableComponentHandler.lua.h"
 #include "InputSettings.lua.h"
+#include "Interface_AssetUserData.lua.h"
+#include "Interface_CollisionDataProvider.lua.h"
+#include "Interface_PostProcessVolume.lua.h"
 #include "InterpCurveEdSetup.lua.h"
 #include "InterpData.lua.h"
 #include "InterpFilter.lua.h"
@@ -95,16 +103,28 @@
 #include "MaterialInterface.lua.h"
 #include "MaterialParameterCollection.lua.h"
 #include "MaterialParameterCollectionInstance.lua.h"
+#include "MatineeAnimInterface.lua.h"
+#include "MatineeInterface.lua.h"
 #include "MorphTarget.lua.h"
+#include "NavAgentInterface.lua.h"
 #include "NavArea.lua.h"
 #include "NavCollision.lua.h"
+#include "NavEdgeProviderInterface.lua.h"
 #include "NavigationDataChunk.lua.h"
 #include "NavigationPath.lua.h"
+#include "NavigationPathGenerator.lua.h"
 #include "NavigationQueryFilter.lua.h"
 #include "NavigationTypes.lua.h"
+#include "NavLinkCustomInterface.lua.h"
 #include "NavLinkDefinition.lua.h"
+#include "NavLinkHostInterface.lua.h"
+#include "NavNodeInterface.lua.h"
+#include "NavPathObserverInterface.lua.h"
+#include "NavRelevantInterface.lua.h"
 #include "NetDriver.lua.h"
+#include "NetworkPredictionInterface.lua.h"
 #include "NodeMappingContainer.lua.h"
+#include "NodeMappingProviderInterface.lua.h"
 #include "ObjectLibrary.lua.h"
 #include "ObjectReferencer.lua.h"
 #include "OcclusionPluginSourceSettingsBase.lua.h"
@@ -131,10 +151,12 @@
 #include "PlayerInput.lua.h"
 #include "Polys.lua.h"
 #include "PoseWatch.lua.h"
+#include "PreviewCollectionInterface.lua.h"
 #include "ReporterBase.lua.h"
 #include "ReverbEffect.lua.h"
 #include "ReverbPluginSourceSettingsBase.lua.h"
 #include "Rig.lua.h"
+#include "RVOAvoidanceInterface.lua.h"
 #include "SaveGame.lua.h"
 #include "Scene.lua.h"
 #include "ScriptViewportClient.lua.h"
@@ -146,6 +168,7 @@
 #include "SkeletalMeshSocket.lua.h"
 #include "Skeleton.lua.h"
 #include "SlateBrushAsset.lua.h"
+#include "SlateTextureAtlasInterface.lua.h"
 #include "SoundAttenuation.lua.h"
 #include "SoundBase.lua.h"
 #include "SoundClass.lua.h"
@@ -172,6 +195,7 @@
 #include "UserDefinedStruct.lua.h"
 #include "VectorField.lua.h"
 #include "VisualLoggerAutomationTests.lua.h"
+#include "VisualLoggerDebugSnapshotInterface.lua.h"
 #include "World.lua.h"
 #include "WorldComposition.lua.h"
 #include "AmbientSound.lua.h"
@@ -873,6 +897,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AISystemBase_Lib, "UAISystemBase");
 		UTableUtil::loadlib(AnimationAsset_Lib, "UAnimationAsset");
 		UTableUtil::loadlib(AnimClassData_Lib, "UAnimClassData");
+		UTableUtil::loadlib(AnimClassInterface_Lib, "IAnimClassInterface");
 		UTableUtil::loadlib(AnimCompress_Lib, "UAnimCompress");
 		UTableUtil::loadlib(AnimInstance_Lib, "UAnimInstance");
 		UTableUtil::loadlib(AnimMetaData_Lib, "UAnimMetaData");
@@ -886,6 +911,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(AssetUserData_Lib, "UAssetUserData");
 		UTableUtil::loadlib(AutomationTestSettings_Lib, "UAutomationTestSettings");
 		UTableUtil::loadlib(AvoidanceManager_Lib, "UAvoidanceManager");
+		UTableUtil::loadlib(BlendableInterface_Lib, "IBlendableInterface");
 		UTableUtil::loadlib(BlendProfile_Lib, "UBlendProfile");
 		UTableUtil::loadlib(BlueprintAsyncActionBase_Lib, "UBlueprintAsyncActionBase");
 		UTableUtil::loadlib(BlueprintCore_Lib, "UBlueprintCore");
@@ -908,9 +934,11 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(CheckBoxStyleAsset_Lib, "UCheckBoxStyleAsset");
 		UTableUtil::loadlib(Commandlet_Lib, "UCommandlet");
 		UTableUtil::loadlib(Console_Lib, "UConsole");
+		UTableUtil::loadlib(ControlRigInterface_Lib, "IControlRigInterface");
 		UTableUtil::loadlib(CrowdManagerBase_Lib, "UCrowdManagerBase");
 		UTableUtil::loadlib(CurveBase_Lib, "UCurveBase");
 		UTableUtil::loadlib(CurveEdPresetCurve_Lib, "UDEPRECATED_CurveEdPresetCurve");
+		UTableUtil::loadlib(CurveSourceInterface_Lib, "ICurveSourceInterface");
 		UTableUtil::loadlib(CurveTable_Lib, "UCurveTable");
 		UTableUtil::loadlib(DamageType_Lib, "UDamageType");
 		UTableUtil::loadlib(DataAsset_Lib, "UDataAsset");
@@ -941,8 +969,12 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(GameInstance_Lib, "UGameInstance");
 		UTableUtil::loadlib(GameUserSettings_Lib, "UGameUserSettings");
 		UTableUtil::loadlib(HapticFeedbackEffect_Base_Lib, "UHapticFeedbackEffect_Base");
+		UTableUtil::loadlib(ImportantToggleSettingInterface_Lib, "IImportantToggleSettingInterface");
 		UTableUtil::loadlib(InheritableComponentHandler_Lib, "UInheritableComponentHandler");
 		UTableUtil::loadlib(InputSettings_Lib, "UInputSettings");
+		UTableUtil::loadlib(Interface_AssetUserData_Lib, "IInterface_AssetUserData");
+		UTableUtil::loadlib(Interface_CollisionDataProvider_Lib, "IInterface_CollisionDataProvider");
+		UTableUtil::loadlib(Interface_PostProcessVolume_Lib, "IInterface_PostProcessVolume");
 		UTableUtil::loadlib(InterpCurveEdSetup_Lib, "UInterpCurveEdSetup");
 		UTableUtil::loadlib(InterpData_Lib, "UInterpData");
 		UTableUtil::loadlib(InterpFilter_Lib, "UInterpFilter");
@@ -964,16 +996,28 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialInterface_Lib, "UMaterialInterface");
 		UTableUtil::loadlib(MaterialParameterCollection_Lib, "UMaterialParameterCollection");
 		UTableUtil::loadlib(MaterialParameterCollectionInstance_Lib, "UMaterialParameterCollectionInstance");
+		UTableUtil::loadlib(MatineeAnimInterface_Lib, "IMatineeAnimInterface");
+		UTableUtil::loadlib(MatineeInterface_Lib, "IMatineeInterface");
 		UTableUtil::loadlib(MorphTarget_Lib, "UMorphTarget");
+		UTableUtil::loadlib(NavAgentInterface_Lib, "INavAgentInterface");
 		UTableUtil::loadlib(NavArea_Lib, "UNavArea");
 		UTableUtil::loadlib(NavCollision_Lib, "UNavCollision");
+		UTableUtil::loadlib(NavEdgeProviderInterface_Lib, "INavEdgeProviderInterface");
 		UTableUtil::loadlib(NavigationDataChunk_Lib, "UNavigationDataChunk");
 		UTableUtil::loadlib(NavigationPath_Lib, "UNavigationPath");
+		UTableUtil::loadlib(NavigationPathGenerator_Lib, "INavigationPathGenerator");
 		UTableUtil::loadlib(NavigationQueryFilter_Lib, "UNavigationQueryFilter");
 		UTableUtil::loadlib(NavigationTypes_Lib, "UNavigationTypes");
+		UTableUtil::loadlib(NavLinkCustomInterface_Lib, "INavLinkCustomInterface");
 		UTableUtil::loadlib(NavLinkDefinition_Lib, "UNavLinkDefinition");
+		UTableUtil::loadlib(NavLinkHostInterface_Lib, "INavLinkHostInterface");
+		UTableUtil::loadlib(NavNodeInterface_Lib, "INavNodeInterface");
+		UTableUtil::loadlib(NavPathObserverInterface_Lib, "INavPathObserverInterface");
+		UTableUtil::loadlib(NavRelevantInterface_Lib, "INavRelevantInterface");
 		UTableUtil::loadlib(NetDriver_Lib, "UNetDriver");
+		UTableUtil::loadlib(NetworkPredictionInterface_Lib, "INetworkPredictionInterface");
 		UTableUtil::loadlib(NodeMappingContainer_Lib, "UNodeMappingContainer");
+		UTableUtil::loadlib(NodeMappingProviderInterface_Lib, "INodeMappingProviderInterface");
 		UTableUtil::loadlib(ObjectLibrary_Lib, "UObjectLibrary");
 		UTableUtil::loadlib(ObjectReferencer_Lib, "UObjectReferencer");
 		UTableUtil::loadlib(OcclusionPluginSourceSettingsBase_Lib, "UOcclusionPluginSourceSettingsBase");
@@ -1000,10 +1044,12 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(PlayerInput_Lib, "UPlayerInput");
 		UTableUtil::loadlib(Polys_Lib, "UPolys");
 		UTableUtil::loadlib(PoseWatch_Lib, "UPoseWatch");
+		UTableUtil::loadlib(PreviewCollectionInterface_Lib, "IPreviewCollectionInterface");
 		UTableUtil::loadlib(ReporterBase_Lib, "UReporterBase");
 		UTableUtil::loadlib(ReverbEffect_Lib, "UReverbEffect");
 		UTableUtil::loadlib(ReverbPluginSourceSettingsBase_Lib, "UReverbPluginSourceSettingsBase");
 		UTableUtil::loadlib(Rig_Lib, "URig");
+		UTableUtil::loadlib(RVOAvoidanceInterface_Lib, "IRVOAvoidanceInterface");
 		UTableUtil::loadlib(SaveGame_Lib, "USaveGame");
 		UTableUtil::loadlib(Scene_Lib, "UScene");
 		UTableUtil::loadlib(ScriptViewportClient_Lib, "UScriptViewportClient");
@@ -1015,6 +1061,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(SkeletalMeshSocket_Lib, "USkeletalMeshSocket");
 		UTableUtil::loadlib(Skeleton_Lib, "USkeleton");
 		UTableUtil::loadlib(SlateBrushAsset_Lib, "USlateBrushAsset");
+		UTableUtil::loadlib(SlateTextureAtlasInterface_Lib, "ISlateTextureAtlasInterface");
 		UTableUtil::loadlib(SoundAttenuation_Lib, "USoundAttenuation");
 		UTableUtil::loadlib(SoundBase_Lib, "USoundBase");
 		UTableUtil::loadlib(SoundClass_Lib, "USoundClass");
@@ -1041,6 +1088,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(UserDefinedStruct_Lib, "UUserDefinedStruct");
 		UTableUtil::loadlib(VectorField_Lib, "UVectorField");
 		UTableUtil::loadlib(VisualLoggerAutomationTests_Lib, "UVisualLoggerAutomationTests");
+		UTableUtil::loadlib(VisualLoggerDebugSnapshotInterface_Lib, "IVisualLoggerDebugSnapshotInterface");
 		UTableUtil::loadlib(World_Lib, "UWorld");
 		UTableUtil::loadlib(WorldComposition_Lib, "UWorldComposition");
 		UTableUtil::loadlib(AmbientSound_Lib, "AAmbientSound");

@@ -233,7 +233,11 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
 			Initializer = FString::Printf(TEXT("(%s)(lua_tointeger"), *typeName);
 		}
-
+		else if (Param->IsA(UInterfaceProperty::StaticClass()))
+		{
+			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+			Initializer = FString::Printf(TEXT("(UObject*)(touobject"), ParamIndex);
+		}
 		else
 		{
 			Initializer = TEXT("(lua_tointeger");
@@ -413,10 +417,7 @@ bool FLuaScriptCodeGenerator::HasExportedClass(UClass* Class)
 
 bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 {
-	// 	if  ( !(Class->ClassFlags & (CLASS_RequiredAPI | CLASS_MinimalAPI)) )
-	// 		return false;
-
-	if (Class->ClassFlags &(CLASS_Interface | CLASS_Intrinsic))
+	if (Class->ClassFlags &(CLASS_Intrinsic))
 		return false;
 
 	if (NotSupportedClass.Contains(GetClassNameCPP(Class)))
@@ -431,6 +432,9 @@ bool FLuaScriptCodeGenerator::CanExportClass(UClass* Class)
 
 bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
 {
+	if (Class->ClassFlags &(CLASS_Interface))
+		return false;
+
 	if (NotSupportedClassFunction.Contains("*." + Function->GetName()) || NotSupportedClassFunction.Contains(ClassNameCPP + "." + Function->GetName()))
 		return false;
 	if (Function->GetName().Contains("DEPRECATED") || Function->HasMetaData("DeprecatedFunction"))
@@ -443,6 +447,8 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	if (Function->HasAnyFunctionFlags(FUNC_EditorOnly))
 		return false;
 #endif
+// 	if (Function->GetName() == "GetAssetRegistry")
+// 		return true;
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
 	if (bExport)
 	{
@@ -1024,16 +1030,6 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property)
 	}
 	else if (auto p = Cast<UClassProperty>(Property))
 	{
-		// 		if (Property->HasAnyPropertyFlags(CPF_UObjectWrapper) && !CanExportClass(p->MetaClass))
-		// 		{
-		// 			bSupported = false;
-		// 		}
-		// 		else if (!CanExportClass(p->PropertyClass))
-		// 		{
-		// 			bSupported = false;
-		// 		}
-		// 		else
-		// 		{
 		FString HeaderPath = FModulePath::Get().GetClassHeaderPath(p->MetaClass);
 		if (!HeaderPath.IsEmpty())
 			ExtraIncludeHeader.AddUnique(HeaderPath);
@@ -1041,7 +1037,6 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property)
 		HeaderPath = FModulePath::Get().GetClassHeaderPath(p->PropertyClass);
 		if (!HeaderPath.IsEmpty())
 			ExtraIncludeHeader.AddUnique(HeaderPath);
-		// 		}
 	}
 	else if (auto p = Cast<UWeakObjectProperty>(Property))
 	{
@@ -1052,6 +1047,17 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property)
 		else
 		{
 			FString HeaderPath = FModulePath::Get().GetClassHeaderPath(p->PropertyClass);
+			if (!HeaderPath.IsEmpty())
+				ExtraIncludeHeader.AddUnique(HeaderPath);
+		}
+	}
+	else if (auto p = Cast<UInterfaceProperty>(Property))
+	{
+		return true;
+		if (CanExportClass(p->InterfaceClass))
+		{
+			bSupported = true;
+			FString HeaderPath = FModulePath::Get().GetClassHeaderPath(p->InterfaceClass);
 			if (!HeaderPath.IsEmpty())
 				ExtraIncludeHeader.AddUnique(HeaderPath);
 		}
