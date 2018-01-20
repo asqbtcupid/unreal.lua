@@ -9,4 +9,24 @@ function TestBpClass_Child:BeginPlay( )
 	assert(self:Interface_BpImplement(1) == true)
 end
 
+function TestBpClass_Child:TestInterface(I)
+	assert(I == self.TestAssetRegistry)
+	self.TestAssetRegistry = nil
+	assert(self.TestAssetRegistry == nil)
+	self.TestAssetRegistry = I
+	assert(I == self.TestAssetRegistry)
+
+	assert(self.test_interface_public == nil)
+	assert(self.test_interface_private == nil)
+
+	self.test_interface_public = self
+	self.test_interface_private = self
+
+	assert(self.test_interface_public == self)
+	assert(self.test_interface_private == self)
+
+	self:Test_Param_Interface_public(self)
+	self:Test_Param_Interface_private(self)
+end
+
 return TestBpClass_Child

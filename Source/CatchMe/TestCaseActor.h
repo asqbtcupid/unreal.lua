@@ -151,7 +151,18 @@ public:
 		void Func_Test_Enum(TestEnum enum_Param);
 
 	virtual int32 Interface_NativeEvent_Implementation(int32 v) override;
+
+	UPROPERTY()
+		TScriptInterface<IForTestInterface> test_interface_public;
+
+	UFUNCTION()
+		void Test_Param_Interface_public(TScriptInterface<IForTestInterface> I);
 private:
+	UFUNCTION()
+		void Test_Param_Interface_private(TScriptInterface<IForTestInterface> I);
+
+	UPROPERTY()
+		TScriptInterface<IForTestInterface> test_interface_private;
 	UPROPERTY()
 		TMap<FString, TestEnum> test_map_enum_private;
 	UFUNCTION()

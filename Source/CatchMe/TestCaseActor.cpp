@@ -266,6 +266,16 @@ int32 ATestCaseActor::Interface_NativeEvent_Implementation(int32 v)
 	return 1999;
 }
 
+void ATestCaseActor::Test_Param_Interface_public(TScriptInterface<IForTestInterface> I)
+{
+	checkf(I.GetObject() == this, L"");
+}
+
+void ATestCaseActor::Test_Param_Interface_private(TScriptInterface<IForTestInterface> I)
+{
+	checkf(I.GetObject() == this, L"");
+}
+
 void ATestCaseActor::FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map)
 {
 	Map.Reset();

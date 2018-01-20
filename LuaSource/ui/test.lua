@@ -20,7 +20,6 @@ end
 
 function testUmg:ClickClear( )
 	A_("you click button")
-	local t = UAssetRegistryHelpers.GetAssetRegistry()
 end
 
 function testUmg:Txt1(content)

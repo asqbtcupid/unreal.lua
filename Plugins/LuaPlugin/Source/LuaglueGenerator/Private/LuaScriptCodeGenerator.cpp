@@ -178,6 +178,10 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 				Initializer = FString::Printf(TEXT("(%s*)(touobject(L,"), *typeName);
 			return FString::Printf(TEXT("%s %d))"), *Initializer, ParamIndex);
 		}
+		else if (Param->IsA(UInterfaceProperty::StaticClass()))
+		{		
+			Initializer = "(UObject*)(touobject";
+		}
 		else if (Param->IsA(UObjectPropertyBase::StaticClass()))
 		{
 			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
@@ -1225,6 +1229,10 @@ FString FLuaScriptCodeGenerator::GetPropertyType(UProperty* Property) const
 	{
 		return FString("UClassProperty");
 	}
+	else if (Property->IsA(UInterfaceProperty::StaticClass()))
+	{
+		return FString("UInterfaceProperty");
+	}
 	else if (Property->IsA(UObjectPropertyBase::StaticClass()))
 	{
 		return FString("UObjectPropertyBase");
@@ -1517,6 +1525,10 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 	{
 		Initializer += FString::Printf(TEXT("(%s%s*)(touobject(L,"), p->PropertyClass->GetPrefixCPP(), *p->PropertyClass->GetName());
 		return FString::Printf(TEXT("%s %d))"), *Initializer, PropertyIndex);
+	}
+	else if (Property->IsA(UInterfaceProperty::StaticClass()))
+	{
+		Initializer += "(UObject*)(touobject";
 	}
 	else if (Property->IsA(UObjectPropertyBase::StaticClass()))
 	{

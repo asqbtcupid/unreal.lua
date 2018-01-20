@@ -953,6 +953,10 @@ void UTableUtil::pushproperty(lua_State* inL, UProperty* property, const void* p
 	{
 		pushproperty_type(inL, p, ptr);
 	}
+	else if (UInterfaceProperty* p = Cast<UInterfaceProperty>(property))
+	{
+		pushproperty_type(inL, p, ptr);
+	}
 	else
 	{
 		ensureAlwaysMsgf(0, L"Some type didn't process");
@@ -1288,6 +1292,12 @@ void UTableUtil::pushproperty_type(lua_State*inL, UMulticastDelegateProperty* p,
 	pushuobject(inL, (void*)delegateproxy, true);
 }
 
+void UTableUtil::pushproperty_type(lua_State*inL, UInterfaceProperty* p, const void*ptr)
+{
+	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr_InContainer(ptr);
+	pushuobject(inL, (void*)result->GetObject());
+}
+
 
 void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr)
 {
@@ -1354,6 +1364,10 @@ void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
 	else if (UObjectPropertyBase* p = Cast<UObjectPropertyBase>(property))
+	{
+		pushproperty_type_valueptr(inL, p, ptr);
+	}
+	else if (UInterfaceProperty* p = Cast<UInterfaceProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
@@ -1453,8 +1467,8 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UStructProperty* p, c
 void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UArrayProperty* property, const void* ptr)
 {
 	push(inL, ULuaArrayHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
-
 }
+
 void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMapProperty* property, const void* ptr)
 {
 	push(inL, ULuaMapHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
@@ -1463,6 +1477,12 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMapProperty* propert
 void UTableUtil::pushproperty_type_valueptr(lua_State*inL, USetProperty* property, const void*ptr)
 {
 	push(inL, ULuaSetHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
+}
+
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInterfaceProperty* p, const void*ptr)
+{
+	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr(ptr);
+	pushuobject(inL, (void*)result->GetObject());
 }
 
 static int32 BpStructGetProp(lua_State* inL)
@@ -1611,11 +1631,11 @@ void UTableUtil::pushproperty_type(lua_State*inL, UArrayProperty* property, cons
 {
 	pushcontainer(inL, (void*)ptr, property);
 }
+
 void UTableUtil::pushproperty_type(lua_State*inL, UMapProperty* property, const void* ptr)
 {
 	pushcontainer(inL, (void*)ptr, property);
 }
-
 
 void UTableUtil::pushproperty_type(lua_State*inL, USetProperty* property, const void*ptr)
 {
@@ -1686,6 +1706,10 @@ void UTableUtil::popproperty(lua_State* inL, int index, UProperty* property, voi
 		popproperty_type(inL, index, p, ptr);
 	}
 	else if (UObjectPropertyBase* p = Cast<UObjectPropertyBase>(property))
+	{
+		popproperty_type(inL, index, p, ptr);
+	}
+	else if (UInterfaceProperty* p = Cast<UInterfaceProperty>(property))
 	{
 		popproperty_type(inL, index, p, ptr);
 	}
@@ -1859,6 +1883,13 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, USetProperty* p, voi
 void UTableUtil::popproperty_type(lua_State*inL, int index, UMulticastDelegateProperty* p, void*ptr)
 {
 
+}
+
+void UTableUtil::popproperty_type(lua_State*inL, int index, UInterfaceProperty* p, void*ptr)
+{
+	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr_InContainer(ptr);
+	UObject* value = (UObject*)touobject(inL, index);
+	result->SetObject(value);
 }
 
 void pushuobject(lua_State *inL, void* p, bool bgcrecord)
