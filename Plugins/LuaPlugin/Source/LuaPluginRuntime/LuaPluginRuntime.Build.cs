@@ -22,7 +22,7 @@ public class LuaPluginRuntime : ModuleRules
            
         Definitions.Add("LuaDebug");
         Definitions.Add("STRONG_CHECK_GC_REF");
-
+     
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });

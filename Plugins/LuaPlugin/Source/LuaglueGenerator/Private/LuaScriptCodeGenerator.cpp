@@ -1104,7 +1104,10 @@ bool FLuaScriptCodeGenerator::IsPropertyTypeSupported(UProperty* Property)
 	}
 	else if (auto p = Cast<UInterfaceProperty>(Property))
 	{
-		return true;
+#if ENGINE_MINOR_VERSION < 17
+// there is bug in 4.16 engine scriptinterface.blame ue4 not me.
+		return false;
+#endif
 		if (CanExportClass(p->InterfaceClass))
 		{
 			bSupported = true;

@@ -20,7 +20,9 @@ function CppObjectBase:Destroy()
 	LinkAgainstGC[self] = nil
 	local _cppinstance_ = rawget(self, "_cppinstance_")
 	if _cppinstance_ then 
-		_cppinstance_:Destroy()
+		if _cppinstance_.Destroy then
+			_cppinstance_:Destroy()
+		end
 		rawset(self, "_cppinstance_", nil)
 	end
 	LevelActors[self] = nil
