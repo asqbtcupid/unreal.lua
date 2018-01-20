@@ -51,8 +51,9 @@ bool IsApiProp(UProperty* Prop)
 
 FString GetUClassGlue(UClass* Class)
 {
+	FString CPPName = FString::Printf(TEXT("%s%s"), Class->GetPrefixCPP(), *Class->GetName());
 	if (IsApiClass(Class))
-		return FLuaScriptCodeGenerator::GetClassNameCPP(Class) + "::StaticClass()";
+		return CPPName + "::StaticClass()";
 	else
 		return "FindObject<UClass>(ANY_PACKAGE, TEXT(\"" + Class->GetName() + "\"))";
 }
@@ -434,7 +435,24 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 {
 	if (Class->ClassFlags &(CLASS_Interface))
 		return false;
+	
+	bool bExport = CanExportFunctionForInterface(ClassNameCPP, Class, Function);
 
+	if (bExport)
+	{
+		UClass* ClassOwner = Function->GetOwnerClass();
+		if (ClassOwner != Class)
+		{
+			if (!CanExportFunction(GetClassNameCPP(ClassOwner), ClassOwner, Function))
+				return false;
+		}
+
+	}
+	return bExport;
+}
+
+bool FLuaScriptCodeGenerator::CanExportFunctionForInterface(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
+{
 	if (NotSupportedClassFunction.Contains("*." + Function->GetName()) || NotSupportedClassFunction.Contains(ClassNameCPP + "." + Function->GetName()))
 		return false;
 	if (Function->GetName().Contains("DEPRECATED") || Function->HasMetaData("DeprecatedFunction"))
@@ -447,8 +465,7 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 	if (Function->HasAnyFunctionFlags(FUNC_EditorOnly))
 		return false;
 #endif
-// 	if (Function->GetName() == "GetAssetRegistry")
-// 		return true;
+
 	bool bExport = FScriptCodeGeneratorBase::CanExportFunction(ClassNameCPP, Class, Function);
 	if (bExport)
 	{
@@ -460,27 +477,16 @@ bool FLuaScriptCodeGenerator::CanExportFunction(const FString& ClassNameCPP, UCl
 		}
 	}
 
-	if (bExport)
-	{
-		UClass* ClassOwner = Function->GetOwnerClass();
-		if (ClassOwner != Class)
-		{
-			if (!CanExportFunction(GetClassNameCPP(ClassOwner), ClassOwner, Function))
-				return false;
-		}
-
-	}
-
 	return bExport;
 }
 
-FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int num, FString paramlist, FString ClassNameCPP, bool isfinal = false, bool bIsInterface = false)
+FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int num, FString paramlist, FString ClassNameCPP, bool isfinal = false, UClass* InterfaceClass = nullptr)
 {
-	if (bIsInterface)
-	{
-		paramlist = "p," + paramlist;
-		num = num + 1;
-	}
+// 	if (InterfaceClass)
+// 	{
+// 		paramlist = "p," + paramlist;
+// 		num = num + 1;
+// 	}
 	if (!paramlist.IsEmpty())
 		paramlist.RemoveAt(paramlist.Len() - 1);
 	if (!bIsStaticFunc)
@@ -488,32 +494,43 @@ FString CallCode(UFunction* Function, bool bIsStaticFunc, bool hasresult, int nu
 	FString code;
 	if (!isfinal)
 		code += FString::Printf(TEXT("\tif (num_params == %d )\r\n\t{\r\n"), num);
-	if (bIsStaticFunc)
-		if (hasresult)
-			code += FString::Printf(TEXT("\t\tresult = %s::%s(%s);\r\n"), *ClassNameCPP, *Function->GetName(), *paramlist);
-		else
-			code += FString::Printf(TEXT("\t\t%s::%s(%s);\r\n"), *ClassNameCPP, *Function->GetName(), *paramlist);
+
+	FString CallFuncName;
+	if (InterfaceClass)
+	{
+		if (Function->HasAnyFunctionFlags(FUNC_Event))
+		{
+			if (Function->HasAnyFunctionFlags(FUNC_Native))
+				CallFuncName = Function->GetName() + "_Implementation";
+			else
+				CallFuncName = Function->GetName();
+		}
+		else if (Function->HasAnyFunctionFlags(FUNC_BlueprintCallable))
+			CallFuncName = Function->GetName();
+	}
 	else
-		if (bIsInterface)
-		{
-			if (hasresult)
-				code += FString::Printf(TEXT("\t\tresult = Obj->Execute_%s(%s);\r\n"), *Function->GetName(), *paramlist);
-			else
-				code += FString::Printf(TEXT("\t\tObj->Execute_%s(%s);\r\n"), *Function->GetName(), *paramlist);
-		}
+		CallFuncName = Function->GetName();
+
+	if (bIsStaticFunc)
+	{
+		if (hasresult)
+			code += FString::Printf(TEXT("\t\tresult = %s::%s(%s);\r\n"), *ClassNameCPP, *CallFuncName, *paramlist);
 		else
-		{
-			if (hasresult)
-				code += FString::Printf(TEXT("\t\tresult = Obj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
-			else
-				code += FString::Printf(TEXT("\t\tObj->%s(%s);\r\n"), *Function->GetName(), *paramlist);
-		}
+			code += FString::Printf(TEXT("\t\t%s::%s(%s);\r\n"), *ClassNameCPP, *CallFuncName, *paramlist);
+	}
+	else
+	{
+		if (hasresult)
+			code += FString::Printf(TEXT("\t\tresult = Obj->%s(%s);\r\n"), *CallFuncName, *paramlist);
+		else
+			code += FString::Printf(TEXT("\t\tObj->%s(%s);\r\n"), *CallFuncName, *paramlist);
+	}
 	if (!isfinal)
 		code += "\t\tgoto end;\r\n\t}\r\n";
 	return code;
 }
 
-FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, UClass* Class, bool bIsStaticFunc)
+FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Function, const FString &ClassNameCPP, UClass* Class, bool bIsStaticFunc, UClass* InterfaceClass)
 {
 	FString Params;
 	FString paramList;
@@ -562,8 +579,12 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Fun
 		}
 
 	}
+	FString GetClassGlue = GetUClassGlue(Class);
+	if(InterfaceClass)
+		GetClassGlue = GetUClassGlue(InterfaceClass);
+		
 	Params += FString::Printf(TEXT("\tstatic FName FuncName(\"%s\");\r\n"), *FuncName);
-	Params += FString::Printf(TEXT("\tstatic UFunction* Func = %s->FindFunctionByName(FuncName);\r\n"), *GetUClassGlue(Class));
+	Params += FString::Printf(TEXT("\tstatic UFunction* Func = %s->FindFunctionByName(FuncName);\r\n"), *GetClassGlue);
 	
 	if (!bIsStaticFunc)
 		Params += FString::Printf(TEXT("\tObj->ProcessEvent(Func, %s);\r\n"), *args);
@@ -573,7 +594,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch_private(UFunction* Fun
 			Params += FString::Printf(TEXT("\tGetMutableDefault<%s>()->ProcessEvent(Func, %s);\r\n"), *ClassNameCPP, *args);
 		else
 		{
-			Params += FString::Printf(TEXT("\tstatic UClass* Class = %s;\r\n"), *GetUClassGlue(Class));
+			Params += FString::Printf(TEXT("\tstatic UClass* Class = %s;\r\n"), *GetClassGlue);
 			Params += FString::Printf(TEXT("\tClass->GetDefaultObject()->ProcessEvent(Func, %s);\r\n"), *args);
 		}
 	}
@@ -594,7 +615,7 @@ bool NeedTempIns(UProperty *Param)
 	return false;
 }
 
-FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc, bool bIsInterface)
+FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, const FString &ClassNameCPP, bool bIsStaticFunc, UClass* InterfaceClass)
 {
 	FString Params;
 	FString paramList;
@@ -645,11 +666,11 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		if (bIsStaticFunc)
 			ParamIndex = -1;
 
-		if (bIsInterface)
-		{
-			count_all_param++;
-			ParamIndex = 1;
-		}
+// 		if (bIsInterface)
+// 		{
+// 			count_all_param++;
+// 			ParamIndex = 1;
+// 		}
 		if (index_first_default != 0)
 			count_default_param = count_all_param - index_first_default + 1;
 
@@ -698,7 +719,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		int count_init_param = 0;
 		if (count_default_param > 0 && count_default_param + count_init_param >= count_all_param)
 		{
-			Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
+			Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, InterfaceClass);
 		}
 		for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt, ++ParamIndex)
 		{
@@ -719,7 +740,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 						Params += FString::Printf(TEXT("\t%s* %s = &%s;\r\n"), *nameCpp, *PtrName, *Param->GetName());
 						Params += InitializeParam(Param, ParamIndex, false, "&" + PtrName);
 						if (count_default_param + count_init_param >= count_all_param)
-							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, InterfaceClass);
 					}
 					else
 					{
@@ -751,7 +772,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 						Params += FString::Printf(TEXT("\t%s = %s;\r\n"), *Param->GetName(), *initParam);
 						// SpawnSoundAttached ambiouscall blame UE4 not me
 						if (count_default_param + count_init_param >= count_all_param && !(FuncName == "SpawnSoundAttached" && count_init_param == 4))
-							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, bIsInterface);
+							Params += CallCode(Function, bIsStaticFunc, !returnType.IsEmpty(), count_init_param, paramList, ClassNameCPP, count_init_param == count_all_param, InterfaceClass);
 					}
 					else
 					{
@@ -780,11 +801,11 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 		else
 			Params += "\t";
 		FString callobj = "Obj->";
-		if (bIsInterface)
-		{
-			callobj = callobj + "Execute_";
-			paramList = "p," + paramList;
-		}
+// 		if (bIsInterface)
+// 		{
+// 			callobj = callobj + "Execute_";
+// 			paramList = "p," + paramList;
+// 		}
 		if (bIsStaticFunc)
 			callobj = FString::Printf(TEXT("%s::"), *ClassNameCPP);
 		if (paramList.IsEmpty())
@@ -804,7 +825,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 	return Params;
 }
 
-FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper, UClass* Class)
+FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classname, UFunction* Function, UClass* FuncSuper, UClass* Class, UClass* InterfaceClass)
 {
 	UProperty* ReturnValue = NULL;
 	FString FunctionBody = GenerateWrapperFunctionDeclaration(ClassNameCPP, classname, Function);
@@ -813,17 +834,13 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 	{
 		const FName ReturnCountKey = "LuaCustomReturn";
 		bool HasReturnCountMeta = Function->HasMetaData(ReturnCountKey);
-		if (IsApiClass(Class) && (Function->FunctionFlags & FUNC_Public) && (!(Class->ClassFlags & CLASS_MinimalAPI) || (Function->FunctionFlags & FUNC_RequiredAPI)))
+		if (!InterfaceClass && IsApiClass(Class) && (Function->FunctionFlags & FUNC_Public) && (!(Class->ClassFlags & CLASS_MinimalAPI) || (Function->FunctionFlags & FUNC_RequiredAPI)))
 		{
 			bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
 			if (!bIsStaticFunc)
 				FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
-			bool bIsInterface = !!(Class->ClassFlags & CLASS_Interface);
-			if (bIsInterface)
-			{
-				FunctionBody += TEXT("\tUObject *p = (UObject*)touobject(L, 2);\r\n");
-			}
-			FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc, bIsInterface);
+
+			FunctionBody += GenerateFunctionDispatch(Function, ClassNameCPP, bIsStaticFunc, InterfaceClass);
 			int returnCount = 0;
 
 			if (!HasReturnCountMeta)
@@ -879,7 +896,7 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 			bool bIsStaticFunc = !!(Function->FunctionFlags & FUNC_Static);
 			if (!bIsStaticFunc)
 				FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
-			FunctionBody += GenerateFunctionDispatch_private(Function, ClassNameCPP, Class, bIsStaticFunc);
+			FunctionBody += GenerateFunctionDispatch_private(Function, ClassNameCPP, Class, bIsStaticFunc, InterfaceClass);
 
 			int returnCount = 0;
 			TArray<UProperty*> PushBackParms;
@@ -948,6 +965,36 @@ FString FLuaScriptCodeGenerator::FuncCode(FString  ClassNameCPP, FString classna
 	}
 	FunctionBody += TEXT("}\r\n\r\n");
 	return FunctionBody;
+}
+
+FString FLuaScriptCodeGenerator::ExportInterfaceFunc(UClass* Class)
+{
+	FString GeneratedGlueBody;
+	for (FImplementedInterface& Interface : Class->Interfaces)
+	{
+		UClass* InterfaceClass = Interface.Class;
+		if (CanExportClass(InterfaceClass))
+		{
+			FString HeaderPath = FModulePath::Get().GetClassHeaderPath(InterfaceClass);
+			if (!HeaderPath.IsEmpty())
+				ExtraIncludeHeader.AddUnique(HeaderPath);
+			FString ClassNameCPP = GetClassNameCPP(Class);
+
+			for (TFieldIterator<UFunction> FuncIt(InterfaceClass /*, EFieldIteratorFlags::ExcludeSuper*/); FuncIt; ++FuncIt)
+			{
+				UFunction* Function = *FuncIt;
+				if (CanExportFunctionForInterface(ClassNameCPP, Class, Function))
+				{
+					auto& Exports = ClassExportedFunctions.FindOrAdd(Class);
+					Exports.Add(Function->GetFName());
+
+					GeneratedGlueBody += FuncCode(ClassNameCPP, Class->GetName(), Function, nullptr, Class, InterfaceClass);
+				}
+			}
+		}
+	}
+
+	return GeneratedGlueBody;
 }
 
 FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function)
@@ -1573,6 +1620,10 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 		if (Property->PropertyFlags & CPF_EditorOnly)
 			GeneratedGlue += TEXT("#endif\r\n");
 	}
+	else
+	{
+		GeneratedGlue += "\tensureAlwaysMsgf(0, L\"error\");\r\n";
+	}
 	GeneratedGlue += "\treturn 0;\r\n";
 	GeneratedGlue += TEXT("}\r\n\r\n");
 	return GeneratedGlue;
@@ -1985,6 +2036,8 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 			GeneratedGlueBody += ExportFunction(ClassNameCPP, Class, Function);
 		}
 	}
+
+	GeneratedGlueBody += ExportInterfaceFunc(Class);
 
 	// Export properties that are owned by this class
 	int32 PropertyIndex = 0;

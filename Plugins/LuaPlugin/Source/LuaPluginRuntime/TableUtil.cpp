@@ -673,7 +673,8 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 
 	if (Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 	{
-		const char* classname = TCHAR_TO_UTF8(*Class->GetName());
+// remove "_C"
+		const char* classname = TCHAR_TO_UTF8(*Class->GetName().LeftChop(2));
 		lua_getglobal(inL, classname);
 		if (lua_isnil(inL, -1))
 		{
@@ -689,7 +690,7 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 
 			while (BpClass && BpClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 			{
-				const char* newclassname = TCHAR_TO_UTF8(*BpClass->GetName());
+				const char* newclassname = TCHAR_TO_UTF8(*BpClass->GetName().LeftChop(2));
 
 
 				lua_newtable(inL);

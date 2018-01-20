@@ -47,16 +47,15 @@ void ACMPlayerControllerBase::SetPawn(APawn* aPawn)
 	LuaCall("SetPawn", this, aPawn);
 }
 
-TArray<float> ACMPlayerControllerBase::GetInputState()
+void ACMPlayerControllerBase::GetInputState(TArray<float>& result)
 {
-	TArray<float> result;
+	result.Reset();
 	for (int32 i = 0; i < ARRAY_COUNT(PlayerInput->Touches); i++)
 	{
 		result.Add(PlayerInput->Touches[i].X);
 		result.Add(PlayerInput->Touches[i].Y);
 		result.Add(PlayerInput->Touches[i].Z);
 	}
-	return result;
 }
 
 bool ACMPlayerControllerBase::GetHitResult(float x, float y, FHitResult& HitResult, int TraceChannel, bool bTraceComplex /*= true*/)

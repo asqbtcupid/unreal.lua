@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ForTestInterface.h"
 #include "TestCaseActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FDelegateTest1,  bool,    test_bool,   int32,    test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
@@ -17,7 +18,7 @@ enum class TestEnum : uint8
 };
 
 UCLASS()
-class CATCHME_API ATestCaseActor : public AActor
+class CATCHME_API ATestCaseActor : public AActor, public IForTestInterface
 {
 	GENERATED_BODY()
 	
@@ -148,6 +149,8 @@ public:
 		TMap<FString, TestEnum> test_map_enum_public;
 	UFUNCTION(BlueprintCallable, Category = "TestCase")
 		void Func_Test_Enum(TestEnum enum_Param);
+
+	virtual int32 Interface_NativeEvent_Implementation(int32 v) override;
 private:
 	UPROPERTY()
 		TMap<FString, TestEnum> test_map_enum_private;

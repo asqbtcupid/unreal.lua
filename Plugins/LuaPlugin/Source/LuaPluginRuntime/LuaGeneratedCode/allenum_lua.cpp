@@ -19,6 +19,7 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(ETouchIndex_Enum, "ETouchIndex");
 		UTableUtil::loadEnum(EConsoleForGamepadLabels_Enum, "EConsoleForGamepadLabels");
 		UTableUtil::loadEnum(ETouchType_Enum, "ETouchType");
+		UTableUtil::loadEnum(EMaterialProperty_Enum, "EMaterialProperty");
 		UTableUtil::loadEnum(EInputEvent_Enum, "EInputEvent");
 		UTableUtil::loadEnum(EMouseCaptureMode_Enum, "EMouseCaptureMode");
 		UTableUtil::loadEnum(EMouseLockMode_Enum, "EMouseLockMode");
@@ -105,7 +106,6 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(FNavigationSystemRunMode_Enum, "FNavigationSystemRunMode");
 		UTableUtil::loadEnum(ERecastPartitioning_Enum, "ERecastPartitioning");
 		UTableUtil::loadEnum(ENavCostDisplay_Enum, "ENavCostDisplay");
-		UTableUtil::loadEnum(EMaterialProperty_Enum, "EMaterialProperty");
 		UTableUtil::loadEnum(EDOFMode_Enum, "EDOFMode");
 		UTableUtil::loadEnum(EDynamicActorScene_Enum, "EDynamicActorScene");
 		UTableUtil::loadEnum(ECanBeCharacterBase_Enum, "ECanBeCharacterBase");
@@ -377,11 +377,6 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(EWidgetBlendMode_Enum, "EWidgetBlendMode");
 		UTableUtil::loadEnum(EWidgetGeometryMode_Enum, "EWidgetGeometryMode");
 		UTableUtil::loadEnum(EWidgetInteractionSource_Enum, "EWidgetInteractionSource");
-		UTableUtil::loadEnum(FoliageVertexColorMask_Enum, "FoliageVertexColorMask");
-		UTableUtil::loadEnum(EVertexColorMaskChannel_Enum, "EVertexColorMaskChannel");
-		UTableUtil::loadEnum(EFoliageScaling_Enum, "EFoliageScaling");
-		UTableUtil::loadEnum(ESimulationOverlap_Enum, "ESimulationOverlap");
-		UTableUtil::loadEnum(ESimulationQuery_Enum, "ESimulationQuery");
 		UTableUtil::loadEnum(EAIOptionFlag_Enum, "EAIOptionFlag");
 		UTableUtil::loadEnum(FAIDistanceType_Enum, "FAIDistanceType");
 		UTableUtil::loadEnum(EPawnActionAbortState_Enum, "EPawnActionAbortState");
@@ -433,6 +428,11 @@ struct lua_static_load_allenum_struct
 		UTableUtil::loadEnum(EEnvTestDot_Enum, "EEnvTestDot");
 		UTableUtil::loadEnum(EEnvTestPathfinding_Enum, "EEnvTestPathfinding");
 		UTableUtil::loadEnum(EAISenseNotifyType_Enum, "EAISenseNotifyType");
+		UTableUtil::loadEnum(FoliageVertexColorMask_Enum, "FoliageVertexColorMask");
+		UTableUtil::loadEnum(EVertexColorMaskChannel_Enum, "EVertexColorMaskChannel");
+		UTableUtil::loadEnum(EFoliageScaling_Enum, "EFoliageScaling");
+		UTableUtil::loadEnum(ESimulationOverlap_Enum, "ESimulationOverlap");
+		UTableUtil::loadEnum(ESimulationQuery_Enum, "ESimulationQuery");
 		UTableUtil::loadEnum(TestEnum_Enum, "TestEnum");
 	}
 	lua_static_load_allenum_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}

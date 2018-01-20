@@ -28,7 +28,7 @@ public:
 
 	
 	UFUNCTION()
-	TArray<float> GetInputState();
+	void GetInputState(TArray<float>& result);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerControllerBase")
 	bool GetHitResult(float x, float y, FHitResult& HitResult, int TraceChannel = -1, bool bTraceComplex = true);

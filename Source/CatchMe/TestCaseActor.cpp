@@ -260,6 +260,12 @@ void ATestCaseActor::Func_Test_Enum(TestEnum enum_Param)
 
 }
 
+int32 ATestCaseActor::Interface_NativeEvent_Implementation(int32 v)
+{
+	checkf(v == 200, L"");
+	return 1999;
+}
+
 void ATestCaseActor::FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map)
 {
 	Map.Reset();
