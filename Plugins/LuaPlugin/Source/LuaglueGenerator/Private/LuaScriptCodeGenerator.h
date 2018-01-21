@@ -49,7 +49,7 @@ protected:
 	TMap<UClass*, TArray<FPropertyAccessor> > ClassExportedProperties;
 	TArray<FString> SupportedStruct;
 	TArray<FString> NoSupportedStruct;
-	TArray<FString> NoexportPropertyStruct;
+	TArray<FString> PrivatePropertyStruct;
 	TArray<FString> NoCopyStruct;
 	TArray<FString> NoNewStruct;
 	TArray<FString> NotSupportedClassFunction;

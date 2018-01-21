@@ -19,10 +19,10 @@ public class LuaPluginRuntime : ModuleRules
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG", "AssetRegistry" });
             
         PrivateDependencyModuleNames.AddRange(new string[] { "CatchMe" });
-           
+          
         Definitions.Add("LuaDebug");
         Definitions.Add("STRONG_CHECK_GC_REF");
-     
+      
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });

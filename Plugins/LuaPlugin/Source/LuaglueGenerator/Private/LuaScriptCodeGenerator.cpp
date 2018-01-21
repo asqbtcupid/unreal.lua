@@ -68,7 +68,7 @@ FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, c
 	IncludeBase = InIncludeBase;
 	GConfig->GetArray(TEXT("Lua"), TEXT("SupportedStruct"), SupportedStruct, LuaConfigPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NoSupportedStruct"), NoSupportedStruct, LuaConfigPath);
-	GConfig->GetArray(TEXT("Lua"), TEXT("NoPropertyStruct"), NoexportPropertyStruct, LuaConfigPath);
+	GConfig->GetArray(TEXT("Lua"), TEXT("PrivatePropertyStruct"), PrivatePropertyStruct, LuaConfigPath);
 
 	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClassFunction"), NotSupportedClassFunction, LuaConfigPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NotSupportedClassProperty"), NotSupportedClassProperty, LuaConfigPath);
@@ -1415,8 +1415,8 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 		if (Property->PropertyFlags & CPF_EditorOnly)
 			FunctionBody += TEXT("#if WITH_EDITORONLY_DATA\r\n");
 		FunctionBody += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
-		if (Property->PropertyFlags & CPF_NativeAccessSpecifierPublic
-			|| Property->IsA(UArrayProperty::StaticClass())
+		if (!PrivatePropertyStruct.Contains(ClassNameCPP) && 
+			(Property->PropertyFlags & CPF_NativeAccessSpecifierPublic || Property->IsA(UArrayProperty::StaticClass()))
 			)
 		{
 			if (Property->IsA(UArrayProperty::StaticClass()))
@@ -1441,14 +1441,20 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 			if (Property->ArrayDim <= 1)
 			{
 				FString statictype = GetPropertyType(Property);
-				FunctionBody += FString::Printf(TEXT("\tstatic FName PropertyName(\"%s\");\r\n"), *Property->GetName());
+// 				FunctionBody += FString::Printf(TEXT("\tstatic FName PropertyName(\"%s\");\r\n"), *Property->GetName());
 				if (ClassNameCPP[0] != 'F')
 				{
-					FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s->FindPropertyByName(PropertyName);\r\n"), *statictype, *statictype, *GetUClassGlue(Class));
+					FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *GetUClassGlue(Class), *Property->GetName());
 				}
 				else
 				{
-					FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s::StaticStruct()->FindPropertyByName(PropertyName);\r\n"), *statictype, *statictype, *ClassNameCPP);
+					if (!PrivatePropertyStruct.Contains(ClassNameCPP))
+						FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s::StaticStruct()->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *ClassNameCPP, *Property->GetName());
+					else
+					{
+						FString GetStructClassStr = "FindObject<UScriptStruct>(ANY_PACKAGE, TEXT(\"" + ClassNameCPP.RightChop(1) + "\"))";
+						FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *GetStructClassStr, *Property->GetName());
+					}
 				}
 
 				FunctionBody += TEXT("\tUTableUtil::pushproperty_type(L, p, Obj);\r\n");
@@ -1607,7 +1613,8 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 		if (PropertySuper == NULL)
 		{
 			GeneratedGlue += FString::Printf(TEXT("\t%s\r\n"), *GenerateObjectDeclarationFromContext(ClassNameCPP));
-			if (Property->PropertyFlags & CPF_NativeAccessSpecifierPublic)
+			if (!PrivatePropertyStruct.Contains(ClassNameCPP) &&
+				Property->PropertyFlags & CPF_NativeAccessSpecifierPublic)
 			{
 				FString Body = SetterBody(Property);
 				if (!Body.IsEmpty())
@@ -1622,7 +1629,13 @@ FString FLuaScriptCodeGenerator::SetterCode(FString ClassNameCPP, FString classn
 				}
 				else
 				{
-					GeneratedGlue += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s::StaticStruct()->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *ClassNameCPP, *Property->GetName());
+					if (!PrivatePropertyStruct.Contains(ClassNameCPP))
+						GeneratedGlue += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s::StaticStruct()->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *ClassNameCPP, *Property->GetName());
+					else
+					{
+						FString GetStructClassStr = "FindObject<UScriptStruct>(ANY_PACKAGE, TEXT(\"" + ClassNameCPP.RightChop(1) + "\"))";
+						GeneratedGlue += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *GetStructClassStr, *Property->GetName());
+					}
 				}
 				GeneratedGlue += L"\tUTableUtil::popproperty_type(L, 2, p, Obj);\r\n";
 			}
@@ -1897,8 +1910,8 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		int32 PropertyIndex = 0;
 		TArray<FString> allPropertyName;
 		FString PropertyGlue;
-		if (!NoexportPropertyStruct.Contains(namecpp))
-		{
+// 		if (!PrivatePropertyStruct.Contains(namecpp))
+// 		{
 			for (TFieldIterator<UProperty> PropertyIt(*It/*, EFieldIteratorFlags::ExcludeSuper*/); PropertyIt; ++PropertyIt, ++PropertyIndex)
 			{
 				UProperty* Property = *PropertyIt;
@@ -1911,7 +1924,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 					PropertyGlue += SetterCode(namecpp, namecpp, SetterName, Property);
 				}
 			}
-		}
+// 		}
 		FString addition;
 		bool bIsNoNewStruct = NoNewStruct.Contains(namecpp);
 		if (!bIsNoNewStruct)
