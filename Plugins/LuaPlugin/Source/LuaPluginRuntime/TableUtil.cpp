@@ -411,6 +411,21 @@ int32 serialize_table(lua_State *inL)
 	}
 }
 
+int32 EnsureNew(lua_State* inL)
+{
+	ensureAlwaysMsgf(0, L"This class not api class, so don't have new, make it become api class if you want one.");
+	return 0;
+}
+
+int32 EnsureDestroy(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	if (Obj)
+	{
+		UTableUtil::rmgcref(Obj);
+	}
+	return 0;
+}
 
 void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 {
@@ -430,6 +445,20 @@ void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 			lua_pushcfunction(TheOnlyLuaState, uobjcet_gcfunc);
 		else
 			lua_pushcfunction(TheOnlyLuaState, struct_gcfunc);
+		lua_rawset(TheOnlyLuaState, -3);
+	}
+	if (!bIsStruct)
+	{
+		lua_pushstring(TheOnlyLuaState, "New");
+		lua_pushcfunction(TheOnlyLuaState, EnsureNew);
+		lua_rawset(TheOnlyLuaState, -3);
+
+		lua_pushstring(TheOnlyLuaState, "NewObject");
+		lua_pushcfunction(TheOnlyLuaState, EnsureNew);
+		lua_rawset(TheOnlyLuaState, -3);
+
+		lua_pushstring(TheOnlyLuaState, "Destroy");
+		lua_pushcfunction(TheOnlyLuaState, EnsureDestroy);
 		lua_rawset(TheOnlyLuaState, -3);
 	}
 	lua_pushstring(TheOnlyLuaState, "__iscppclass");
