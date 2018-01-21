@@ -65,7 +65,7 @@ function Call(functionName, inscpp, ...)
     if type(inscpp) == "table" and not inscpp._has_destroy_ then
         return inscpp[functionName](inscpp, ...)
     else
-        ensure(false, "error in Call, No Exist such lua ins or ins has been released")
+        -- ensure(false, "error in Call, No Exist such lua ins or ins has been released")
     end
 end
 -- *******************************

@@ -20,7 +20,9 @@ function CppObjectBase:Destroy()
 	LinkAgainstGC[self] = nil
 	local _cppinstance_ = rawget(self, "_cppinstance_")
 	if _cppinstance_ then 
-		_cppinstance_:Destroy()
+		if _cppinstance_.Destroy then
+			_cppinstance_:Destroy()
+		end
 		rawset(self, "_cppinstance_", nil)
 	end
 	LevelActors[self] = nil
@@ -29,9 +31,15 @@ end
 function CppObjectBase:BeginPlay()
 	if not self.m_HasBeginPlay then
 		self.m_HasBeginPlay = true
+		-- actor
 		local OnEndPlayDelegate = self.OnEndPlay
-		self:GC(OnEndPlayDelegate)
-		OnEndPlayDelegate:Add(SafeCallBack(self.EndPlay, self))
+		if OnEndPlayDelegate then
+			self:GC(OnEndPlayDelegate)
+			OnEndPlayDelegate:Add(InsCallBack(self.EndPlay, self))
+		end
+		if UActorComponent.Cast(self) then
+			self:Link(self:GetOwner())
+		end
 	end
 end
 
@@ -61,7 +69,6 @@ function CppObjectBase:GC(obj)
 	end
 end
 
-
 function CppObjectBase:Link(Actor)
 	if AActor.Cast(Actor) then
 		if type(Actor) == "table" then
@@ -73,7 +80,7 @@ function CppObjectBase:Link(Actor)
 			local function f(ins)
 				ins:Release()
 			end
-			destroy_delegate:Add(SafeCallBack(f, self))
+			destroy_delegate:Add(InsCallBack(f, self))
 		end
 	else
 		-- error("can only link to Actor")
@@ -88,7 +95,7 @@ function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
 	rawset(ins, "_cppinstance_", inscpp)
 	rawset(ins, "_cppinstance_meta_", getmetatable(inscpp))
-	-- _objectins2luatable[inscpp] = ins
+
 	setexisttable(inscpp, ins)
 	ins:Initialize(...)
 	return ins

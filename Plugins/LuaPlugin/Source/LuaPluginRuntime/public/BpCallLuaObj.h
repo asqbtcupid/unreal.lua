@@ -65,11 +65,22 @@ public:
 			UTableUtil::pushall(L, Z_Param_FunctionName, Z_Param_Ins);
 			for (int i = 0; i < ParamCount; i++)
 			{
-				Stack.MostRecentProperty = nullptr;
-				Stack.StepCompiledIn<UProperty>(NULL);
-
-				UProperty* ParamProperty = Stack.MostRecentProperty;
-				UTableUtil::pushproperty_valueptr(L, ParamProperty, Stack.MostRecentPropertyAddress);
+				
+				if (Stack.PeekCode() != 0x17)
+				{
+					Stack.MostRecentProperty = nullptr;
+					Stack.StepCompiledIn<UProperty>(NULL);
+					UProperty* ParamProperty = Stack.MostRecentProperty;
+					UTableUtil::pushproperty_valueptr(L, ParamProperty, Stack.MostRecentPropertyAddress);
+				}
+				// self	
+				else
+				{
+					Stack.MostRecentProperty = nullptr;
+					UObject* self = nullptr;
+					Stack.StepCompiledIn<UProperty>(&self);
+					UTableUtil::push(L, self);
+				}
 			}
 			if (lua_pcall(L, ParamCount+2, ReturnCount, -(ParamCount+4)))
 			{

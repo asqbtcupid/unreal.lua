@@ -23,10 +23,45 @@ function TestBpClass:BeginPlay( )
 	self:TestSetFunc()
 	self:TestEnum()
 	self:TestBpStructType()
+	self:TestInterface()
 end
 
-function TestBpClass:TestBpStructType( )
+function TestBpClass:TestInterface( )
+	assert(self:Interface_NativeEvent(200) == 1999)
+end
 
+function TestBpClass:TestBpStructType()
+	local struct = self.test_bpstruct_type
+	assert(_G["test_bp_struct_type"] ~= nil)
+	assert(struct.inter == 199)
+	assert(struct.vector.X == 2)
+	assert(struct.vector.Y == 3)
+	assert(struct.vector.Z == 4)
+	assert(struct.enum == 1)
+	assert(struct.arr:Num() == 3)
+	assert(struct.arr[1] == true)
+	assert(struct.arr[2] == false)
+	assert(struct.arr[3] == true)
+	local struct1 = struct:Copy()
+	assert(struct1.inter == 199)
+	assert(struct1.vector.X == 2)
+	assert(struct1.vector.Y == 3)
+	assert(struct1.vector.Z == 4)
+	assert(struct1.enum == 1)
+	assert(struct1.arr:Num() == 3)
+	assert(struct1.arr[1] == true)
+	assert(struct1.arr[2] == false)
+	assert(struct1.arr[3] == true)
+
+	local newstruct = test_bp_struct_type.New()
+	self.test_bp_struct_type = newstruct
+	local nowstruct = self.test_bp_struct_type
+	assert(nowstruct.inter == newstruct.inter)
+	assert(nowstruct.vector.X == newstruct.vector.X)
+	assert(nowstruct.vector.Y == newstruct.vector.Y)
+	assert(nowstruct.vector.Z == newstruct.vector.Z)
+	assert(nowstruct.enum == newstruct.enum)
+	assert(nowstruct.arr:Num() == newstruct.arr:Num())
 end
 
 function TestBpClass:TestSetFunc( )

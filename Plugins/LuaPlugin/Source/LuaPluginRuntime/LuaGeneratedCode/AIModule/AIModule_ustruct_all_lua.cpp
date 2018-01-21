@@ -5,6 +5,10 @@
 #include "PawnActionStack.lua.h"
 #include "GenericTeamId.lua.h"
 #include "BlackboardKeySelector.lua.h"
+#include "BTDecoratorLogic.lua.h"
+#include "BTCompositeChild.lua.h"
+#include "BehaviorTreeTemplateInfo.lua.h"
+#include "BlackboardEntry.lua.h"
 #include "AIDataProviderValue.lua.h"
 #include "AIDataProviderTypedValue.lua.h"
 #include "AIDataProviderStructValue.lua.h"
@@ -19,10 +23,12 @@
 #include "AIDynamicParam.lua.h"
 #include "EQSParametrizedQueryExecutionRequest.lua.h"
 #include "EnvQueryRequest.lua.h"
+#include "EnvQueryInstanceCache.lua.h"
 #include "CrowdAvoidanceConfig.lua.h"
 #include "CrowdAvoidanceSamplingPattern.lua.h"
 #include "AIStimulus.lua.h"
 #include "AISenseAffiliationFilter.lua.h"
+#include "ActorPerceptionBlueprintInfo.lua.h"
 #include "AIDamageEvent.lua.h"
 #include "AINoiseEvent.lua.h"
 #include "AIPredictionEvent.lua.h"
@@ -39,6 +45,10 @@ struct lua_static_load_AIModule_ustruct_all_struct
 		UTableUtil::loadstruct(FPawnActionStack_Lib, "FPawnActionStack");
 		UTableUtil::loadstruct(FGenericTeamId_Lib, "FGenericTeamId");
 		UTableUtil::loadstruct(FBlackboardKeySelector_Lib, "FBlackboardKeySelector");
+		UTableUtil::loadstruct(FBTDecoratorLogic_Lib, "FBTDecoratorLogic");
+		UTableUtil::loadstruct(FBTCompositeChild_Lib, "FBTCompositeChild");
+		UTableUtil::loadstruct(FBehaviorTreeTemplateInfo_Lib, "FBehaviorTreeTemplateInfo");
+		UTableUtil::loadstruct(FBlackboardEntry_Lib, "FBlackboardEntry");
 		UTableUtil::loadstruct(FAIDataProviderValue_Lib, "FAIDataProviderValue");
 		UTableUtil::loadstruct(FAIDataProviderTypedValue_Lib, "FAIDataProviderTypedValue");
 		UTableUtil::loadstruct(FAIDataProviderStructValue_Lib, "FAIDataProviderStructValue");
@@ -53,10 +63,12 @@ struct lua_static_load_AIModule_ustruct_all_struct
 		UTableUtil::loadstruct(FAIDynamicParam_Lib, "FAIDynamicParam");
 		UTableUtil::loadstruct(FEQSParametrizedQueryExecutionRequest_Lib, "FEQSParametrizedQueryExecutionRequest");
 		UTableUtil::loadstruct(FEnvQueryRequest_Lib, "FEnvQueryRequest");
+		UTableUtil::loadstruct(FEnvQueryInstanceCache_Lib, "FEnvQueryInstanceCache");
 		UTableUtil::loadstruct(FCrowdAvoidanceConfig_Lib, "FCrowdAvoidanceConfig");
 		UTableUtil::loadstruct(FCrowdAvoidanceSamplingPattern_Lib, "FCrowdAvoidanceSamplingPattern");
 		UTableUtil::loadstruct(FAIStimulus_Lib, "FAIStimulus");
 		UTableUtil::loadstruct(FAISenseAffiliationFilter_Lib, "FAISenseAffiliationFilter");
+		UTableUtil::loadstruct(FActorPerceptionBlueprintInfo_Lib, "FActorPerceptionBlueprintInfo");
 		UTableUtil::loadstruct(FAIDamageEvent_Lib, "FAIDamageEvent");
 		UTableUtil::loadstruct(FAINoiseEvent_Lib, "FAINoiseEvent");
 		UTableUtil::loadstruct(FAIPredictionEvent_Lib, "FAIPredictionEvent");

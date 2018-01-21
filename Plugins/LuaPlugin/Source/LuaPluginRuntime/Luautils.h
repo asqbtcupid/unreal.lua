@@ -64,5 +64,5 @@ public:
 
 	UFUNCTION()
 		static UObject* GetPrivateClass(UObject *p);
-
 };
+    

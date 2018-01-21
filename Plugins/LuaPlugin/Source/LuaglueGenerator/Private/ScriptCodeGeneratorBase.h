@@ -34,7 +34,6 @@ protected:
 	/** Re-bases the local path to build path */
 	FString RebaseToBuildPath(const FString& FileName) const;
 	/** Converts a UClass name to C++ class name (with U/A prefix) */
-	FString GetClassNameCPP(UClass* Class);
 	/** Gets C++ friendly property type name. */
 	FString GetPropertyTypeCPP(UProperty* Property, uint32 PortFlags = 0, bool bIsKeepTEnumAsByte = false);
 
@@ -51,6 +50,7 @@ protected:
 	virtual bool CanExportProperty(const FString& ClassNameCPP, UClass* Class, UProperty* Property);
 
 public:
+	static FString GetClassNameCPP(UClass* Class);
 	FString GameModuleName;
 	FString LuaConfigIniPath;
 	virtual ~FScriptCodeGeneratorBase() {}

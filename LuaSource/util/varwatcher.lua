@@ -27,19 +27,43 @@ function LuaVarWatcher:GetUNodeNewName( )
 end
 
 function LuaVarWatcher:GetClassName(VarValue)
+	local name = ""
 	if type(VarValue) == "table" or type(VarValue) == "userdata" then
-		if VarValue.classname then
-			return "("..VarValue.classname..")"
+		local function getname()
+			if VarValue.classname then
+				name = "("..VarValue.classname..")"
+			end
 		end
+		-- lightweight userdata will error
+		pcall(getname)
 	end
-	return ""
+	return name
 end
 
 
 function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
+	local classname = self:GetClassName(VarValue)
+	if classname == "(UVarNode)" then
+		return
+	elseif classname == "(ULuaArrayHelper)" or classname == "(ULuaSetHelper)" or classname == "(ULuaMapHelper)" then
+		if VarValue._cppinstance_ then
+			VarValue = VarValue:Table()
+		end
+	end
+	-- a_(classname)
+
 	if UNode:bIsExpanding() or (UNode.HasExpand and not UNode:HasChild()) then
 		local function TravelVar(ChildrenMap, key, v, KeyName, bTravelKey)
-			local ValueStr = tostring(v)..self:GetClassName(v)
+			local classname = self:GetClassName(v)
+			if classname == "(UVarNode)" then
+				return
+			elseif classname == "(ULuaArrayHelper)" or classname == "(ULuaSetHelper)" or classname == "(ULuaMapHelper)" then
+				if v._cppinstance_ then
+					v = v:Table()
+				end
+			end
+
+			local ValueStr = tostring(v)..classname
 			local ChildNode = ChildrenMap[key]
 			if ChildNode then
 				ChildNode.Value = ValueStr
@@ -69,7 +93,7 @@ function LuaVarWatcher:UpdateNodesChildren(UNode, VarValue, bIsKey)
 			end
 			for i, Node in ipairs(ChildrenArr) do
 				local Key = self.m_WeakRegistry[Node.LuaIndex]
-				if (Key and VarValue[Key]) or getmetatable(VarValue) == Key then
+				if (Key and VarValue[Key]) or (Key and getmetatable(VarValue) == Key) then
 					if not self.m_NeedShowFunction and type(VarValue[Key]) == "function" then
 						Node:Release()
 					else

@@ -127,6 +127,14 @@ void ATestCaseActor::Tick(float DeltaTime)
 
 }
 
+void ATestCaseActor::TestLoad1()
+{
+}
+
+void ATestCaseActor::TestLoad2()
+{
+}
+
 void ATestCaseActor::RunCppCallLuaTest()
 {
 
@@ -250,6 +258,22 @@ void ATestCaseActor::TestSpeed_Native(int32 i)
 void ATestCaseActor::Func_Test_Enum(TestEnum enum_Param)
 {
 
+}
+
+int32 ATestCaseActor::Interface_NativeEvent_Implementation(int32 v)
+{
+	checkf(v == 200, L"");
+	return 1999;
+}
+
+void ATestCaseActor::Test_Param_Interface_public(TScriptInterface<IForTestInterface> I)
+{
+	checkf(I.GetObject() == this, L"");
+}
+
+void ATestCaseActor::Test_Param_Interface_private(TScriptInterface<IForTestInterface> I)
+{
+	checkf(I.GetObject() == this, L"");
 }
 
 void ATestCaseActor::FuncReturn_ParamMap_struct_private(TMap<FString, FVector>& Map)

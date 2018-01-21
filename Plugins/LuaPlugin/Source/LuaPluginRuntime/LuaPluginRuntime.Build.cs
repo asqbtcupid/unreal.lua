@@ -4,25 +4,25 @@ using UnrealBuildTool;
 using System.IO;
  
 public class LuaPluginRuntime : ModuleRules
-{
+{          
 	private string LuaLibPath
     {
         get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../Lua/")); }
     }
 	public LuaPluginRuntime(ReadOnlyTargetRules Target) : base(Target)
-	{ 
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+	{    
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs; 
         bFasterWithoutUnity = true;
         PrivateIncludePaths.Add("LuaPluginRuntime/Private");
-
+           
         PublicDependencyModuleNames.AddRange(new string[] {  "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore", "Foliage", "GameplayTasks" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG"});
-
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG", "AssetRegistry" });
+            
         PrivateDependencyModuleNames.AddRange(new string[] { "CatchMe" });
-
+         
         Definitions.Add("LuaDebug");
         Definitions.Add("STRONG_CHECK_GC_REF");
-
+      
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });

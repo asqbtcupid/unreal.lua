@@ -303,7 +303,12 @@ public:
 		pushuobject(inL, value.Get());
 		return 1;
 	}
-
+	template<class T>
+	static int push(lua_State*inL, const TScriptInterface<T>& value)
+	{
+		pushuobject(inL, (void*)value.GetObject());
+		return 1;
+	}
 
 	inline static int push(lua_State *inL, uint8 value)
 	{
@@ -395,7 +400,8 @@ public:
 	static void pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr);
 	static void pushproperty_type(lua_State*inL, UMapProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, USetProperty* p, const void*ptr);
-
+	static void pushproperty_type(lua_State*inL, UInterfaceProperty* p, const void*ptr);
+	
 	static void pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr);
 	static void pushproperty_type_valueptr(lua_State*inL, UBoolProperty* p, const void*ptr);
 	static void pushproperty_type_valueptr(lua_State*inL, UIntProperty* p, const void*ptr);
@@ -415,6 +421,8 @@ public:
 	static void pushproperty_type_valueptr(lua_State*inL, UArrayProperty* property, const void* ptr);
 	static void pushproperty_type_valueptr(lua_State*inL, UMapProperty* p, const void*ptr);
 	static void pushproperty_type_valueptr(lua_State*inL, USetProperty* p, const void*ptr);
+	static void pushproperty_type_valueptr(lua_State*inL, UInterfaceProperty* p, const void*ptr);
+
 
 	template<class T>
 	static int push(lua_State *inL, const TArray<T>& value);
@@ -884,6 +892,7 @@ public:
 	static void popproperty_type(lua_State*inL, int index, UArrayProperty* p, void* ptr);
 	static void popproperty_type(lua_State*inL, int index, UMapProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, USetProperty* p, void*ptr);
+	static void popproperty_type(lua_State*inL, int index, UInterfaceProperty* p, void*ptr);
 	static void popproperty_type(lua_State*inL, int index, UMulticastDelegateProperty* p, void*ptr);
 
 	template<class returnType, class... T>

@@ -49,7 +49,10 @@
 #include "PawnActionsComponent.lua.h"
 #include "PawnSensingComponent.lua.h"
 #include "VisualLoggerExtension.lua.h"
+#include "DetourCrowdAIController.lua.h"
+#include "GridPathAIController.lua.h"
 #include "AIDataProvider_QueryParams.lua.h"
+#include "AIDataProvider_Random.lua.h"
 #include "AISense_Blueprint.lua.h"
 #include "AISense_Damage.lua.h"
 #include "AISense_Hearing.lua.h"
@@ -146,12 +149,17 @@
 #include "EnvQueryGenerator_Cone.lua.h"
 #include "EnvQueryGenerator_Donut.lua.h"
 #include "EnvQueryGenerator_OnCircle.lua.h"
+#include "EnvQueryGenerator_SimpleGrid.lua.h"
+#include "EnvQueryGenerator_PathingGrid.lua.h"
+#include "EnvQueryTest_Distance.lua.h"
 #include "EnvQueryTest_Dot.lua.h"
 #include "EnvQueryTest_GameplayTags.lua.h"
 #include "EnvQueryTest_Overlap.lua.h"
+#include "EnvQueryTest_Pathfinding.lua.h"
 #include "EnvQueryTest_Project.lua.h"
 #include "EnvQueryTest_Random.lua.h"
 #include "EnvQueryTest_Trace.lua.h"
+#include "EnvQueryTest_PathfindingBatch.lua.h"
 #include "CrowdFollowingComponent.lua.h"
 #include "GridPathFollowingComponent.lua.h"
 #include "PawnAction_BlueprintBase.lua.h"
@@ -213,7 +221,10 @@ struct lua_static_load_AIModule_uclass_all_struct
 		UTableUtil::loadlib(PawnActionsComponent_Lib, "UPawnActionsComponent");
 		UTableUtil::loadlib(PawnSensingComponent_Lib, "UPawnSensingComponent");
 		UTableUtil::loadlib(VisualLoggerExtension_Lib, "UVisualLoggerExtension");
+		UTableUtil::loadlib(DetourCrowdAIController_Lib, "ADetourCrowdAIController");
+		UTableUtil::loadlib(GridPathAIController_Lib, "AGridPathAIController");
 		UTableUtil::loadlib(AIDataProvider_QueryParams_Lib, "UAIDataProvider_QueryParams");
+		UTableUtil::loadlib(AIDataProvider_Random_Lib, "UAIDataProvider_Random");
 		UTableUtil::loadlib(AISense_Blueprint_Lib, "UAISense_Blueprint");
 		UTableUtil::loadlib(AISense_Damage_Lib, "UAISense_Damage");
 		UTableUtil::loadlib(AISense_Hearing_Lib, "UAISense_Hearing");
@@ -310,12 +321,17 @@ struct lua_static_load_AIModule_uclass_all_struct
 		UTableUtil::loadlib(EnvQueryGenerator_Cone_Lib, "UEnvQueryGenerator_Cone");
 		UTableUtil::loadlib(EnvQueryGenerator_Donut_Lib, "UEnvQueryGenerator_Donut");
 		UTableUtil::loadlib(EnvQueryGenerator_OnCircle_Lib, "UEnvQueryGenerator_OnCircle");
+		UTableUtil::loadlib(EnvQueryGenerator_SimpleGrid_Lib, "UEnvQueryGenerator_SimpleGrid");
+		UTableUtil::loadlib(EnvQueryGenerator_PathingGrid_Lib, "UEnvQueryGenerator_PathingGrid");
+		UTableUtil::loadlib(EnvQueryTest_Distance_Lib, "UEnvQueryTest_Distance");
 		UTableUtil::loadlib(EnvQueryTest_Dot_Lib, "UEnvQueryTest_Dot");
 		UTableUtil::loadlib(EnvQueryTest_GameplayTags_Lib, "UEnvQueryTest_GameplayTags");
 		UTableUtil::loadlib(EnvQueryTest_Overlap_Lib, "UEnvQueryTest_Overlap");
+		UTableUtil::loadlib(EnvQueryTest_Pathfinding_Lib, "UEnvQueryTest_Pathfinding");
 		UTableUtil::loadlib(EnvQueryTest_Project_Lib, "UEnvQueryTest_Project");
 		UTableUtil::loadlib(EnvQueryTest_Random_Lib, "UEnvQueryTest_Random");
 		UTableUtil::loadlib(EnvQueryTest_Trace_Lib, "UEnvQueryTest_Trace");
+		UTableUtil::loadlib(EnvQueryTest_PathfindingBatch_Lib, "UEnvQueryTest_PathfindingBatch");
 		UTableUtil::loadlib(CrowdFollowingComponent_Lib, "UCrowdFollowingComponent");
 		UTableUtil::loadlib(GridPathFollowingComponent_Lib, "UGridPathFollowingComponent");
 		UTableUtil::loadlib(PawnAction_BlueprintBase_Lib, "UPawnAction_BlueprintBase");
