@@ -925,6 +925,10 @@ void UTableUtil::pushproperty(lua_State* inL, UProperty* property, const void* p
 	{
 		pushproperty_type(inL, p, ptr);
 	}
+	else if (UUInt32Property* p = Cast<UUInt32Property>(property))
+	{
+		pushproperty_type(inL, p, ptr);
+	}
 	else if (UInt64Property* p = Cast<UInt64Property>(property))
 	{
 		pushproperty_type(inL, p, ptr);
@@ -1339,6 +1343,10 @@ void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
+	else if (UUInt32Property* p = Cast<UUInt32Property>(property))
+	{
+		pushproperty_type_valueptr(inL, p, ptr);
+	}
 	else if (UInt64Property* p = Cast<UInt64Property>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
@@ -1678,6 +1686,10 @@ void UTableUtil::popproperty(lua_State* inL, int index, UProperty* property, voi
 		ensureAlwaysMsgf(0, L"some bug?");
 #endif
 	if (UIntProperty* p = Cast<UIntProperty>(property))
+	{
+		popproperty_type(inL, index, p, ptr);
+	}
+	else if (UUInt32Property* p = Cast<UUInt32Property>(property))
 	{
 		popproperty_type(inL, index, p, ptr);
 	}
