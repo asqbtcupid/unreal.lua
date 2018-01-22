@@ -5,7 +5,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "LuaDelegate.h"
 #include "Luautils.generated.h"
-
+  
 USTRUCT()
 struct LUAPLUGINRUNTIME_API FReplifetimeCond {
 	GENERATED_USTRUCT_BODY()

@@ -55,6 +55,8 @@ protected:
 	TArray<FString> NotSupportedClassFunction;
 	TArray<FString> NotSupportedClassProperty;
 	TArray<FString> NotSupportedClass;
+	TArray<FString> CircularModules;
+	bool IsExportingCircularModule;
 	TSet<FString> WeakPtrClass;
 	TMap<UClass*, FString> Class2Sourcefile;
 	TMap<UClass*, TArray<UClass*>> ExtraIncludeClass;
@@ -67,7 +69,7 @@ protected:
 	bool bExportDelegateProxy;
 	/** Creats a 'glue' file that merges all generated script files */
 	void GlueAllGeneratedFiles();
-	void GlueAllGeneratedFiles1();
+	void GlueAllGeneratedFiles_CircularModule();
 	/** Exports a wrapper function */
 	FString ExportFunction(const FString& ClassNameCPP, UClass* Class, UFunction* Function);
 	/** Exports a wrapper functions for properties */

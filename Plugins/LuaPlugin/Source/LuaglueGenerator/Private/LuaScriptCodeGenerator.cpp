@@ -76,6 +76,7 @@ FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, c
 	GConfig->GetArray(TEXT("Lua"), TEXT("ChangeableModules"), ChangeableModules, LuaConfigPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NoCopyStruct"), NoCopyStruct, LuaConfigPath);
 	GConfig->GetArray(TEXT("Lua"), TEXT("NoNewStruct"), NoNewStruct, LuaConfigPath);
+	GConfig->GetArray(TEXT("Lua"), TEXT("CircularModules"), CircularModules, LuaConfigPath);
 
 	GConfig->GetString(TEXT("Lua"), TEXT("GeneratedCodeDir"), LuaGeneratedCodeDir, LuaConfigPath);
 }
@@ -102,7 +103,9 @@ FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FStrin
 FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIndex, bool isnotpublicproperty, FString arrayName)
 {
 	FString Initializer;
-
+	FString CircularModulesLuaPrefix = "";
+	if (IsExportingCircularModule)
+		CircularModulesLuaPrefix = "ue_";
 	if (!(Param->GetPropertyFlags() & CPF_ReturnParm))
 	{
 		// In Lua, the first param index on the stack is 1 and it's the object we're invoking the function on
@@ -114,31 +117,31 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 			Param->IsA(UUInt16Property::StaticClass())
 			)
 		{
-			Initializer = TEXT("(lua_tointeger");
+			Initializer = TEXT("("+ CircularModulesLuaPrefix+ "lua_tointeger");
 		}
 		else if (Param->IsA(UFloatProperty::StaticClass()))
 		{
-			Initializer = TEXT("(float)(lua_tonumber");
+			Initializer = TEXT("(float)(" + CircularModulesLuaPrefix + "lua_tonumber");
 		}
 		else if (Param->IsA(UDoubleProperty::StaticClass()))
 		{
-			Initializer = TEXT("(double)(lua_tonumber");
+			Initializer = TEXT("(double)(" + CircularModulesLuaPrefix + "lua_tonumber");
 		}
 		else if (Param->IsA(UStrProperty::StaticClass()))
 		{
-			Initializer = TEXT("UTF8_TO_TCHAR(lua_tostring");
+			Initializer = TEXT("UTF8_TO_TCHAR(" + CircularModulesLuaPrefix + "lua_tostring");
 		}
 		else if (Param->IsA(UNameProperty::StaticClass()))
 		{
-			Initializer = TEXT("FName(lua_tostring");
+			Initializer = TEXT("FName(" + CircularModulesLuaPrefix + "lua_tostring");
 		}
 		else if (Param->IsA(UTextProperty::StaticClass()))
 		{
-			Initializer = TEXT("FText::FromString(UTF8_TO_TCHAR(lua_tostring");
+			Initializer = TEXT("FText::FromString(UTF8_TO_TCHAR(" + CircularModulesLuaPrefix + "lua_tostring");
 		}
 		else if (Param->IsA(UBoolProperty::StaticClass()))
 		{
-			Initializer = TEXT("!!(lua_toboolean");
+			Initializer = TEXT("!!(" + CircularModulesLuaPrefix + "lua_toboolean");
 		}
 		else if (Param->IsA(UClassProperty::StaticClass()))
 		{
@@ -231,12 +234,12 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		else if (Param->IsA(UByteProperty::StaticClass()) || Param->IsA(UEnumProperty::StaticClass()))
 		{
 			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-			Initializer = FString::Printf(TEXT("(%s)((int)lua_tointeger"), *typeName);
+			Initializer = FString::Printf(TEXT("(%s)((int)%slua_tointeger"), *typeName, *CircularModulesLuaPrefix);
 		}
 		else if (Param->IsA(UMulticastDelegateProperty::StaticClass()))
 		{
 			FString typeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
-			Initializer = FString::Printf(TEXT("(%s)(lua_tointeger"), *typeName);
+			Initializer = FString::Printf(TEXT("(%s)(%slua_tointeger"), *typeName, *CircularModulesLuaPrefix);
 		}
 		else if (Param->IsA(UInterfaceProperty::StaticClass()))
 		{
@@ -245,7 +248,7 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		}
 		else
 		{
-			Initializer = TEXT("(lua_tointeger");
+			Initializer = TEXT("(" + CircularModulesLuaPrefix + "lua_tointeger");
 		}
 	}
 	if (Param->IsA(UTextProperty::StaticClass()))
@@ -288,27 +291,27 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 		ReturnValue->IsA(UUInt16Property::StaticClass()) ||
 		ReturnValue->IsA(UInt64Property::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushinteger(L, %s);"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushinteger(L, %s);"), *name);
 	}
 	else if (ReturnValue->IsA(UFloatProperty::StaticClass()) || ReturnValue->IsA(UDoubleProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushnumber(L, %s);"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushnumber(L, %s);"), *name);
 	}
 	else if (ReturnValue->IsA(UStrProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s));"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushstring(L, TCHAR_TO_UTF8(*%s));"), *name);
 	}
 	else if (ReturnValue->IsA(UNameProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
 	}
 	else if (ReturnValue->IsA(UTextProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushstring(L, TCHAR_TO_UTF8(*%s.ToString()));"), *name);
 	}
 	else if (ReturnValue->IsA(UBoolProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushboolean(L, %s);"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushboolean(L, %s);"), *name);
 	}
 	else if (ReturnValue->IsA(UClassProperty::StaticClass()))
 	{
@@ -362,7 +365,7 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	}
 	else if (ReturnValue->IsA(UByteProperty::StaticClass()) || ReturnValue->IsA(UEnumProperty::StaticClass()))
 	{
-		Initializer = FString::Printf(TEXT("lua_pushinteger(L, (int)%s);"), *name);
+		Initializer = FString::Printf(TEXT("ue_lua_pushinteger(L, (int)%s);"), *name);
 	}
 	else if (auto DelegateProperty = Cast<UMulticastDelegateProperty>(ReturnValue))
 	{
@@ -679,7 +682,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 			count_default_param = count_all_param - index_first_default + 1;
 
 		Params += TEXT("\t#ifdef LuaDebug\r\n");
-		Params += TEXT("\tint totalPamCount = lua_gettop(L);\r\n");
+		Params += TEXT("\tint totalPamCount = ue_lua_gettop(L);\r\n");
 		if (bIsStaticFunc)
 		{
 			Params += FString::Printf(TEXT("\tif (totalPamCount < %d)\r\n"), count_all_param_for_warning - count_default_param);
@@ -695,7 +698,7 @@ FString FLuaScriptCodeGenerator::GenerateFunctionDispatch(UFunction* Function, c
 
 		if (count_default_param > 0)
 		{
-			Params += TEXT("\tint num_params = lua_gettop(L);\r\n");
+			Params += TEXT("\tint num_params = ue_lua_gettop(L);\r\n");
 			for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
 			{
 				UProperty* Param = *ParamIt;
@@ -1477,6 +1480,9 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 {
 	int PropertyIndex = 2;
 	FString Initializer = "\tObj->" + Property->GetName() + " = ";
+	FString CircularModulesLuaPrefix = "";
+	if (IsExportingCircularModule)
+		CircularModulesLuaPrefix = "ue_";
 	if (Property->ArrayDim > 1)
 	{
 		return "";
@@ -1487,27 +1493,27 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 	}
 	else if (Property->IsA(UFloatProperty::StaticClass()))
 	{
-		Initializer += TEXT("(float)(lua_tonumber");
+		Initializer += TEXT("(float)(" + CircularModulesLuaPrefix + "lua_tonumber");
 	}
 	else if (Property->IsA(UDoubleProperty::StaticClass()))
 	{
-		Initializer += TEXT("(double)(lua_tonumber");
+		Initializer += TEXT("(double)(" + CircularModulesLuaPrefix + "lua_tonumber");
 	}
 	else if (Property->IsA(UStrProperty::StaticClass()))
 	{
-		Initializer += TEXT("UTF8_TO_TCHAR(lua_tostring");
+		Initializer += TEXT("UTF8_TO_TCHAR(" + CircularModulesLuaPrefix + "lua_tostring");
 	}
 	else if (Property->IsA(UNameProperty::StaticClass()))
 	{
-		Initializer += TEXT("FName(lua_tostring");
+		Initializer += TEXT("FName(" + CircularModulesLuaPrefix + "lua_tostring");
 	}
 	else if (Property->IsA(UTextProperty::StaticClass()))
 	{
-		Initializer += TEXT("FText::FromString(UTF8_TO_TCHAR(lua_tostring");
+		Initializer += TEXT("FText::FromString(UTF8_TO_TCHAR(" + CircularModulesLuaPrefix + "lua_tostring");
 	}
 	else if (Property->IsA(UBoolProperty::StaticClass()))
 	{
-		Initializer += TEXT("!!(lua_toboolean");
+		Initializer += TEXT("!!(" + CircularModulesLuaPrefix + "lua_toboolean");
 	}
 	else if (Property->IsA(UClassProperty::StaticClass()))
 	{
@@ -1571,12 +1577,12 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 	else if (Property->IsA(UByteProperty::StaticClass()) || Property->IsA(UEnumProperty::StaticClass()))
 	{
 		FString typeName = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
-		Initializer += FString::Printf(TEXT("(%s)((int)lua_tointeger"), *typeName);
+		Initializer += FString::Printf(TEXT("(%s)((int)%slua_tointeger"), *typeName, *CircularModulesLuaPrefix);
 	}
 	else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
 	{
 		FString typeName = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
-		Initializer += FString::Printf(TEXT("(%s)(lua_tointeger"), *typeName);
+		Initializer += FString::Printf(TEXT("(%s)(%slua_tointeger"), *typeName, *CircularModulesLuaPrefix);
 	}
 	else if (auto p = Cast<UMapProperty>(Property))
 	{
@@ -1588,7 +1594,7 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 	}
 	else
 	{
-		Initializer += TEXT("(lua_tointeger");
+		Initializer += TEXT("(" + CircularModulesLuaPrefix + "lua_tointeger");
 	}
 	if (Property->IsA(UTextProperty::StaticClass()))
 		return FString::Printf(TEXT("%s(L, %d)))"), *Initializer, PropertyIndex);
@@ -1726,7 +1732,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("New"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			GeneratedGlue += TEXT("\tUObject* Obj = nullptr;\r\n");
-			GeneratedGlue += TEXT("\tint32 len = lua_gettop(L);\r\n");
+			GeneratedGlue += TEXT("\tint32 len = ue_lua_gettop(L);\r\n");
 
 			GeneratedGlue += TEXT("\tif(len == 0)\r\n");
 			GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>();\r\n"), *ClassNameCPP);
@@ -1740,7 +1746,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += TEXT("\telse if(len == 3){\r\n");
 			GeneratedGlue += TEXT("\t\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
 			GeneratedGlue += TEXT("\t\tUClass* Class = (UClass*)touobject(L, 2);\r\n");
-			GeneratedGlue += TEXT("\t\tFName Name = FName(lua_tostring(L, 3));\r\n");
+			GeneratedGlue += TEXT("\t\tFName Name = FName(ue_lua_tostring(L, 3));\r\n");
 			GeneratedGlue += FString::Printf(TEXT("\t\tObj = NewObject<%s>(Outer, Class, Name);\r\n\t}\r\n"), *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, (void*)Obj, true);\r\n"));
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
@@ -1759,7 +1765,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("CreateDefaultSubobject"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			GeneratedGlue += TEXT("\tUObject* Outer = (UObject*)touobject(L, 1);\r\n");
-			GeneratedGlue += TEXT("\tFName Name = FName(lua_tostring(L, 2));\r\n");
+			GeneratedGlue += TEXT("\tFName Name = FName(ue_lua_tostring(L, 2));\r\n");
 			GeneratedGlue += FString::Printf(TEXT("\tUObject* Obj = Outer->CreateDefaultSubobject<%s>(Name);\r\n"), *ClassNameCPP);
 			GeneratedGlue += TEXT("\tif (Obj)\r\n\t{\r\n");
 			GeneratedGlue += TEXT("\t}\r\n");
@@ -1774,14 +1780,14 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("FObjectFinder"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			// 		GeneratedGlue += FString::Printf(TEXT("\tvoid* Obj = (void*)UTableUtil::FObjectFinder(%s::StaticClass(), luaL_checkstring(L, 1));\r\n"), *ClassNameCPP);
-			GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FObjectFinder<%s> Obj(UTF8_TO_TCHAR(lua_tostring(L, 1)));\r\n"), *ClassNameCPP);
+			GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FObjectFinder<%s> Obj(UTF8_TO_TCHAR(ue_lua_tostring(L, 1)));\r\n"), *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, (void*)(Obj.Object), true);\r\n"));
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
 			GeneratedGlue += TEXT("}\r\n\r\n");
 
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("FClassFinder"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
-			GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FClassFinder<%s> Obj(UTF8_TO_TCHAR(lua_tostring(L, 1)));\r\n"), *ClassNameCPP);
+			GeneratedGlue += FString::Printf(TEXT("\tConstructorHelpers::FClassFinder<%s> Obj(UTF8_TO_TCHAR(ue_lua_tostring(L, 1)));\r\n"), *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, Obj.Class);\r\n"));
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
 			GeneratedGlue += TEXT("}\r\n\r\n");
@@ -1797,7 +1803,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("LoadClass"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			GeneratedGlue += TEXT("\tUObject* obj = (UObject*)touobject(L, 1);\r\n");
-			GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = LoadClass<%s>(obj, UTF8_TO_TCHAR(lua_tostring(L, 2)));\r\n"), *ClassNameCPP);
+			GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = LoadClass<%s>(obj, UTF8_TO_TCHAR(ue_lua_tostring(L, 2)));\r\n"), *ClassNameCPP);
 			GeneratedGlue += TEXT("\tpushuobject(L, (void*)Class);\r\n");
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
 			GeneratedGlue += TEXT("}\r\n\r\n");
@@ -1805,7 +1811,7 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("LoadObject"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			GeneratedGlue += TEXT("\tUObject* obj = (UObject*)touobject(L, 1);\r\n");
-			GeneratedGlue += FString::Printf(TEXT("\t%s* result = LoadObject<%s>(obj, UTF8_TO_TCHAR(lua_tostring(L, 2)));\r\n"), *ClassNameCPP, *ClassNameCPP);
+			GeneratedGlue += FString::Printf(TEXT("\t%s* result = LoadObject<%s>(obj, UTF8_TO_TCHAR(ue_lua_tostring(L, 2)));\r\n"), *ClassNameCPP, *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\tpushuobject(L, (void*)result);\r\n"));
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
 			GeneratedGlue += TEXT("}\r\n\r\n");
@@ -1894,6 +1900,7 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		if (!isStructSupported(*It))
 			continue;
 		FString ModuleName = FModulePath::Get().GetClassModuleName(*It);
+		IsExportingCircularModule = CircularModules.Contains(ModuleName);
 		TArray<UScriptStruct*>& StructSet = ModuleStruct.FindOrAdd(ModuleName);
 		StructSet.Add(*It);
 		// 		auto x = name == "AIRequestID";
@@ -2027,6 +2034,8 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 	{
 		return;
 	}
+	FString ClassModuleName = FModulePath::Get().GetClassModuleName(Class);
+	IsExportingCircularModule = CircularModules.Contains(ClassModuleName);
 	FuncSuperClassName.Reset();
 
 	ExportedClasses.Add(Class->GetFName());
@@ -2087,7 +2096,6 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 	GeneratedGlue += ExportAdditionalClassGlue(ClassNameCPP, Class);
 	GeneratedGlue += "PRAGMA_ENABLE_DEPRECATION_WARNINGS\r\n";
 	Class2Sourcefile.Add(Class, SourceHeaderFilename);
-	FString ClassModuleName = FModulePath::Get().GetClassModuleName(Class);
 	TArray<UClass*>& ClassSet = ModulesClass.FindOrAdd(ClassModuleName);
 	ClassSet.Add(Class);
 	SaveHeaderIfChanged(ClassGlueFilename, GeneratedGlue);
@@ -2098,6 +2106,7 @@ void FLuaScriptCodeGenerator::FinishExport()
 	ExportEnum();
 	ExportStruct();
 	GlueAllGeneratedFiles();
+	GlueAllGeneratedFiles_CircularModule();
 	RenameTempFiles();
 }
 
@@ -2116,102 +2125,107 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 
 	FString CommonInclude;
 
-	// 	CommonInclude += FString::Printf(TEXT("#include \"%s.h\"\r\n"), *GameModuleName);
 	CommonInclude += "#include \"tableutil.h\"\r\n";
 	TArray<FString> FixLinkFuncs;
 	for (const auto& ModuleClassSet : ModulesClass)
 	{
-		if (ChangeableModules.Contains(ModuleClassSet.Key))
+		if (!CircularModules.Contains(ModuleClassSet.Key))
 		{
-			for (auto Class : ModuleClassSet.Value)
+			if (ChangeableModules.Contains(ModuleClassSet.Key))
 			{
-				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Class->GetName() + "_lua.cpp";
+				for (auto Class : ModuleClassSet.Value)
+				{
+					FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Class->GetName() + "_lua.cpp";
 
-				FString CppGlue = CommonInclude;
-				CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
-				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Class->GetName());
+					FString CppGlue = CommonInclude;
+					CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+					CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n\t}\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+					CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Class->GetName(), *Class->GetName());
+					FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Class->GetName());
+					CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+					FixLinkFuncs.AddUnique(FixFuncName);
+					AllLuaGenCpp.Remove(CppFileName);
+					SaveHeaderIfChanged(CppFileName, CppGlue);
+				}
+			}
+			else
+			{
+				FString StructNamePrefix = ModuleClassSet.Key + "_uclass_all";
+				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
+				FString IncludeStr = CommonInclude;
+				FString LoadStr;
+				for (auto Class : ModuleClassSet.Value)
+				{
+					IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
+					LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+				}
+
+				FString CppGlue = IncludeStr;
+				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
 				CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
-				CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n\t}\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
-				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Class->GetName());
-				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Class->GetName(), *Class->GetName());
-				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Class->GetName());
+				CppGlue += LoadStr + "\t}\r\n";
+				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
+				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_uclass_all"), *ModuleClassSet.Key);
 				CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
 				FixLinkFuncs.AddUnique(FixFuncName);
 				AllLuaGenCpp.Remove(CppFileName);
 				SaveHeaderIfChanged(CppFileName, CppGlue);
 			}
-		}
-		else
-		{
-			FString StructNamePrefix = ModuleClassSet.Key + "_uclass_all";
-			FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
-			FString IncludeStr = CommonInclude;
-			FString LoadStr;
-			for (auto Class : ModuleClassSet.Value)
-			{
-				IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
-				LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
-			}
-
-			FString CppGlue = IncludeStr;
-			CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
-			CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
-			CppGlue += LoadStr + "\t}\r\n";
-			CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
-			CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
-			FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_uclass_all"), *ModuleClassSet.Key);
-			CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
-			FixLinkFuncs.AddUnique(FixFuncName);
-			AllLuaGenCpp.Remove(CppFileName);
-			SaveHeaderIfChanged(CppFileName, CppGlue);
 		}
 	}
 	for (const auto& ModuleClassSet : ModuleStruct)
 	{
-		if (ChangeableModules.Contains(ModuleClassSet.Key))
+		if (!CircularModules.Contains(ModuleClassSet.Key))
 		{
-			for (auto Struct : ModuleClassSet.Value)
+			if (ChangeableModules.Contains(ModuleClassSet.Key))
 			{
-				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Struct->GetName() + "_lua.cpp";
+				for (auto Struct : ModuleClassSet.Value)
+				{
+					FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Struct->GetName() + "_lua.cpp";
 
-				FString CppGlue = CommonInclude;
-				CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
-				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Struct->GetName());
+					FString CppGlue = CommonInclude;
+					CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+					CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(%s_Lib, \"%s\");\r\n\t}\r\n"), *GetStructName(Struct), *GetStructName(Struct));
+					CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Struct->GetName(), *Struct->GetName());
+					FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+					FixLinkFuncs.AddUnique(FixFuncName);
+					AllLuaGenCpp.Remove(CppFileName);
+					SaveHeaderIfChanged(CppFileName, CppGlue);
+				}
+			}
+			else
+			{
+				FString StructNamePrefix = ModuleClassSet.Key + "_ustruct_all";
+				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
+				FString IncludeStr = CommonInclude;
+				FString LoadStr;
+
+				for (auto Struct : ModuleClassSet.Value)
+				{
+					IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
+					LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(F%s_Lib, \"F%s\");\r\n"), *Struct->GetName(), *Struct->GetName());
+				}
+
+				FString CppGlue = IncludeStr;
+				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
 				CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
-				CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(%s_Lib, \"%s\");\r\n\t}\r\n"), *GetStructName(Struct), *GetStructName(Struct));
-				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Struct->GetName());
-				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Struct->GetName(), *Struct->GetName());
-				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Struct->GetName());
+				CppGlue += LoadStr + "\t}\r\n";
+				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
+				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_ustruct_all"), *ModuleClassSet.Key);
 				CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
 				FixLinkFuncs.AddUnique(FixFuncName);
 				AllLuaGenCpp.Remove(CppFileName);
 				SaveHeaderIfChanged(CppFileName, CppGlue);
 			}
-		}
-		else
-		{
-			FString StructNamePrefix = ModuleClassSet.Key + "_ustruct_all";
-			FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
-			FString IncludeStr = CommonInclude;
-			FString LoadStr;
-
-			for (auto Struct : ModuleClassSet.Value)
-			{
-				IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
-				LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(F%s_Lib, \"F%s\");\r\n"), *Struct->GetName(), *Struct->GetName());
-			}
-
-			FString CppGlue = IncludeStr;
-			CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
-			CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
-			CppGlue += LoadStr + "\t}\r\n";
-			CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
-			CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
-			FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_ustruct_all"), *ModuleClassSet.Key);
-			CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
-			FixLinkFuncs.AddUnique(FixFuncName);
-			AllLuaGenCpp.Remove(CppFileName);
-			SaveHeaderIfChanged(CppFileName, CppGlue);
 		}
 	}
 
@@ -2235,11 +2249,152 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	//
 	FString FixLinkCppFileName = OutputDir / "private" / "LuaFixLink.cpp";
 	FString FixLinkCppGlue = "#include \"LuaFixLink.h\"\r\n";
+// 	FixLinkCppGlue += "extern void LuaFixLink1();\r\n";
 	for (FString& Func : FixLinkFuncs)
 	{
 		FixLinkCppGlue += "extern void " + Func + "();\r\n";
 	}
 	FixLinkCppGlue += "void LuaFixLink()\r\n{\r\n";
+	for (FString& Func : FixLinkFuncs)
+	{
+		FixLinkCppGlue += "\t" + Func + "();\r\n";
+	}
+// 	FixLinkCppGlue += "\tLuaFixLink1();\r\n";
+	FixLinkCppGlue += "}";
+
+	SaveHeaderIfChanged(FixLinkCppFileName, FixLinkCppGlue);
+
+	for (FString& Path : AllLuaGenCpp)
+	{
+		SaveHeaderIfChanged(Path, "//you should delete this file. In order to let UBT run again, you should make tiny change to project's build.cs.");
+	}
+}
+//later refactor, for now ,just this, hehe.
+void FLuaScriptCodeGenerator::GlueAllGeneratedFiles_CircularModule()
+{
+	FString OutputDir = FModulePath::Get().GetModulePathByName("LuaCircularModules");
+	TArray<FString> AllLuaGenCpp;
+	IFileManager::Get().FindFilesRecursive(AllLuaGenCpp, *(OutputDir / LuaGeneratedCodeDir), TEXT("*.cpp"), true, false, false);
+
+	TMap<FString, FString> FileName2FilePath;
+	for (FString& Path : AllLuaGenCpp)
+	{
+		FString FileName = FPaths::GetCleanFilename(Path);
+		FileName2FilePath.Add(FileName, Path);
+	}
+
+	FString CommonInclude;
+	CommonInclude += "#include \"tableutil.h\"\r\n";
+	TArray<FString> FixLinkFuncs;
+	for (const auto& ModuleClassSet : ModulesClass)
+	{
+		if (CircularModules.Contains(ModuleClassSet.Key))
+		{
+			if (ChangeableModules.Contains(ModuleClassSet.Key))
+			{
+				for (auto Class : ModuleClassSet.Value)
+				{
+					FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Class->GetName() + "_lua.cpp";
+
+					FString CppGlue = CommonInclude;
+					CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+					CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n\t}\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+					CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Class->GetName());
+					CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Class->GetName(), *Class->GetName());
+					FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Class->GetName());
+					CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+					FixLinkFuncs.AddUnique(FixFuncName);
+					AllLuaGenCpp.Remove(CppFileName);
+					SaveHeaderIfChanged(CppFileName, CppGlue);
+				}
+			}
+			else
+			{
+				FString StructNamePrefix = ModuleClassSet.Key + "_uclass_all";
+				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
+				FString IncludeStr = CommonInclude;
+				FString LoadStr;
+				for (auto Class : ModuleClassSet.Value)
+				{
+					IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Class->GetName());
+					LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadlib(%s_Lib, \"%s\");\r\n"), *Class->GetName(), *GetClassNameCPP(Class));
+				}
+
+				FString CppGlue = IncludeStr;
+				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+				CppGlue += LoadStr + "\t}\r\n";
+				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
+				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_uclass_all"), *ModuleClassSet.Key);
+				CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+				FixLinkFuncs.AddUnique(FixFuncName);
+				AllLuaGenCpp.Remove(CppFileName);
+				SaveHeaderIfChanged(CppFileName, CppGlue);
+			}
+		}
+	}
+	for (const auto& ModuleClassSet : ModuleStruct)
+	{
+		if (CircularModules.Contains(ModuleClassSet.Key))
+		{
+			if (ChangeableModules.Contains(ModuleClassSet.Key))
+			{
+				for (auto Struct : ModuleClassSet.Value)
+				{
+					FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / Struct->GetName() + "_lua.cpp";
+
+					FString CppGlue = CommonInclude;
+					CppGlue += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+					CppGlue += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(%s_Lib, \"%s\");\r\n\t}\r\n"), *GetStructName(Struct), *GetStructName(Struct));
+					CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *Struct->GetName(), *Struct->GetName());
+					FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_%s"), *ModuleClassSet.Key, *Struct->GetName());
+					CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+					FixLinkFuncs.AddUnique(FixFuncName);
+					AllLuaGenCpp.Remove(CppFileName);
+					SaveHeaderIfChanged(CppFileName, CppGlue);
+				}
+			}
+			else
+			{
+				FString StructNamePrefix = ModuleClassSet.Key + "_ustruct_all";
+				FString CppFileName = OutputDir / LuaGeneratedCodeDir / ModuleClassSet.Key / StructNamePrefix + "_lua.cpp";
+				FString IncludeStr = CommonInclude;
+				FString LoadStr;
+
+				for (auto Struct : ModuleClassSet.Value)
+				{
+					IncludeStr += FString::Printf(TEXT("#include \"%s.lua.h\"\r\n"), *Struct->GetName());
+					LoadStr += FString::Printf(TEXT("\t\tUTableUtil::loadstruct(F%s_Lib, \"F%s\");\r\n"), *Struct->GetName(), *Struct->GetName());
+				}
+
+				FString CppGlue = IncludeStr;
+				CppGlue += FString::Printf(TEXT("struct lua_static_load_%s_struct\r\n{\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("\tstatic void load()\r\n\t{\r\n"));
+				CppGlue += LoadStr + "\t}\r\n";
+				CppGlue += FString::Printf(TEXT("\tlua_static_load_%s_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}\r\n};\r\n"), *StructNamePrefix);
+				CppGlue += FString::Printf(TEXT("static lua_static_load_%s_struct lua_%s_static_var;\r\n"), *StructNamePrefix, *StructNamePrefix);
+				FString FixFuncName = FString::Printf(TEXT("FixLinkFunc_%s_ustruct_all"), *ModuleClassSet.Key);
+				CppGlue += FString::Printf(TEXT("void %s(){};\r\n"), *FixFuncName);
+				FixLinkFuncs.AddUnique(FixFuncName);
+				AllLuaGenCpp.Remove(CppFileName);
+				SaveHeaderIfChanged(CppFileName, CppGlue);
+			}
+		}
+	}
+
+	FString FixLinkCppFileName = OutputDir / "LuaFixLink1.cpp";
+	FString FixLinkCppGlue = "#include \"LuaFixLink1.h\"\r\n";
+	for (FString& Func : FixLinkFuncs)
+	{
+		FixLinkCppGlue += "extern void " + Func + "();\r\n";
+	}
+	FixLinkCppGlue += "void LuaFixLink1()\r\n{\r\n";
 	for (FString& Func : FixLinkFuncs)
 	{
 		FixLinkCppGlue += "\t" + Func + "();\r\n";
@@ -2251,6 +2406,5 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 	for (FString& Path : AllLuaGenCpp)
 	{
 		SaveHeaderIfChanged(Path, "//you should delete this file. In order to let UBT run again, you should make tiny change to project's build.cs.");
-		//  		IFileManager::Get().Delete(*Path);
 	}
 }

@@ -11,7 +11,7 @@ public class CatchMe : ModuleRules
            
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage","LuaPluginRuntime", "GameplayTasks" });
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG"});
-
+//         LinkTypePrivate = Monolithic;
         if (Target.Platform == UnrealTargetPlatform.Mac)
         {
             CircularlyReferencedDependentModules.Add("LuaPluginRuntime");
