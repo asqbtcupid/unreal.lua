@@ -6,7 +6,8 @@
 
 ULuaSetHelper::ULuaSetHelper()
 {
-	LuaCtor("frame.luasethelper", this);
+	if(!HasAnyFlags(RF_ClassDefaultObject))
+		LuaCtor("frame.luasethelper", this);
 }
 
 void ULuaSetHelper::Init(void* _Obj, USetProperty* _Property)

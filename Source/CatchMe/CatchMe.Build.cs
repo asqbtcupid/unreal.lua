@@ -9,9 +9,9 @@ public class CatchMe : ModuleRules
     { 
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
            
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore","Foliage","LuaPluginRuntime", "GameplayTasks" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "Foliage","LuaPluginRuntime", "GameplayTasks" });
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG"});
-
+//         LinkTypePrivate = Monolithic;
         if (Target.Platform == UnrealTargetPlatform.Mac)
         {
             CircularlyReferencedDependentModules.Add("LuaPluginRuntime");

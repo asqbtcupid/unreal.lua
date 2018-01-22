@@ -19,7 +19,7 @@ function CMPlayerController:BeginPlay( )
 	else
 	end
 	if self:IsLocalPlayerController() then
-		self:InitFogMgr()
+		-- self:InitFogMgr()
 		self.TestUI = require "ui.test":NewCpp(self, self)
 	end
 	self:GetFoliageActor()
@@ -46,9 +46,9 @@ function CMPlayerController:GetFoliageActor()
 					if component.StaticMesh == StaticMesh then
 						self.m_FoliageComponents[component] = index
 						self.m_FoliageComponents[index] = component
-						if self:IsLocalPlayerController() then
-							component:SetMaterial(0, self.m_FogMgr:GetMaterial(Cfg("foliage")[index].Material))
-						end
+						-- if self:IsLocalPlayerController() then
+						-- 	component:SetMaterial(0, self.m_FogMgr:GetMaterial(Cfg("foliage")[index].Material))
+						-- end
 						break
 					end
 				end
@@ -98,11 +98,11 @@ function CMPlayerController:S_RemoveFoliage_Imp(FoliageIndex, Index)
 		local TransForm = FTransform.Temp()
 		FoliageComponent:GetInstanceTransform(Index, TransForm, true)
 		local Pos = TransForm:Break()
-		if self.m_FogMgr:CanSeeNow(Pos) then
-			Remove()
-		else
-			A_("no")
-		end
+		-- if self.m_FogMgr:CanSeeNow(Pos) then
+		-- 	Remove()
+		-- else
+		-- 	A_("no")
+		-- end
 	end
 end
 

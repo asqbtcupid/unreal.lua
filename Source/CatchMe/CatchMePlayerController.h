@@ -11,8 +11,8 @@ class CATCHME_API ACatchMePlayerController : public ACMPlayerControllerBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY()
-	UCMFogMgr* FogMgr;
+// 	UPROPERTY()
+// 	UCMFogMgr* FogMgr;
 	 
 	ACatchMePlayerController();
 	

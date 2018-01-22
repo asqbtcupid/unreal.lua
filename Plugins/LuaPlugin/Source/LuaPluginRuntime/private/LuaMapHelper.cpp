@@ -6,7 +6,8 @@
 
 ULuaMapHelper::ULuaMapHelper()
 {
-	 LuaCtor("frame.luamaphelper", this);
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+		 LuaCtor("frame.luamaphelper", this);
 }
 
 void ULuaMapHelper::Init(void* _Obj, UMapProperty* _Property)

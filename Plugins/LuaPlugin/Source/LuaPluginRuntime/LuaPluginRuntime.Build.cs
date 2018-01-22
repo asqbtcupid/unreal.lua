@@ -14,15 +14,15 @@ public class LuaPluginRuntime : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs; 
         bFasterWithoutUnity = true;
         PrivateIncludePaths.Add("LuaPluginRuntime/Private");
-           
+            
         PublicDependencyModuleNames.AddRange(new string[] {  "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "RHI", "RenderCore", "Foliage", "GameplayTasks" });
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG", "AssetRegistry" });
-            
-        PrivateDependencyModuleNames.AddRange(new string[] { "CatchMe" });
-         
+
+        PublicIncludePathModuleNames.AddRange(new string[] { "CatchMe" });
+
         Definitions.Add("LuaDebug");
         Definitions.Add("STRONG_CHECK_GC_REF");
-      
+          
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });

@@ -5,7 +5,8 @@
 
 ULuaArrayHelper::ULuaArrayHelper()
 {
-	LuaCtor("frame.luaarrayhelper", this);
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+		LuaCtor("frame.luaarrayhelper", this);
 }
 
 void ULuaArrayHelper::Init(void* _Obj, UArrayProperty* _Property)

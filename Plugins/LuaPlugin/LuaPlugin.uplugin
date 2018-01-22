@@ -28,6 +28,11 @@
 		"Type" : "Runtime",
 		"LoadingPhase" : "PreDefault"
 	},
+	{
+		"Name" : "LuaCircularModules",
+		"Type" : "Runtime",
+		"LoadingPhase" : "PreDefault"
+	},
     {
       "Name": "LuaPluginEditor",
       "Type":  "Editor",
