@@ -6,11 +6,11 @@ function testUmg:Ctor(controller)
 	self:Wnd("btn_clear"):Event("OnClicked", self.ClickClear, self)
 	self:Wnd("Play"):Event("OnClicked", self.PlayAnim, self)
 
-	local MaterialFather = UMaterial.LoadObject(self, "/Game/Git/mt_fog.mt_fog")
-	self.MID = UKismetMaterialLibrary.CreateDynamicMaterialInstance(self, MaterialFather)
+	-- local MaterialFather = UMaterial.LoadObject(self, "/Game/Git/mt_fog.mt_fog")
+	-- self.MID = UKismetMaterialLibrary.CreateDynamicMaterialInstance(self, MaterialFather)
 
-	self.MID:SetTextureParameterValue("tx_fog", controller.m_FogMgr.Tx_Fog)
-	self:Wnd("img_fog"):SetBrushFromTexture(controller.m_FogMgr.Tx_Fog)
+	-- self.MID:SetTextureParameterValue("tx_fog", controller.m_FogMgr.Tx_Fog)
+	-- self:Wnd("img_fog"):SetBrushFromTexture(controller.m_FogMgr.Tx_Fog)
 
 end
 function testUmg:PlayAnim()

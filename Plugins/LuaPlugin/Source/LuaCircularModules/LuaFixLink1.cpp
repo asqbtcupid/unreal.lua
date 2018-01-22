@@ -2,7 +2,6 @@
 extern void FixLinkFunc_CatchMe_CatchMeAIController();
 extern void FixLinkFunc_CatchMe_CatchMeGameInstance();
 extern void FixLinkFunc_CatchMe_CMCharacterBase();
-extern void FixLinkFunc_CatchMe_CMFogMgr();
 extern void FixLinkFunc_CatchMe_CMFogMgr_Test();
 extern void FixLinkFunc_CatchMe_CMGameModeBase();
 extern void FixLinkFunc_CatchMe_CMPlayerControllerBase();
@@ -20,7 +19,6 @@ void LuaFixLink1()
 	FixLinkFunc_CatchMe_CatchMeAIController();
 	FixLinkFunc_CatchMe_CatchMeGameInstance();
 	FixLinkFunc_CatchMe_CMCharacterBase();
-	FixLinkFunc_CatchMe_CMFogMgr();
 	FixLinkFunc_CatchMe_CMFogMgr_Test();
 	FixLinkFunc_CatchMe_CMGameModeBase();
 	FixLinkFunc_CatchMe_CMPlayerControllerBase();
