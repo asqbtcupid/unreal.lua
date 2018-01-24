@@ -703,7 +703,8 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 	if (Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 	{
 // remove "_C"
-		const char* classname = TCHAR_TO_UTF8(*Class->GetName().LeftChop(2));
+		auto temp1 = FTCHARToUTF8((const TCHAR*)*Class->GetName().LeftChop(2));
+		const char* classname = (ANSICHAR*)temp1.Get();
 		lua_getglobal(inL, classname);
 		if (lua_isnil(inL, -1))
 		{
@@ -711,16 +712,19 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 
 			while (!NativeClass->HasAnyClassFlags(CLASS_Native))
 				NativeClass = NativeClass->GetSuperClass();
-
-			const char* nativeclassname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName()));
+			
+			FString NativeClassNameStr = FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName());
+			auto temp2 = FTCHARToUTF8((const TCHAR*)*NativeClassNameStr);
+			const char* nativeclassname = (ANSICHAR*)temp2.Get();
 
 			lua_pop(inL, 1);
 			UClass* BpClass = Class;
 
 			while (BpClass && BpClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 			{
-				const char* newclassname = TCHAR_TO_UTF8(*BpClass->GetName().LeftChop(2));
-
+				FString NewClassNameStr = BpClass->GetName().LeftChop(2);
+				auto temp3 = FTCHARToUTF8((const TCHAR*)*NewClassNameStr);
+				const char* newclassname = (ANSICHAR*)temp3.Get();
 
 				lua_newtable(inL);
 				lua_getglobal(inL, nativeclassname);
@@ -823,7 +827,10 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 		while (!NativeClass->HasAnyClassFlags(CLASS_Native))
 			NativeClass = NativeClass->GetSuperClass();
 
-		const char* nativeclassname = TCHAR_TO_UTF8(*FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName()));
+		FString NativeClassStr = FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName());
+		auto temp4 = FTCHARToUTF8((const TCHAR*)*NativeClassStr);
+		const char* nativeclassname = (ANSICHAR*)temp4.Get();
+
 		setmeta(inL, nativeclassname, index);
 #ifdef LuaDebug
 		if (UTableUtil::countforgc.Contains(nativeclassname))
@@ -1589,8 +1596,10 @@ void UTableUtil::MayAddNewStructType(UUserDefinedStruct* BpStruct)
 		return;
 	}
 	bpname2bpstruct.Add(TypeName, BpStruct);
-	const char* name = TCHAR_TO_UTF8(*TypeName);
-	const char* name_nogc = TCHAR_TO_UTF8(*FString::Printf(L"%s_nogc", *TypeName));
+	auto temp1 = FTCHARToUTF8((const TCHAR*)*TypeName);
+	const char* name = (ANSICHAR*)temp1.Get();
+	auto temp2 = FTCHARToUTF8((const TCHAR*)*FString::Printf(L"%s_nogc", *TypeName));
+	const char* name_nogc = (ANSICHAR*)temp2.Get();
 	addmodule(name_nogc, true, false);
 	lua_getglobal(TheOnlyLuaState, name_nogc);
 	for (TFieldIterator<UProperty> PropertyIt(BpStruct); PropertyIt; ++PropertyIt)
