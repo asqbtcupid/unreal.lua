@@ -1,79 +1,97 @@
 # New version is coming soon.
 
 
-## Lua5.1 Plugin
-This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
-## Supported PlatForm
-Windows, Mac, Android(test with samsung edge s7),IOS(test with iphone 6)
-## How to build
-This plugin can be used in UE4 4.17 version.Must be Source code compiled engine,Other wise you have to build the plugin by yourself.
+## Lua 5.1 Plugin
+  This can be used to generate a lua binding for UE4 Engine, allowing you to write game logic in Lua.
 
-It's a demo,so right click CatchMe.uproject then Generate visual studio project.
+## Supported Platforms
+  Windows, Mac, Android, IOS
+  
+## How to Build
+  This plugin can be used in UE4 4.17 version. You must use a copy of the engine compiled from source, otherwise you will have to build the plugin yourself.
+
+  Right click CatchMe.uproject then Generate visual studio project.
 
 ## Communication between C++ and Lua:  
 
-1.call lua function in c++, There are Two way, In both method, No matter how many parameters:
+* There are two ways to call a Lua function:
 
-  without return value:
+  without a return value,
 
   ```
   UTableUtil::call(function_name, parameter1, parameter2, ...);
   ```
 
-  with return value:
+  and with return value.
 
   ```
   UTableUtil::callr<returntype>(function_name, parameter1, parameter2, ...);
-```
+  ```
 
-2.call c++ in lua is similar with Blueprint.You can call c++ class function which with UFUNCTION() and You can get or set c++ member data which with UPROPERTY().
+* Calling C++ in Lua is similar to how it works for Blueprints. You can call C++ class functions with UFUNCTION(), and you can get/set C++ member data which with UPROPERTY().
 
 ## Communication between Blueprint and Lua:
-1.Lua can't not comunicate with Blueprint derectly,I think it's no meaning and slow.
+* You can not communicate between Blueprint and Lua.
 
-## Export Class, Struct, Enum to Lua
+## Exporting Classes, Structs, and Enums to Lua
 
-1.config:In the Config/luaconfig.ini, "SupportedModules" mean The UCLASS of this module are exported to Lua, But for Now I only test CoreUobject, Engine, SlateCore, Slate, UMG."SupportedStruct" mean the USTRUCT exported to Lua.Please ignore "NoPropertyStruct" for now.All UENUM are exported.
+* Config: In the Config/luaconfig.ini, "SupportedModules" means the UCLASS of this module is exported to Lua, but for now I have only tested CoreUobject, Engine, SlateCore, Slate, UMG."SupportedStruct" means the USTRUCT exported to Lua. Please ignore "NoPropertyStruct" for now. All UENUM are exported.
 
-2.if you want to export your class or struct or enum,you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
+* If you want to export your class, struct, or enum you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
+
 ## How to know what function or property of class are exported?
-The lua binding code is generate to the folder base on your visual studio project config.If you use Development Editor config,please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class or struct has their corresponding file.Enum are in allEnum.script.h.
+  The lua binding code is generated in the base folder on your visual studio project config. If you use the development editor config please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder. Each class or struct has their corresponding file. Enums are in allEnum.script.h.
 
 ## What other type are suppoted?
 
-1.TArray and C array is supported.TSet and TMap is not supported.
+* TArray and C array are supported. TSet and TMap are not supported.
 
-2.TWeakObjectPtr is supported,There are some example code in branch 
+* TWeakObjectPtr is supported. There is some example code in that branch.
 
-3.MulticastDelegate is supported.
+* MulticastDelegate is supported.
 
-4.UInterface is supported in branch demo_firstperson_umg.I will merge to master later.
+* UInterface is supported in branch demo_firstperson_umg. I will merge this branch to master at a future date.
 
-## Featrue
+## Features
 
-1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).
+* You can reload the Lua logic at runtime. Check out my other repository for hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).
 
-2.When lua call c++ function which contains default argument.you dont't have to pass all arguments.For an example,In c++,you declare _void example(int i, int j =1, int k = 2)_.When you call this function in lua,you can just pass one argument:example(0).
+* When Lua calls a C++ function which has default arguments you dont't have to pass all arguments. For example: in C++ you've declared
+  ```
+  _void example(int i, int j =1, int k = 2)_
+  ```
+  When calling this function in Lua you can pass only one argument.
+  ```
+  example(0)
+  ```
 
-3.When lua call c++ function which contains reference parameter, such as _void example(int &i, FVector &v)_,lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
+* When Lua calls a C++ function that has reference perameters such as:
+  ```
+  void example(int &i, FVector &v)
+  ```
+  You can get the reference values from the call like this:
+  ```
+  i, v = example(arg1, arg2)
+  ```
 
 ## FAQ
-Q1. Encounter "No filename provided for module LuaglueGenerator" during compile.
+* "No filename provided for module LuaglueGenerator" during compile.
 
-A1. Use source code build ue4 engine,Or try to package the Plugins/LuaPlugin manually.There are another solution in 	 https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4
+  Use a build of UE4 built from source, or try to package the Plugins/LuaPlugin manually. You can find another solution here: https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4
 
-Q2. Encounter lots of compile error in DelegateLuaProxy.h
+* Lots of compile errors in DelegateLuaProxy.h
 
-A2. In order to let the UHT run again.just make tiny modify in what ever a .h file in your project(such as add an empty line),Then compile the project again, the compile error will be disappear.
+  In order to get UHT running again make a tiny modification in any .h file in your project, and then compile the project again. The error will disappear.
 
-Q3.Add module to luaconfig.ini,Then encouter linker error.
+* Linking error when adding modules to luaconfig.ini
 
-A3.add module name to PublicDependencyModuleNames or PrivateDependencyModuleNames in project.build.cs.If error still exist,Config luaconfig.ini to stop exporting relevant class or function.
+  Add module name to PublicDependencyModuleNames or PrivateDependencyModuleNames to project.build.cs. If the error still occurs then config luaconfig.ini to stop exporting the relevant class or function.
+ 
 ## Finally
-1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
+* There is some lua code in LuaSource. We use luaclass.lua to imitate C++ style object orientation. TimerMgr.lua provides a timer. You do not need to use these, and feel free to implement them yourself.
 
-2.All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
+* All my work is based on the official plugin ScriptPlugin https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
 
-3.If you have any problem,you can leave message in https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4.
+* If you have any problem you can make a post in https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4, or submit an issue.
 
-4.It's an experimental project,If you has any good idea or advise, welcome to fallback.Contact:15244611841@163.com
+* This is an experimental project, and if you have any good advice or ideas you can contact me here: 15244611841@163.com
