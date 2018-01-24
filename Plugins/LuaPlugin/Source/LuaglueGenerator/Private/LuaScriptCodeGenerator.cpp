@@ -1792,14 +1792,6 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += TEXT("\treturn 1;\r\n");
 			GeneratedGlue += TEXT("}\r\n\r\n");
 
-			// Class: Equivalent of StaticClass()
-			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("Lua_Class"));
-			GeneratedGlue += TEXT("\r\n{\r\n");
-			GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = %s::StaticClass();\r\n"), *ClassNameCPP);
-			GeneratedGlue += TEXT("\tpushuobject(L, (void*)Class);\r\n");
-			GeneratedGlue += TEXT("\treturn 1;\r\n");
-			GeneratedGlue += TEXT("}\r\n\r\n");
-
 			GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("LoadClass"));
 			GeneratedGlue += TEXT("\r\n{\r\n");
 			GeneratedGlue += TEXT("\tUObject* obj = (UObject*)touobject(L, 1);\r\n");
@@ -1826,6 +1818,17 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 		GeneratedGlue += TEXT("}\r\n\r\n");
 		//Library
 	}
+
+	if (!(Class->ClassFlags & CLASS_Interface))
+	{
+		GeneratedGlue += GenerateWrapperFunctionDeclaration(ClassNameCPP, Class->GetName(), TEXT("Lua_Class"));
+		GeneratedGlue += TEXT("\r\n{\r\n");
+		GeneratedGlue += FString::Printf(TEXT("\tUClass* Class = %s;\r\n"), *GetUClassGlue(Class));
+		GeneratedGlue += TEXT("\tpushuobject(L, (void*)Class);\r\n");
+		GeneratedGlue += TEXT("\treturn 1;\r\n");
+		GeneratedGlue += TEXT("}\r\n\r\n");
+	}
+
 	GeneratedGlue += FString::Printf(TEXT("static const luaL_Reg %s_Lib[] =\r\n{\r\n"), *ClassName);
 
 	if (IsApiClass(Class))
@@ -1844,9 +1847,14 @@ FString FLuaScriptCodeGenerator::ExportAdditionalClassGlue(const FString& ClassN
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"FClassFinder\", %s_FClassFinder },\r\n"), *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"LoadClass\", %s_LoadClass },\r\n"), *ClassNameCPP);
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"LoadObject\", %s_LoadObject },\r\n"), *ClassNameCPP);
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Lua_Class },\r\n"), *ClassNameCPP);
+			
 		}
 		GeneratedGlue += FString::Printf(TEXT("\t{ \"Cast\", %s_Cast },\r\n"), *ClassNameCPP);
+	}
+
+	if (!(Class->ClassFlags & CLASS_Interface))
+	{
+		GeneratedGlue += FString::Printf(TEXT("\t{ \"Class\", %s_Lua_Class },\r\n"), *ClassNameCPP);
 	}
 	auto FunctionExports = ClassExportedFunctions.Find(Class);
 	if (FunctionExports)
