@@ -1,79 +1,55 @@
-# New version is coming soon.
+
+#unreal.lua
+    UE4 is not good enough.
+    
+    Lua make UE4 more perfect, hahaha~~
+    
+    
+    
+    
+
+##Platform & Version
+Windows, Mac, Android, IOS
+
+4.16, 4.17, 4.18
 
 
-## Lua5.1 Plugin
-This can be used to generate lua binding code for UE4 Engine.That means you can write game logic by lua.
-## Supported PlatForm
-Windows, Mac, Android(test with samsung edge s7),IOS(test with iphone 6)
+
 ## How to build
-This plugin can be used in UE4 4.17 version.Must be Source code compiled engine,Other wise you have to build the plugin by yourself.
+for this repository:
 
-It's a demo,so right click CatchMe.uproject then Generate visual studio project.
+    Right click CatchMe.uproject then Generate project.
 
-## Communication between C++ and Lua:  
+    If you use launcher engine and is under 4.18, try CatchMe_for4.17launcherengine.uproject.
 
-1.call lua function in c++, There are Two way, In both method, No matter how many parameters:
+for your project:
+    
+    1.copy LuaSource and Plugins to your project.
+    
+    2.modify luaconfig.ini, Replace all "CatchMe" with your GameModule's name."CatchMe" belong to me,haha~
+    
+    3.modify LuaPluginRuntime.build.cs, Replace "CatchMe" with your GameModule's name.
+    
+    4.modify LuaCircularModules.build.cs, Replace "CatchMe" with your GameModule's name.
+    
+    5.If you want to use Lua in c++, modify your project.build.cs, add "LuaPluginRuntime" to your PublicDependencyModuleNames.
+###Attention
+    You will probably meet link error for the first time compile,No need to panic.
+    
+    Just make a little change to you project.build.cs, such as an empty space.Then complie again.
+    
+    If error still exist,see FAQ below.
+    
+##Feature
 
-  without return value:
+    1.Full Aceess Engine API, include blueprint.
 
-  ```
-  UTableUtil::call(function_name, parameter1, parameter2, ...);
-  ```
-
-  with return value:
-
-  ```
-  UTableUtil::callr<returntype>(function_name, parameter1, parameter2, ...);
-```
-
-2.call c++ in lua is similar with Blueprint.You can call c++ class function which with UFUNCTION() and You can get or set c++ member data which with UPROPERTY().
-
-## Communication between Blueprint and Lua:
-1.Lua can't not comunicate with Blueprint derectly,I think it's no meaning and slow.
-
-## Export Class, Struct, Enum to Lua
-
-1.config:In the Config/luaconfig.ini, "SupportedModules" mean The UCLASS of this module are exported to Lua, But for Now I only test CoreUobject, Engine, SlateCore, Slate, UMG."SupportedStruct" mean the USTRUCT exported to Lua.Please ignore "NoPropertyStruct" for now.All UENUM are exported.
-
-2.if you want to export your class or struct or enum,you can add "meta=(Lua=1)" to the macro, such as UCLASS(meta=(Lua=1)).
-## How to know what function or property of class are exported?
-The lua binding code is generate to the folder base on your visual studio project config.If you use Development Editor config,please check your project_name/Intermediate/Build/Win64/UE4Editor/Inc/project_name folder.each class or struct has their corresponding file.Enum are in allEnum.script.h.
-
-## What other type are suppoted?
-
-1.TArray and C array is supported.TSet and TMap is not supported.
-
-2.TWeakObjectPtr is supported,There are some example code in branch 
-
-3.MulticastDelegate is supported.
-
-4.UInterface is supported in branch demo_firstperson_umg.I will merge to master later.
-
-## Featrue
-
-1.Lua Hot Reload, You can change the lua logic during game running.This is my another repositery about lua hot reload:[luahotupdate](https://github.com/asqbtcupid/lua_hotupdate).
-
-2.When lua call c++ function which contains default argument.you dont't have to pass all arguments.For an example,In c++,you declare _void example(int i, int j =1, int k = 2)_.When you call this function in lua,you can just pass one argument:example(0).
-
-3.When lua call c++ function which contains reference parameter, such as _void example(int &i, FVector &v)_,lua can get the reference value after call.In this case, you can write lua code:local i, v = example(argument1, argument2).
-
+    2.Lua Hot Reload, [luahotupdate](https://github.com/asqbtcupid/lua_hotupdate)
+    
+    3.Variable Watcher
 ## FAQ
-Q1. Encounter "No filename provided for module LuaglueGenerator" during compile.
-
-A1. Use source code build ue4 engine,Or try to package the Plugins/LuaPlugin manually.There are another solution in 	 https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4
-
-Q2. Encounter lots of compile error in DelegateLuaProxy.h
-
-A2. In order to let the UHT run again.just make tiny modify in what ever a .h file in your project(such as add an empty line),Then compile the project again, the compile error will be disappear.
-
-Q3.Add module to luaconfig.ini,Then encouter linker error.
-
-A3.add module name to PublicDependencyModuleNames or PrivateDependencyModuleNames in project.build.cs.If error still exist,Config luaconfig.ini to stop exporting relevant class or function.
+todo
 ## Finally
-1.There are some lua code in LuaSource such as luaclass.lua, It imitate the c++ object-oriented.And TimerMgr.lua, It works like a timer.But all of these are not necessary, you can implement better one.  
+Contact:15244611841@163.com
 
-2.All my work are base on the official plugin ScriptPlugin.https://forums.unrealengine.com/showthread.php?3958-Scripting-Language-extensions-via-plugins
-
-3.If you have any problem,you can leave message in https://forums.unrealengine.com/showthread.php?135440-Lua-5-1-codegenerator-for-UE4.
-
-4.It's an experimental project,If you has any good idea or advise, welcome to fallback.Contact:15244611841@163.com
+support:ETH 0x3b678916bc9d9f9a18717722e90b3afab70c344b
