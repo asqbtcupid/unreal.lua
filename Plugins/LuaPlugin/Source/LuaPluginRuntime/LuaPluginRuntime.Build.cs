@@ -26,7 +26,7 @@ public class LuaPluginRuntime : ModuleRules
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(new string[] { "VarWatcher", "UnrealEd" });
-        }
+        } 
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
