@@ -283,8 +283,15 @@ public:
 		return 1;
 	}
 
+// 	template<typename T>
+// 	static int push(lua_State *inL, const T* value, typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, T>::Type* p = nullptr)
+// 	{
+// 		pushuobject(inL, (void*)value);
+// 		return 1;
+// 	}
+
 	template<typename T>
-	static int push(lua_State *inL, const T* value, typename TEnableIf<TIsDerivedFrom<T, UObject>::IsDerived, T>::Type* p = nullptr)
+	static int push(lua_State *inL, T* value)
 	{
 		pushuobject(inL, (void*)value);
 		return 1;
