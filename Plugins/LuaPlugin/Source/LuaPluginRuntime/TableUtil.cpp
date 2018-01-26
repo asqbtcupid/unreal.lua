@@ -17,6 +17,9 @@
 #include "Platform.h"
 
 DEFINE_LOG_CATEGORY(LuaLog);
+#define SetTableFunc(inL, index, FuncName, Func) lua_pushstring(inL, FuncName);\
+											lua_pushcfunction(inL, Func);\
+											lua_rawset(inL, index)
 
 FLuaInitDelegates& UTableUtil::GetInitDelegates()
 {
@@ -427,17 +430,62 @@ int32 EnsureDestroy(lua_State* inL)
 	return 0;
 }
 
+int32 UObject_GetName(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	UTableUtil::push(inL, Obj->GetName());
+	return 1;
+}
+
+int32 UObject_GetClass(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	pushuobject(inL, Obj->GetClass());
+	return 1;
+}
+
+int32 UObject_GetOuter(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	pushuobject(inL, Obj->GetOuter());
+	return 1;
+}
+
+int32 UObject_IsPendingKill(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	UTableUtil::push(inL, Obj->IsPendingKill());
+	return 1;
+}
+
+int32 UObject_MarkPendingKill(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	Obj->MarkPendingKill();
+	return 0;
+}
+
+int32 UObject_AddToRoot(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	Obj->AddToRoot();
+	return 0;
+}
+
+int32 UObject_RemoveFromRoot(lua_State* inL)
+{
+	UObject* Obj = (UObject*)touobject(inL, 1);
+	Obj->RemoveFromRoot();
+	return 0;
+}
+
+
 void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 {
-	lua_pushstring(TheOnlyLuaState, "__index");
-	lua_pushcfunction(TheOnlyLuaState, indexFunc);
-	lua_rawset(TheOnlyLuaState, -3);
-	lua_pushstring(TheOnlyLuaState, "cast");
-	lua_pushcfunction(TheOnlyLuaState, cast);
-	lua_rawset(TheOnlyLuaState, -3);
-	lua_pushstring(TheOnlyLuaState, "__newindex");
-	lua_pushcfunction(TheOnlyLuaState, newindexFunc);
-	lua_rawset(TheOnlyLuaState, -3);
+	SetTableFunc(TheOnlyLuaState, -3, "__index", indexFunc);
+	SetTableFunc(TheOnlyLuaState, -3, "cast", cast);
+	SetTableFunc(TheOnlyLuaState, -3, "__newindex", newindexFunc);
+
 	if (bNeedGc)
 	{
 		lua_pushstring(TheOnlyLuaState, "__gc");
@@ -449,26 +497,26 @@ void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 	}
 	if (!bIsStruct)
 	{
-		lua_pushstring(TheOnlyLuaState, "New");
-		lua_pushcfunction(TheOnlyLuaState, EnsureNew);
-		lua_rawset(TheOnlyLuaState, -3);
-
-		lua_pushstring(TheOnlyLuaState, "NewObject");
-		lua_pushcfunction(TheOnlyLuaState, EnsureNew);
-		lua_rawset(TheOnlyLuaState, -3);
-
-		lua_pushstring(TheOnlyLuaState, "Destroy");
-		lua_pushcfunction(TheOnlyLuaState, EnsureDestroy);
-		lua_rawset(TheOnlyLuaState, -3);
+		SetTableFunc(TheOnlyLuaState, -3, "New", EnsureNew);
+		SetTableFunc(TheOnlyLuaState, -3, "NewObject", EnsureNew);
+		SetTableFunc(TheOnlyLuaState, -3, "Destroy", EnsureDestroy);
+		SetTableFunc(TheOnlyLuaState, -3, "GetClass", UObject_GetClass);
+		SetTableFunc(TheOnlyLuaState, -3, "GetName", UObject_GetName);
+		SetTableFunc(TheOnlyLuaState, -3, "GetOuter", UObject_GetOuter);
+		SetTableFunc(TheOnlyLuaState, -3, "LuaGet_ClassPrivate", UObject_GetClass);
+		SetTableFunc(TheOnlyLuaState, -3, "LuaGet_NamePrivate", UObject_GetName);
+		SetTableFunc(TheOnlyLuaState, -3, "LuaGet_OuterPrivate", UObject_GetOuter);
+		
+		SetTableFunc(TheOnlyLuaState, -3, "IsPendingKill", UObject_IsPendingKill);
+		SetTableFunc(TheOnlyLuaState, -3, "MarkPendingKill", UObject_MarkPendingKill);
+		SetTableFunc(TheOnlyLuaState, -3, "AddToRoot", UObject_AddToRoot);
+		SetTableFunc(TheOnlyLuaState, -3, "RemoveFromRoot", UObject_RemoveFromRoot);
 	}
 	lua_pushstring(TheOnlyLuaState, "__iscppclass");
 	lua_pushboolean(TheOnlyLuaState, true);
 	lua_rawset(TheOnlyLuaState, -3);
 
-
-	lua_pushstring(TheOnlyLuaState, "Table");
-	lua_pushcfunction(TheOnlyLuaState, serialize_table);
-	lua_rawset(TheOnlyLuaState, -3);
+	SetTableFunc(TheOnlyLuaState, -3, "Table", serialize_table);
 }
 
 void UTableUtil::addmodule(const char* name, bool bIsStruct, bool bNeedGc)

@@ -67,12 +67,12 @@ void FVarWatcherModule::StartupModule()
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
 	
-	{
-		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FVarWatcherModule::AddToolbarExtension));
-		
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
-	}
+// 	{
+// 		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+// 		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FVarWatcherModule::AddToolbarExtension));
+// 		
+// 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
+// 	}
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(VarWatcherTabName, FOnSpawnTab::CreateRaw(this, &FVarWatcherModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FVarWatcherTabTitle", "VarWatcher"))

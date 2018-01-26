@@ -15,7 +15,6 @@
 void FModulePath::Init()
 {
 	ModuleNames.Reset();
-	DisallowedHeaderNames.Empty();
 
 	// Find all the build rules within the game and engine directories
 	FindRootFilesRecursive(ModuleNames, *(FPaths::EngineDir() / TEXT("Source") / TEXT("Developer")), TEXT("*.Build.cs"));
@@ -23,31 +22,10 @@ void FModulePath::Init()
 	FindRootFilesRecursive(ModuleNames, *(FPaths::EngineDir() / TEXT("Source") / TEXT("Runtime")), TEXT("*.Build.cs"));
 	FindRootFilesRecursive(ModuleNames, *(FPaths::GetPath(FPaths::GetProjectFilePath()) / TEXT("Source")), TEXT("*.Build.cs"));
 
-	// Find list of disallowed header names in native (non-plugin) directories
-	TArray<FString> HeaderFiles;
-	for (const FString& ModuleName : ModuleNames)
-	{
-		IFileManager::Get().FindFilesRecursive(HeaderFiles, *(FPaths::GetPath(ModuleName) / TEXT("Classes")), TEXT("*.h"), true, false, false);
-		IFileManager::Get().FindFilesRecursive(HeaderFiles, *(FPaths::GetPath(ModuleName) / TEXT("Public")), TEXT("*.h"), true, false, false);
-	}
-
-	for (const FString& HeaderFile : HeaderFiles)
-	{
-		DisallowedHeaderNames.Add(FPaths::GetBaseFilename(HeaderFile));
-	}
-
-	for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
-	{
-		DisallowedHeaderNames.Remove(ClassIt->GetName());
-	}
-
-	// Find all the plugin directories
 	TArray<FString> PluginNames;
-
 	FindRootFilesRecursive(PluginNames, *(FPaths::EngineDir() / TEXT("Plugins")), TEXT("*.uplugin"));
 	FindRootFilesRecursive(PluginNames, *(FPaths::GetPath(FPaths::GetProjectFilePath()) / TEXT("Plugins")), TEXT("*.uplugin"));
 
-	// Add all the files within plugin directories
 	for (const FString& PluginName : PluginNames)
 	{
 		FindRootFilesRecursive(ModuleNames, *(FPaths::GetPath(PluginName) / TEXT("Source")), TEXT("*.Build.cs"));
