@@ -13,6 +13,11 @@ public class LuaCircularModules : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "Slate", "SlateCore", "UMG", "AssetRegistry","LuaPluginRuntime"});
 
         PublicDependencyModuleNames.AddRange(new string[] {"CatchMe"});
-	}
+
+        if (Target.Type == TargetType.Editor)
+        {
+            PublicDependencyModuleNames.AddRange(new string[] { "LuaDebugger" });
+        }
+    }
 
 }
