@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "STreeView.h"
 #include "DebuggerSetting.generated.h"
 
 USTRUCT()
@@ -11,15 +12,30 @@ struct LUADEBUGGER_API FDebuggerVarNode
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	FString Content;
+	FDebuggerVarNode():
+	NameWeakIndex(-1), ValueWeakIndex(-1)
+	{}
 
 	UPROPERTY()
-	int32 LuaIndex;
+	FText Name;
+
+	UPROPERTY()
+	FText Value;
+
+	UPROPERTY()
+	int32 NameWeakIndex;
+
+	UPROPERTY()
+	int32 ValueWeakIndex;
+
+	void GetChildren(TArray<TSharedRef<FDebuggerVarNode>>& OutChildren);
 
 	TArray<TSharedRef<FDebuggerVarNode>> KeyChildren;
 	TArray<TSharedRef<FDebuggerVarNode>> ValueChildren;
 };
+
+using FDebuggerVarNode_Ref = TSharedRef<FDebuggerVarNode>;
+using SDebuggerVarTree = STreeView<FDebuggerVarNode_Ref>;
 
 UCLASS()
 class LUADEBUGGER_API UDebuggerSetting : public UObject
@@ -39,11 +55,13 @@ public:
 	void UpdateBreakPoint(TMap<FString, TSet<int32>>& BreakPoint);
 	void ToggleDebugStart(bool IsStart);
 	void SetTabIsOpen(bool IsOpen);
+	void GetStackVars(int32 StackIndex, TArray<FDebuggerVarNode_Ref>& Vars);
+	void GetVarsChildren(FDebuggerVarNode Node, TArray<TSharedRef<FDebuggerVarNode>>& OutChildren);
 
 	UFUNCTION()
 		void EnterDebug(const FString& LuaFilePath, int32 Line);
 	UFUNCTION()
 	void SetStackData(const TArray<FString>& Content, const TArray<int32>& Lines, const TArray<FString>& FilePaths, const TArray<int32>& StackIndex);
 
-	TArray<FDebuggerVarNode> GetStackVar(int32 StackIndex);
+// 	TArray<FDebuggerVarNode> GetStackVar(int32 StackIndex);
 };

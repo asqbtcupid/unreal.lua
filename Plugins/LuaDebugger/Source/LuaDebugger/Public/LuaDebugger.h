@@ -120,8 +120,7 @@ public:
 };
 
 
-using FDebuggerVarNode_Ref = TSharedRef<FDebuggerVarNode>;
-using SDebuggerVarTree = STreeView<FDebuggerVarNode_Ref>;
+
 
 class SDebuggerVarTreeWidgetItem :public SMultiColumnTableRow<TSharedRef<FDebuggerVarNode>>
 {
@@ -163,6 +162,9 @@ public:
 	TArray<FStackListNode_Ref> NowLuaStack;
 	TWeakPtr<SLuaStackList> LuaStackListPtr;
 
+	TArray<FDebuggerVarNode_Ref> NowVars;
+	TWeakPtr<SDebuggerVarTree> DebuggerVarTree;
+
 	TMap<FString, TSet<int32>> BreakPoint;
 	bool IsDebugRun;
 	bool IsEnterDebugMode;
@@ -181,6 +183,7 @@ public:
 	void EnterDebug(const FString& LuaFilePath, int32 Line);
 	void SetStackData(const TArray<FString>& Content, const TArray<int32>& Lines, const TArray<FString>& FilePaths, const TArray<int32>& StackIndex);
 	void ShowCode(const FString& FilePath, int32 Line = 0);
+	void ShowStackVars(int32 StackIndex);
 
 	TSharedRef<ITableRow> HandleFileTreeGenerateRow(FLuaFileTreeNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
 	void HandleFileTreeGetChildren(FLuaFileTreeNode_Ref InNode, TArray<FLuaFileTreeNode_Ref>& OutChildren);
@@ -192,6 +195,11 @@ public:
 
 	TSharedRef<ITableRow> HandleStackListGenerateRow(FStackListNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
 	void HandleStackListSelectionChanged(TSharedPtr<FStackListNode>, ESelectInfo::Type);
+
+
+	TSharedRef<ITableRow> HandleVarsTreeGenerateRow(FDebuggerVarNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
+	void HandleVarsTreeGetChildren(FDebuggerVarNode_Ref InNode, TArray<FDebuggerVarNode_Ref>& OutChildren);
+	void HandleVarsTreeSelectionChanged(TSharedPtr<FDebuggerVarNode>, ESelectInfo::Type);
 
 	void RefreshLuaFileData();
 

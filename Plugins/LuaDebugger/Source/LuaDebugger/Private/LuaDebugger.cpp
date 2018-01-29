@@ -172,6 +172,25 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 						[
 							SNew(SBorder)
 							.BorderImage(FEditorStyle::GetBrush("MessageLog.ListBorder"))
+							[
+								SAssignNew(DebuggerVarTree, SDebuggerVarTree)
+								.ItemHeight(24.0f)
+								.TreeItemsSource(&NowVars)
+								.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleVarsTreeGenerateRow)
+								.OnGetChildren_Raw(this, &FLuaDebuggerModule::HandleVarsTreeGetChildren)
+								.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleVarsTreeSelectionChanged)
+								.HeaderRow
+								(
+									SNew(SHeaderRow)
+									+ SHeaderRow::Column(SDebuggerVarTreeWidgetItem::Col_Name)
+									.DefaultLabel(LOCTEXT("VarName1", "Key"))
+									.FillWidth(20.0f)
+
+									+ SHeaderRow::Column(SDebuggerVarTreeWidgetItem::Col_Value)
+									.DefaultLabel(LOCTEXT("VarValue1", "Value"))
+									.FillWidth(20.0f)
+								)
+							]
 						]
 						+ SSplitter::Slot()
 						.Value(0.3f)
@@ -295,6 +314,8 @@ FString FLuaDebuggerModule::LuaPathToFilePath(FString LuaFilePath)
 void FLuaDebuggerModule::EnterDebug(const FString& LuaFilePath, int32 Line)
 {
 	ShowCode(LuaFilePath, Line);
+// todo
+	ShowStackVars(3);
 	IsEnterDebugMode = true;
 	FSlateApplication::Get().EnterDebuggingMode();
 }
@@ -352,10 +373,28 @@ void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 			LuaCodeListPtr.Pin()->ClearSelection();
 			LuaCodeListPtr.Pin()->SetItemSelection(NowLuaCodes[Line - 1], true);
 			float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
+// todo
 			if (FMath::Abs(NowOffset-Line)>5)
 				LuaCodeListPtr.Pin()->SetScrollOffset(Line-5);
 		}
 		
+	}
+}
+
+
+void FLuaDebuggerModule::ShowStackVars(int32 StackIndex)
+{
+	if (StackIndex == -1)
+	{
+		NowVars.Reset();
+	}
+	else
+	{
+		UDebuggerSetting::Get()->GetStackVars(StackIndex, NowVars);
+	}
+	if (DebuggerVarTree.IsValid())
+	{
+		DebuggerVarTree.Pin()->RequestTreeRefresh();
 	}
 }
 
@@ -412,7 +451,26 @@ void FLuaDebuggerModule::HandleStackListSelectionChanged(TSharedPtr<FStackListNo
 		{
 			ShowCode(InNode->FilePath, InNode->Line);
 		}
+		ShowStackVars(InNode->StackIndex);
 	}
+}
+
+
+TSharedRef<ITableRow> FLuaDebuggerModule::HandleVarsTreeGenerateRow(FDebuggerVarNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(SDebuggerVarTreeWidgetItem, OwnerTable, InNode);
+}
+
+
+void FLuaDebuggerModule::HandleVarsTreeGetChildren(FDebuggerVarNode_Ref InNode, TArray<FDebuggerVarNode_Ref>& OutChildren)
+{
+	InNode->GetChildren(OutChildren);
+}
+
+
+void FLuaDebuggerModule::HandleVarsTreeSelectionChanged(TSharedPtr<FDebuggerVarNode>, ESelectInfo::Type)
+{
+
 }
 
 void FLuaDebuggerModule::RefreshLuaFileData()
@@ -430,6 +488,7 @@ FReply FLuaDebuggerModule::DebugContinue()
 	{
 		NowLuaStack.Reset();
 		RefreshStackList();
+		ShowStackVars(-1);
 		FSlateApplication::Get().LeaveDebuggingMode();
 		IsEnterDebugMode = false;
 	}
@@ -598,6 +657,26 @@ FName SDebuggerVarTreeWidgetItem::Col_Value = "value";
 
 TSharedRef<SWidget> SDebuggerVarTreeWidgetItem::GenerateWidgetForColumn(const FName& ColumnName)
 {
-	return SNew(STextBlock)
-		.Text(FText::FromString(""));
+	if (ColumnName == Col_Name)
+	{
+		return SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			[
+				SNew(SExpanderArrow, SharedThis(this))
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(STextBlock)
+				.Text_Lambda([&]()->FText {return VarInfoNode->Name; })
+			];
+	}
+	else
+	{
+		return SNew(STextBlock)
+			.Text_Lambda([&]()->FText {return VarInfoNode->Value; })
+			;
+	}
 }

@@ -3,6 +3,7 @@
 #include "DebuggerSetting.h"
 #include "TableUtil.h"
 #include "LuaDebugger.h"
+#include "DebuggerVarNode.lua.h"
 
 UDebuggerSetting* UDebuggerSetting::Get()
 {
@@ -45,6 +46,25 @@ void UDebuggerSetting::SetTabIsOpen(bool IsOpen)
 	LuaCall("SetTabIsOpen", this, IsOpen);
 }
 
+void UDebuggerSetting::GetStackVars(int32 StackIndex, TArray<FDebuggerVarNode_Ref>& Vars)
+{
+	Vars.Reset();
+ 	TArray<FDebuggerVarNode> Result = LuaCallr(TArray<FDebuggerVarNode>, "GetStackVars", this, StackIndex);
+	for(auto& Node: Result)
+	{
+		Vars.Add(MakeShareable(new FDebuggerVarNode(Node)));
+	}
+}
+
+void UDebuggerSetting::GetVarsChildren(FDebuggerVarNode InNode, TArray<TSharedRef<FDebuggerVarNode>>& OutChildren)
+{
+	TArray<FDebuggerVarNode> Result = LuaCallr(TArray<FDebuggerVarNode>, "GetVarNodeChildren", this, InNode);
+	for (auto& Node : Result)
+	{
+		OutChildren.Add(MakeShareable(new FDebuggerVarNode(Node)));
+	}
+}
+
 void UDebuggerSetting::EnterDebug(const FString& LuaFilePath, int32 Line)
 {
 	FLuaDebuggerModule::Get()->EnterDebug(LuaFilePath, Line);
@@ -55,8 +75,9 @@ void UDebuggerSetting::SetStackData(const TArray<FString>& Content, const TArray
 	FLuaDebuggerModule::Get()->SetStackData(Content, Lines, FilePaths, StackIndex);
 }
 
-// TArray<FDebuggerVarNode> UDebuggerSetting::GetStackVar(int32 StackIndex)
-// {
-// // 	return LuaCallr(TArray<FDebuggerVarNode>, "GetStackVar", this, StackIndex);
-// 	return TArray<FDebuggerVarNode>();
-// }
+void FDebuggerVarNode::GetChildren(TArray<TSharedRef<FDebuggerVarNode>>& OutChildren)
+{
+	if (ValueChildren.Num() == 0)
+		UDebuggerSetting::Get()->GetVarsChildren(*this, ValueChildren);
+	OutChildren = ValueChildren;
+}
