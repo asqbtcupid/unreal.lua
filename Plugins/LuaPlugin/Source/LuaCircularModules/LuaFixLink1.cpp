@@ -12,8 +12,10 @@ extern void FixLinkFunc_CatchMe_TestCaseActor();
 extern void FixLinkFunc_CatchMe_CatchMeCharacter();
 extern void FixLinkFunc_CatchMe_CatchMeGameMode();
 extern void FixLinkFunc_CatchMe_CatchMePlayerController();
+extern void FixLinkFunc_LuaDebugger_uclass_all();
 extern void FixLinkFunc_CatchMe_CharacterInfo();
 extern void FixLinkFunc_CatchMe_SkillInfo();
+extern void FixLinkFunc_LuaDebugger_ustruct_all();
 void LuaFixLink1()
 {
 	FixLinkFunc_CatchMe_CatchMeAIController();
@@ -29,6 +31,8 @@ void LuaFixLink1()
 	FixLinkFunc_CatchMe_CatchMeCharacter();
 	FixLinkFunc_CatchMe_CatchMeGameMode();
 	FixLinkFunc_CatchMe_CatchMePlayerController();
+	FixLinkFunc_LuaDebugger_uclass_all();
 	FixLinkFunc_CatchMe_CharacterInfo();
 	FixLinkFunc_CatchMe_SkillInfo();
+	FixLinkFunc_LuaDebugger_ustruct_all();
 }

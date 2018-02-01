@@ -6,7 +6,9 @@
 // #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "TableUtil.h"
 #include "luautils.h"
-#include "all_struct.lua.h"
+#include "NetViewer.lua.h"
+#include "ReplifetimeCond.lua.h"
+
 
 ACatchMeCharacter::ACatchMeCharacter()
 {

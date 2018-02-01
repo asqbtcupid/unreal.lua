@@ -9,9 +9,9 @@ function Init(IsMannual)
     TimerMgr:Get():On(ShowMem):Time(2)
 
     if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
-        InitLuahotupdate()
+        -- InitLuahotupdate()
     end
-        -- require "util.sbcompletions".run()
+    require "frame.debugger.debuggersetting"
 end
 
 function InitLuahotupdate()
