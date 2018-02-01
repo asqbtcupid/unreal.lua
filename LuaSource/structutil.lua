@@ -95,7 +95,7 @@ local function CopyToNoGcStructMeta(StructName)
 	local WithGcStructMeta = _G[StructName]
 	local WithoutGcStructMeta = _G[StructName.."_nogc"]
 	for k, v in pairs(WithGcStructMeta) do
-		if k ~= "__gc" then
+		if k ~= "__gc" and k ~= "classname" and k ~= "Destroy" then
 			WithoutGcStructMeta[k] = v
 		end
 	end
