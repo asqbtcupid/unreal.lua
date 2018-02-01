@@ -7,6 +7,7 @@
 #include "STableRow.h"
 #include "STreeView.h"
 #include "DebuggerSetting.h"
+#include "IInputProcessor.h"
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -203,8 +204,20 @@ public:
 
 	void RefreshLuaFileData();
 
+	void CleanDebugInfo();
 	FReply DebugContinue();
+	FReply DebugStepover();
+	FReply DebugStepin();
+	FReply DebugStepout();
 	void DebugTabClose(TSharedRef<SDockTab> DockTab);
+	void RegisterKeyDown();
+	class FHandleKeyDown :public IInputProcessor
+	{
+		virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor) {};
+		virtual bool HandleKeyDownEvent(FSlateApplication& SlateApp, const FKeyEvent& InKeyEvent);
+
+	};
+	TSharedPtr<FHandleKeyDown> ptr_HandleKeyDown;
 private:
 
 	void AddToolbarExtension(FToolBarBuilder& Builder);

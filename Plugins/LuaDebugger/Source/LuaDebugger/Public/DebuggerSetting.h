@@ -63,5 +63,8 @@ public:
 	UFUNCTION()
 	void SetStackData(const TArray<FString>& Content, const TArray<int32>& Lines, const TArray<FString>& FilePaths, const TArray<int32>& StackIndex);
 
+	void StepOver();
+	void StepIn();
+	void StepOut();
 // 	TArray<FDebuggerVarNode> GetStackVar(int32 StackIndex);
 };

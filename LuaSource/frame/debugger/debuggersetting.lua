@@ -2,7 +2,12 @@ local DebuggerSetting = Inherit(CppObjectBase)
 
 local DebuggerSingleton
 local LuaSourceDir 
-local BreakPoints
+local BreakPoints = {}
+local bStepOver = false
+local bStepIn = false
+local bStepOut = false
+local StepInStackCount = 0
+local StepOutStackCount = 0
 function DebuggerSetting:Ctor()
 	LuaSourceDir = self:GetLuaSourceDir()
 	DebuggerSingleton = self
@@ -11,6 +16,7 @@ function DebuggerSetting:Ctor()
 	self.m_WeakVars = setmetatable({}, weakmeta)
 	self.m_bIsStart = false
 	self.m_bIsDebuging = false
+
 	self:Timer(self.Tick, self):Time(0.0001)
 	self:PullDataToLua()
 end
@@ -22,7 +28,7 @@ local Cached = {}
 local function GetFullFilePath(Path)
 	local TheCached = Cached[Path]
 	if not TheCached then
-		local FullPath = string.match(Path, ".*LuaSource(.*%.lua)")
+		local FullPath = string.match(Path, "@.*LuaSource(.*%.lua)")
 		if FullPath then
 			FullPath = string.gsub(FullPath, "\\", "/")
 			Cached[Path] = LuaSourceDir..FullPath
@@ -75,7 +81,7 @@ local function CollectStackData()
 	for i = 3, math.huge do
 		local StackInfo = getinfo(i)
 		if not StackInfo then break end
-		local FilePath = GetFullFilePath(StackInfo.short_src)
+		local FilePath = GetFullFilePath(StackInfo.source)
 		local Line = StackInfo.currentline
 		local LuaPath = GetLuaPath(FilePath)
 		local Content = LuaPath..":"..tostring(StackInfo.name).." Line"..tostring(Line)
@@ -88,11 +94,34 @@ local function CollectStackData()
 end
 
 local function HookCallBack(Event, Line)
-	local StackInfo = getinfo(2)
-	local FilePath = GetFullFilePath(StackInfo.short_src)
-	if IsHitBreakPoint(FilePath, Line) then
-		CollectStackData()
-		DebuggerSingleton:EnterDebug(FilePath, Line)
+	if Line then
+		local StackInfo = getinfo(2, "S")
+		local FilePath = GetFullFilePath(StackInfo.source)
+		if 	(bStepOut and StepOutStackCount<=-1)
+			or (bStepOver and StepInStackCount<=0) 
+			or bStepIn 
+			or BreakPoints[FilePath..tostring(Line)] then
+			a_(StepOutStackCount)
+			StepInStackCount = 0
+			StepOutStackCount = 0
+			bStepIn = false
+			bStepOver = false
+			bStepOut = false
+			CollectStackData()
+			DebuggerSingleton:EnterDebug(FilePath, Line)
+		end
+	elseif bStepOver then
+		if Event == "call" then
+			StepInStackCount = StepInStackCount + 1
+		elseif Event == "return" then
+			StepInStackCount = StepInStackCount - 1
+		end
+	elseif bStepOut then
+		if Event == "call" then
+			StepOutStackCount = StepOutStackCount + 1
+		elseif Event == "return" then
+			StepOutStackCount = StepOutStackCount - 1
+		end 
 	end
 end
 
@@ -107,7 +136,7 @@ function DebuggerSetting:CheckToRun()
 		end	
 	else
 		if ShouldRunDebug() then
-			debug.sethook(HookCallBack, "l")
+			debug.sethook(HookCallBack, "lcr")
 			self.m_bIsDebuging = true
 		end	
 	end
@@ -118,8 +147,13 @@ function DebuggerSetting:ToggleDebugStart(bIsStart)
 	self:CheckToRun()
 end
 
-function DebuggerSetting:UpdateBreakPoint(BreakPoint)
-	BreakPoints = BreakPoint
+function DebuggerSetting:UpdateBreakPoint(InBreakPoints)
+	BreakPoints = {}
+	for FilePath, LineSet in pairs(InBreakPoints) do
+		for LineNum in pairs(LineSet) do
+			BreakPoints[FilePath..tostring(LineNum)] = true
+		end
+	end
 	self:CheckToRun()
 end
 
@@ -130,10 +164,8 @@ end
 
 function DebuggerSetting:HasAnyBreakPoint( )
 	if BreakPoints then
-		for FilePath, LineSet in pairs(BreakPoints) do
-			for LineNum in pairs(LineSet) do
-				return true
-			end
+		for a,b in pairs(BreakPoints) do
+			return true
 		end
 	end
 	return false
@@ -263,6 +295,18 @@ function DebuggerSetting:GetVarNodeChildren(ParentNode)
 		end
 	end
 	return result
+end
+
+function DebuggerSetting:StepOver()
+	bStepOver = true	
+end
+
+function DebuggerSetting:StepIn()
+	bStepIn = true	
+end
+
+function DebuggerSetting:StepOut()
+	bStepOut = true	
 end
 
 function DebuggerSetting:Get( )

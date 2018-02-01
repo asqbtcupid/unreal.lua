@@ -75,6 +75,21 @@ void UDebuggerSetting::SetStackData(const TArray<FString>& Content, const TArray
 	FLuaDebuggerModule::Get()->SetStackData(Content, Lines, FilePaths, StackIndex);
 }
 
+void UDebuggerSetting::StepOver()
+{
+	LuaCall("StepOver", this);
+}
+
+void UDebuggerSetting::StepIn()
+{
+	LuaCall("StepIn", this);
+}
+
+void UDebuggerSetting::StepOut()
+{
+	LuaCall("StepOut", this);
+}
+
 void FDebuggerVarNode::GetChildren(TArray<TSharedRef<FDebuggerVarNode>>& OutChildren)
 {
 	if (ValueChildren.Num() == 0)

@@ -27,6 +27,7 @@ void FLuaDebuggerModule::StartupModule()
 	Ptr = this;
 	IsDebugRun = true;
 	IsEnterDebugMode = false;
+	ptr_HandleKeyDown = MakeShareable(new FHandleKeyDown());
 	FLuaDebuggerStyle::Initialize();
 	FLuaDebuggerStyle::ReloadTextures();
 
@@ -77,6 +78,7 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 	DebugStateChange();
 	BreakPointChange();
 	RefreshLuaFileData();
+	FSlateApplication::Get().RegisterInputPreProcessor(ptr_HandleKeyDown);
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		.OnTabClosed_Raw(this, &FLuaDebuggerModule::DebugTabClose)
@@ -111,7 +113,47 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 					.OnClicked_Raw(this, &FLuaDebuggerModule::DebugContinue)
 					[
 						SNew(STextBlock)
-						.Text(FText::FromString("Continue"))
+						.Text(FText::FromString("Continue F5"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.OnClicked_Raw(this, &FLuaDebuggerModule::DebugStepover)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("StepOver F10"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.OnClicked_Raw(this, &FLuaDebuggerModule::DebugStepin)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("StepIn F11"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SButton)
+					.OnClicked_Raw(this, &FLuaDebuggerModule::DebugStepout)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("StepOut shift+F11"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SBox)
+					.HAlign(HAlign_Right)
+					[
+						SNew(STextBlock)
+						.Text_Lambda([&]()->FText {return FText::FromString(NowLuaCodeFilePath); })
 					]
 				]
 			]
@@ -201,6 +243,7 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 								SAssignNew(LuaStackListPtr, SLuaStackList)
 								.ItemHeight(24.0f)
 								.ListItemsSource(&NowLuaStack)
+								.SelectionMode(ESelectionMode::Single)
 								.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleStackListGenerateRow)
 								.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleStackListSelectionChanged)
 							]
@@ -334,38 +377,37 @@ void FLuaDebuggerModule::SetStackData(const TArray<FString>& Content, const TArr
 
 void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 {
-	if (NowLuaCodeFilePath != FilePath)
+
+	if (LuaCodeListPtr.IsValid())
 	{
-		if (LuaCodeListPtr.IsValid())
-		{
-			float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
-			LastTimeFileOffset.Add(NowLuaCodeFilePath, NowOffset);
-		}
-		NowLuaCodeFilePath = FilePath;
-		FString RawCode;
-		FFileHelper::LoadFileToString(RawCode, *FilePath);
-		TArray<FString> CodeArr;
-		RawCode.ParseIntoArrayLines(CodeArr, false);
-		NowLuaCodes.Reset();
-		for (int32 i = 0; i < CodeArr.Num(); i++)
-		{
-			FString& Code = CodeArr[i];
-			FCodeListNode_Ref NewNode = MakeShareable(new FCodeListNode(Code, i + 1, FilePath));
-			NowLuaCodes.Add(NewNode);
-		}
-		if (LuaCodeListPtr.IsValid())
-		{
-			if (float* Offset = LastTimeFileOffset.Find(NowLuaCodeFilePath))
-			{
-				LuaCodeListPtr.Pin()->SetScrollOffset(*Offset);
-			}
-			else
-			{
-				LuaCodeListPtr.Pin()->SetScrollOffset(0);
-			}
-		}
-		RefreshCodeList();
+		float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
+		LastTimeFileOffset.Add(NowLuaCodeFilePath, NowOffset);
 	}
+	NowLuaCodeFilePath = FilePath;
+	FString RawCode;
+	FFileHelper::LoadFileToString(RawCode, *FilePath);
+	TArray<FString> CodeArr;
+	RawCode.ParseIntoArrayLines(CodeArr, false);
+	NowLuaCodes.Reset();
+	for (int32 i = 0; i < CodeArr.Num(); i++)
+	{
+		FString& Code = CodeArr[i];
+		FCodeListNode_Ref NewNode = MakeShareable(new FCodeListNode(Code, i + 1, FilePath));
+		NowLuaCodes.Add(NewNode);
+	}
+	if (LuaCodeListPtr.IsValid())
+	{
+		if (float* Offset = LastTimeFileOffset.Find(NowLuaCodeFilePath))
+		{
+			LuaCodeListPtr.Pin()->SetScrollOffset(*Offset);
+		}
+		else
+		{
+			LuaCodeListPtr.Pin()->SetScrollOffset(0);
+		}
+	}
+	RefreshCodeList();
+
 	if (Line > 0)
 	{
 		if (LuaCodeListPtr.IsValid())
@@ -482,13 +524,18 @@ void FLuaDebuggerModule::RefreshLuaFileData()
 }
 
 
+void FLuaDebuggerModule::CleanDebugInfo()
+{
+	NowLuaStack.Reset();
+	RefreshStackList();
+	ShowStackVars(-1);
+}
+
 FReply FLuaDebuggerModule::DebugContinue()
 {
 	if (IsEnterDebugMode)
 	{
-		NowLuaStack.Reset();
-		RefreshStackList();
-		ShowStackVars(-1);
+		CleanDebugInfo();
 		FSlateApplication::Get().LeaveDebuggingMode();
 		IsEnterDebugMode = false;
 	}
@@ -496,10 +543,55 @@ FReply FLuaDebuggerModule::DebugContinue()
 }
 
 
+FReply FLuaDebuggerModule::DebugStepover()
+{
+	if (IsEnterDebugMode)
+	{
+		CleanDebugInfo();
+		FSlateApplication::Get().LeaveDebuggingMode();
+		IsEnterDebugMode = false;
+		UDebuggerSetting::Get()->StepOver();
+	}
+	return FReply::Handled();
+}
+
+
+FReply FLuaDebuggerModule::DebugStepin()
+{
+	if (IsEnterDebugMode)
+	{
+		CleanDebugInfo();
+		FSlateApplication::Get().LeaveDebuggingMode();
+		IsEnterDebugMode = false;
+		UDebuggerSetting::Get()->StepIn();
+	}
+	return FReply::Handled();
+}
+
+
+FReply FLuaDebuggerModule::DebugStepout()
+{
+	if (IsEnterDebugMode)
+	{
+		CleanDebugInfo();
+		FSlateApplication::Get().LeaveDebuggingMode();
+		IsEnterDebugMode = false;
+		UDebuggerSetting::Get()->StepOut();
+	}
+	return FReply::Handled();
+}
+
 void FLuaDebuggerModule::DebugTabClose(TSharedRef<SDockTab> DockTab)
 {
 	UDebuggerSetting::Get()->SetTabIsOpen(false);
 	DebugContinue();
+	FSlateApplication::Get().UnregisterInputPreProcessor(ptr_HandleKeyDown);
+}
+
+
+void FLuaDebuggerModule::RegisterKeyDown()
+{
+	FSlateApplication::Get().RegisterInputPreProcessor(ptr_HandleKeyDown);
 }
 
 void FLuaDebuggerModule::AddMenuExtension(FMenuBuilder& Builder)
@@ -600,7 +692,7 @@ void SCodeWidgetItem::Construct(const FArguments& InArgs, const TSharedRef<STabl
 					.OnClicked(this, &SCodeWidgetItem::HandleClickBreakPoint)
 					[
 						SNew(SImage)
-						.Image(FEditorStyle::GetBrush(FName("MessageLog.Note")))
+						.Image(FEditorStyle::GetBrush("Level.VisibleHighlightIcon16x"))
 						.Visibility(this, &SCodeWidgetItem::BreakPointVisible)
 					]
 				]
@@ -679,4 +771,27 @@ TSharedRef<SWidget> SDebuggerVarTreeWidgetItem::GenerateWidgetForColumn(const FN
 			.Text_Lambda([&]()->FText {return VarInfoNode->Value; })
 			;
 	}
+}
+
+bool FLuaDebuggerModule::FHandleKeyDown::HandleKeyDownEvent(FSlateApplication& SlateApp, const FKeyEvent& InKeyEvent)
+{
+	if (InKeyEvent.GetKey() == EKeys::F5)
+	{
+		FLuaDebuggerModule::Get()->DebugContinue();
+		return true;
+	}
+	else if (InKeyEvent.GetKey() == EKeys::F10)
+	{
+		FLuaDebuggerModule::Get()->DebugStepover();
+		return true;
+	}
+	else if (InKeyEvent.GetKey() == EKeys::F11)
+	{
+		if(InKeyEvent.IsLeftShiftDown() || InKeyEvent.IsRightShiftDown())
+			FLuaDebuggerModule::Get()->DebugStepout();
+		else
+			FLuaDebuggerModule::Get()->DebugStepin();
+		return true;
+	}
+	return false;
 }
