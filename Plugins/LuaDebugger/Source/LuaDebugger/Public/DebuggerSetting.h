@@ -87,9 +87,7 @@ public:
 
 	UPROPERTY(config)
 		FString RecentFilePath;
-
+	
 	UPROPERTY(config)
 		TArray<FBreakPointNode> RecentBreakPoint;
-
-// 	TArray<FDebuggerVarNode> GetStackVar(int32 StackIndex);
 };
