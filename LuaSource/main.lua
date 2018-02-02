@@ -2,11 +2,11 @@ function Init(IsMannual)
     package.path = package.path .. ";".._luadir.."/?.lua"
     -- package.cpath = package.cpath .. ";".._luadir.."/?.dll"
     require "frame.initrequire"
-    local function ShowMem()
-        -- collectgarbage("collect")
-        a_("lua memory: ", collectgarbage("count"))
-    end
-    TimerMgr:Get():On(ShowMem):Time(2)
+    -- local function ShowMem()
+    --     collectgarbage("collect")
+    --     a_("lua memory: ", collectgarbage("count"))
+    -- end
+    -- TimerMgr:Get():On(ShowMem):Time(2)
 
     if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
         -- InitLuahotupdate()

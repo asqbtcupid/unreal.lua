@@ -8,6 +8,7 @@
 #include "STreeView.h"
 #include "DebuggerSetting.h"
 #include "IInputProcessor.h"
+#include "Regex.h"
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -141,6 +142,26 @@ public:
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
 };
 
+using FBreakPointNode_Ref = TSharedRef<FBreakPointNode>;
+using SBreakPointList = SListView<FBreakPointNode_Ref>;
+
+class SBreakPointWidgetItem :public STableRow<FBreakPointNode_Ref>
+{
+public:
+	TSharedPtr<FBreakPointNode> Node;
+	SLATE_BEGIN_ARGS(SBreakPointWidgetItem)
+	{}
+	SLATE_END_ARGS()
+		void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView, FBreakPointNode_Ref Node);
+
+};
+
+enum class EStackListState : uint8
+{
+	CallStack,
+	BreakPoints,
+};
+
 class FLuaDebuggerModule : public IModuleInterface
 {
 public:
@@ -154,27 +175,32 @@ public:
 	void PluginButtonClicked();
 
 	TArray<FLuaFileTreeNode_Ref> LuaFiles;
+	TArray<FLuaFileTreeNode_Ref> AfterFilterLuaFiles;
 	TWeakPtr<SLuaFileTree> LuaFileTreePtr;
 
 	FString NowLuaCodeFilePath;
 	TArray<FCodeListNode_Ref> NowLuaCodes;
 	TWeakPtr<SLuaCodeList> LuaCodeListPtr;
 
+	EStackListState StackListState;
 	TArray<FStackListNode_Ref> NowLuaStack;
 	TWeakPtr<SLuaStackList> LuaStackListPtr;
 
+	TArray<FBreakPointNode_Ref> BreakPointForView;
+	TWeakPtr<SBreakPointList> BreakPointListPtr;
+
 	TArray<FDebuggerVarNode_Ref> NowVars;
 	TWeakPtr<SDebuggerVarTree> DebuggerVarTree;
+	FString RecentFilePath;
 
-	TMap<FString, TSet<int32>> BreakPoint;
+	TMap<FString, TSet<int32>> EnableBreakPoint;
 	bool IsDebugRun;
 	bool IsEnterDebugMode;
 	bool HasBreakPoint(FString& FilePath, int32 CodeLine);
 	TMap<FString, float> LastTimeFileOffset;
-	void AddBreakPoint(FString& FilePath, int32 CodeLine);
-	void DelBreakPoint(FString& FilePath, int32 CodeLine);
 	void ToggleBreakPoint(FString& FilePath, int32 CodeLine);
 	void ToggleStartDebug(const ECheckBoxState NewState);
+	void ToggleStackListState(const ECheckBoxState NewState, EStackListState State);
 	void BreakPointChange();
 	void DebugStateChange();
 	void RefreshCodeList();
@@ -197,6 +223,8 @@ public:
 	TSharedRef<ITableRow> HandleStackListGenerateRow(FStackListNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
 	void HandleStackListSelectionChanged(TSharedPtr<FStackListNode>, ESelectInfo::Type);
 
+	TSharedRef<ITableRow> HandleBreakPointListGenerateRow(FBreakPointNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
+	void HandleBreakPointListSelectionChanged(TSharedPtr<FBreakPointNode>, ESelectInfo::Type);
 
 	TSharedRef<ITableRow> HandleVarsTreeGenerateRow(FDebuggerVarNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable);
 	void HandleVarsTreeGetChildren(FDebuggerVarNode_Ref InNode, TArray<FDebuggerVarNode_Ref>& OutChildren);
@@ -211,6 +239,8 @@ public:
 	FReply DebugStepout();
 	void DebugTabClose(TSharedRef<SDockTab> DockTab);
 	void RegisterKeyDown();
+	void BeforeExit();
+	void SaveDebuggerConfig();
 	class FHandleKeyDown :public IInputProcessor
 	{
 		virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor) {};
@@ -218,6 +248,9 @@ public:
 
 	};
 	TSharedPtr<FHandleKeyDown> ptr_HandleKeyDown;
+
+	void OnFileFilterTextChanged(const FText& InFilterText);
+	void FielterFileNode(FRegexPattern& Pattern, FLuaFileTreeNode_Ref& FileNode);
 private:
 
 	void AddToolbarExtension(FToolBarBuilder& Builder);
