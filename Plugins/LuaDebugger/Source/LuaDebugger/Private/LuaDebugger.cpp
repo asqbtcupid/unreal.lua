@@ -59,12 +59,12 @@ void FLuaDebuggerModule::StartupModule()
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
 	
-	{
-		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FLuaDebuggerModule::AddToolbarExtension));
-		
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
-	}
+// 	{
+// 		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+// 		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FLuaDebuggerModule::AddToolbarExtension));
+// 		
+// 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
+// 	}
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(LuaDebuggerTabName, FOnSpawnTab::CreateRaw(this, &FLuaDebuggerModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FLuaDebuggerTabTitle", "LuaDebugger"))
