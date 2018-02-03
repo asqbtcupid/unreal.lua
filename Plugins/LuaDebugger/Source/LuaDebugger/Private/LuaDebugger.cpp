@@ -29,6 +29,7 @@ void FLuaDebuggerModule::StartupModule()
 	Ptr = this;
 	IsDebugRun = true;
 	IsEnterDebugMode = false;
+	IntervalToCheckFileChange = 0;
 	ptr_HandleKeyDown = MakeShareable(new FHandleKeyDown());
 	StackListState = EStackListState::CallStack;
 	LastTimeFileOffset = UDebuggerSetting::Get()->LastTimeFileOffset;
@@ -471,7 +472,6 @@ void FLuaDebuggerModule::SetStackData(const TArray<FString>& Content, const TArr
 
 void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 {
-
 	if (LuaCodeListPtr.IsValid())
 	{
 		float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
@@ -479,6 +479,7 @@ void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 	}
 	RecentFilePath = FilePath;
 	NowLuaCodeFilePath = FilePath;
+	ModifyTimeOfNowFile = IFileManager::Get().GetTimeStamp(*NowLuaCodeFilePath);
 	FString RawCode;
 	FFileHelper::LoadFileToString(RawCode, *FilePath);
 	TArray<FString> CodeArr;
@@ -773,6 +774,22 @@ void FLuaDebuggerModule::FielterFileNode(FRegexPattern& Pattern, FLuaFileTreeNod
 	}
 }
 
+
+void FLuaDebuggerModule::Tick(float Delta)
+{
+	IntervalToCheckFileChange += Delta;
+	if (IntervalToCheckFileChange > 1.0f)
+	{
+		IntervalToCheckFileChange = 0;
+		if (!NowLuaCodeFilePath.IsEmpty())
+		{
+			FDateTime ModifyTime = IFileManager::Get().GetTimeStamp(*NowLuaCodeFilePath);
+			if (ModifyTime != ModifyTimeOfNowFile)
+				ShowCode(NowLuaCodeFilePath);
+		}
+	}
+}
+
 void FLuaDebuggerModule::AddMenuExtension(FMenuBuilder& Builder)
 {
 	Builder.AddMenuEntry(FLuaDebuggerCommands::Get().OpenPluginWindow);
@@ -950,6 +967,12 @@ TSharedRef<SWidget> SDebuggerVarTreeWidgetItem::GenerateWidgetForColumn(const FN
 			.Text_Lambda([&]()->FText {return VarInfoNode->Value; })
 			;
 	}
+}
+
+
+void FLuaDebuggerModule::FHandleKeyDown::Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor)
+{
+	FLuaDebuggerModule::Get()->Tick(DeltaTime);
 }
 
 bool FLuaDebuggerModule::FHandleKeyDown::HandleKeyDownEvent(FSlateApplication& SlateApp, const FKeyEvent& InKeyEvent)
