@@ -2,11 +2,11 @@ function Init(IsMannual)
     package.path = package.path .. ";".._luadir.."/?.lua"
     -- package.cpath = package.cpath .. ";".._luadir.."/?.dll"
     require "frame.initrequire"
-    local function ShowMem()
-        -- collectgarbage("collect")
-        a_("lua memory: ", collectgarbage("count"))
-    end
-    TimerMgr:Get():On(ShowMem):Time(2)
+    -- local function ShowMem()
+    --     collectgarbage("collect")
+    --     a_("lua memory: ", collectgarbage("count"))
+    -- end
+    -- TimerMgr:Get():On(ShowMem):Time(2)
 
     if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
         -- InitLuahotupdate()
@@ -23,12 +23,8 @@ function InitLuahotupdate()
     HU.Init("hotupdatelist", {_luadir}, A_)
     TimerMgr:Get():On(HU.Update):Time(1):Fire()
 end
-local IsDebug
+
 function Tick(delta)
-    if IsDebug then
-        for i = 1, 10000000 do
-        end
-    end
     local function f()
         TimerMgr:Get():Tick(delta)
     end

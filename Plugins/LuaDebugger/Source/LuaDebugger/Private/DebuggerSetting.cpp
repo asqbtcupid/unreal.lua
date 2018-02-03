@@ -59,6 +59,14 @@ void UDebuggerSetting::GetStackVars(int32 StackIndex, TArray<FDebuggerVarNode_Re
 void UDebuggerSetting::GetVarsChildren(FDebuggerVarNode InNode, TArray<TSharedRef<FDebuggerVarNode>>& OutChildren)
 {
 	TArray<FDebuggerVarNode> Result = LuaCallr(TArray<FDebuggerVarNode>, "GetVarNodeChildren", this, InNode);
+	Result.StableSort([&](const FDebuggerVarNode& a, const FDebuggerVarNode& b) 
+	{
+		bool aIsFunc = a.Value.ToString().Contains("function:");
+		bool bIsFunc = b.Value.ToString().Contains("function:");
+		if (aIsFunc != bIsFunc)
+			return bIsFunc;
+		return a.Name.CompareTo(b.Name) < 0; 
+	});
 	for (auto& Node : Result)
 	{
 		OutChildren.Add(MakeShareable(new FDebuggerVarNode(Node)));

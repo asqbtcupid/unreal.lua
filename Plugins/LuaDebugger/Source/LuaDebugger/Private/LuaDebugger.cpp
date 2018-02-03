@@ -13,6 +13,8 @@
 #include "FileHelper.h"
 #include "DebuggerSetting.h"
 #include "SlateApplication.h"
+#include "SSearchBox.h"
+#include "CoreDelegates.h"
 
 static const FName LuaDebuggerTabName("LuaDebugger");
 
@@ -28,6 +30,14 @@ void FLuaDebuggerModule::StartupModule()
 	IsDebugRun = true;
 	IsEnterDebugMode = false;
 	ptr_HandleKeyDown = MakeShareable(new FHandleKeyDown());
+	StackListState = EStackListState::CallStack;
+	LastTimeFileOffset = UDebuggerSetting::Get()->LastTimeFileOffset;
+	RecentFilePath = UDebuggerSetting::Get()->RecentFilePath;
+	for (FBreakPointNode &Node : UDebuggerSetting::Get()->RecentBreakPoint)
+	{
+		ToggleBreakPoint(Node.FilePath, Node.Line);
+	}
+	FCoreDelegates::OnPreExit.AddRaw(this, &FLuaDebuggerModule::BeforeExit);
 	FLuaDebuggerStyle::Initialize();
 	FLuaDebuggerStyle::ReloadTextures();
 
@@ -49,12 +59,12 @@ void FLuaDebuggerModule::StartupModule()
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
 	
-	{
-		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FLuaDebuggerModule::AddToolbarExtension));
-		
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
-	}
+// 	{
+// 		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
+// 		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FLuaDebuggerModule::AddToolbarExtension));
+// 		
+// 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
+// 	}
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(LuaDebuggerTabName, FOnSpawnTab::CreateRaw(this, &FLuaDebuggerModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FLuaDebuggerTabTitle", "LuaDebugger"))
@@ -65,6 +75,7 @@ void FLuaDebuggerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+	
 	FLuaDebuggerStyle::Shutdown();
 
 	FLuaDebuggerCommands::Unregister();
@@ -79,7 +90,7 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 	BreakPointChange();
 	RefreshLuaFileData();
 	FSlateApplication::Get().RegisterInputPreProcessor(ptr_HandleKeyDown);
-	return SNew(SDockTab)
+	TSharedRef<SDockTab> Tab = SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		.OnTabClosed_Raw(this, &FLuaDebuggerModule::DebugTabClose)
 		[
@@ -147,13 +158,12 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 					]
 				]
 				+ SHorizontalBox::Slot()
-				.AutoWidth()
 				[
 					SNew(SBox)
 					.HAlign(HAlign_Right)
 					[
 						SNew(STextBlock)
-						.Text_Lambda([&]()->FText {return FText::FromString(NowLuaCodeFilePath); })
+						.Text_Lambda([&]()->FText {return FText::FromString(NowLuaCodeFilePath.Mid(GetLuaSourceDir().Len()+1)); })
 					]
 				]
 			]
@@ -173,13 +183,25 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 						SNew(SBorder)
 						.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
 						[
-							SAssignNew(LuaFileTreePtr, SLuaFileTree)
-							.ItemHeight(24.0f)
-							.TreeItemsSource(&LuaFiles)
-							.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleFileTreeGenerateRow)
-							.OnGetChildren_Raw(this, &FLuaDebuggerModule::HandleFileTreeGetChildren)
- 							.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleFileTreeSelectionChanged)
-							.OnExpansionChanged_Raw(this, &FLuaDebuggerModule::HandleFileNodeExpansion)
+							SNew(SVerticalBox)
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SSearchBox)
+								.HintText(FText::FromString(L"Search..."))
+								.OnTextChanged_Raw(this, &FLuaDebuggerModule::OnFileFilterTextChanged)
+// 								.OnTextCommitted(this, &SSceneOutliner::OnFilterTextCommitted)
+							]
+							+ SVerticalBox::Slot()
+							[
+								SAssignNew(LuaFileTreePtr, SLuaFileTree)
+								.ItemHeight(24.0f)
+								.TreeItemsSource(&AfterFilterLuaFiles)
+								.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleFileTreeGenerateRow)
+								.OnGetChildren_Raw(this, &FLuaDebuggerModule::HandleFileTreeGetChildren)
+ 								.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleFileTreeSelectionChanged)
+								.OnExpansionChanged_Raw(this, &FLuaDebuggerModule::HandleFileNodeExpansion)
+							]
 						]
 					]
 					+ SSplitter::Slot()
@@ -210,7 +232,7 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 						SNew(SSplitter)
 						.Orientation(Orient_Horizontal)
 						+ SSplitter::Slot()
-						.Value(0.7f)
+						.Value(0.618f)
 						[
 							SNew(SBorder)
 							.BorderImage(FEditorStyle::GetBrush("MessageLog.ListBorder"))
@@ -235,23 +257,85 @@ TSharedRef<SDockTab> FLuaDebuggerModule::OnSpawnPluginTab(const FSpawnTabArgs& S
 							]
 						]
 						+ SSplitter::Slot()
-						.Value(0.3f)
+						.Value(1.0f - 0.618f)
 						[
+
 							SNew(SBorder)
 							.BorderImage(FEditorStyle::GetBrush("MessageLog.ListBorder"))
 							[
-								SAssignNew(LuaStackListPtr, SLuaStackList)
-								.ItemHeight(24.0f)
-								.ListItemsSource(&NowLuaStack)
-								.SelectionMode(ESelectionMode::Single)
-								.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleStackListGenerateRow)
-								.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleStackListSelectionChanged)
+								SNew(SVerticalBox)
+								+ SVerticalBox::Slot()
+								[
+									SAssignNew(LuaStackListPtr, SLuaStackList)
+									.Visibility_Lambda([&]()->EVisibility {return (StackListState == EStackListState::CallStack) ? EVisibility::Visible : EVisibility::Collapsed; })
+									.ItemHeight(24.0f)
+									.ListItemsSource(&NowLuaStack)
+									.SelectionMode(ESelectionMode::Single)
+									.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleStackListGenerateRow)
+									.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleStackListSelectionChanged)
+								]
+								+ SVerticalBox::Slot()
+								[
+									SAssignNew(BreakPointListPtr, SBreakPointList)
+									.Visibility_Lambda([&]()->EVisibility {return (StackListState == EStackListState::BreakPoints) ? EVisibility::Visible : EVisibility::Collapsed; })
+									.ItemHeight(24.0f)
+									.ListItemsSource(&BreakPointForView)
+									.SelectionMode(ESelectionMode::Single)
+									.OnGenerateRow_Raw(this, &FLuaDebuggerModule::HandleBreakPointListGenerateRow)
+									.OnSelectionChanged_Raw(this, &FLuaDebuggerModule::HandleBreakPointListSelectionChanged)
+								]
+								+ SVerticalBox::Slot()
+								.VAlign(VAlign_Bottom)
+								.AutoHeight()
+								[
+									SNew(SHorizontalBox)
+									+ SHorizontalBox::Slot()
+									.HAlign(HAlign_Left)
+									.AutoWidth()
+									[
+										SNew(SCheckBox)
+										.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+										.IsChecked_Lambda([&]() {return (StackListState==EStackListState::CallStack) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+										.OnCheckStateChanged_Raw(this, &FLuaDebuggerModule::ToggleStackListState, EStackListState::CallStack)
+										[
+											SNew(SBox)
+											.VAlign(VAlign_Center)
+											.HAlign(HAlign_Center)
+											.Padding(FMargin(4.0, 2.0))
+											[
+												SNew(STextBlock)
+												.Text(FText::FromString("CallStack"))
+											]
+										]
+									]
+									+ SHorizontalBox::Slot()
+									.HAlign(HAlign_Left)
+									.AutoWidth()
+									[
+										SNew(SCheckBox)
+										.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+										.IsChecked_Lambda([&]() {return (StackListState == EStackListState::BreakPoints) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+										.OnCheckStateChanged_Raw(this, &FLuaDebuggerModule::ToggleStackListState, EStackListState::BreakPoints)
+										[
+											SNew(SBox)
+											.VAlign(VAlign_Center)
+											.HAlign(HAlign_Center)
+											.Padding(FMargin(4.0, 2.0))
+											[
+												SNew(STextBlock)
+												.Text(FText::FromString("Breakpoints"))
+											]
+										]
+									]
+								]
 							]
 						]
 					]
 				]
 			]
 		];
+	ShowCode(RecentFilePath);
+	return Tab;
 }
 
 void FLuaDebuggerModule::PluginButtonClicked()
@@ -262,7 +346,7 @@ void FLuaDebuggerModule::PluginButtonClicked()
 
 bool FLuaDebuggerModule::HasBreakPoint(FString& FilePath, int32 CodeLine)
 {
-	if (TSet<int32>* p = BreakPoint.Find(FilePath))
+	if (TSet<int32>* p = EnableBreakPoint.Find(FilePath))
 	{
 		if (p->Contains(CodeLine))
 			return true;
@@ -270,30 +354,29 @@ bool FLuaDebuggerModule::HasBreakPoint(FString& FilePath, int32 CodeLine)
 	return false;
 }
 
-
-void FLuaDebuggerModule::AddBreakPoint(FString& FilePath, int32 CodeLine)
-{
-	TSet<int32>& Set = BreakPoint.FindOrAdd(FilePath);
-	Set.Add(CodeLine);
-	BreakPointChange();
-}
-
-
-void FLuaDebuggerModule::DelBreakPoint(FString& FilePath, int32 CodeLine)
-{
-	TSet<int32>& Set = BreakPoint.FindOrAdd(FilePath);
-	Set.Remove(CodeLine);
-	BreakPointChange();
-}
-
-
 void FLuaDebuggerModule::ToggleBreakPoint(FString& FilePath, int32 CodeLine)
 {
-	TSet<int32>& Set = BreakPoint.FindOrAdd(FilePath);
+	TSet<int32>& Set = EnableBreakPoint.FindOrAdd(FilePath);
 	if (Set.Contains(CodeLine))
+	{
 		Set.Remove(CodeLine);
+		
+		for (int32 i = 0; i < BreakPointForView.Num(); i++)
+		{
+			FBreakPointNode_Ref&Node = BreakPointForView[i];
+			if (Node->FilePath == FilePath && Node->Line == CodeLine)
+			{
+				BreakPointForView.RemoveAt(i);
+				break;
+			}
+		}
+	}
 	else
+	{
 		Set.Add(CodeLine);
+		FBreakPointNode_Ref NewNode = MakeShareable(new FBreakPointNode(CodeLine, FilePath));
+		BreakPointForView.Add(NewNode);
+	}
 	BreakPointChange();
 }
 
@@ -304,10 +387,21 @@ void FLuaDebuggerModule::ToggleStartDebug(const ECheckBoxState NewState)
 	DebugStateChange();
 }
 
+
+void FLuaDebuggerModule::ToggleStackListState(const ECheckBoxState NewState, EStackListState State)
+{
+	if (NewState == ECheckBoxState::Checked)
+	{
+		StackListState = State;
+	}
+}
+
 void FLuaDebuggerModule::BreakPointChange()
 {
+	if (BreakPointListPtr.IsValid())
+		BreakPointListPtr.Pin()->RequestListRefresh();
 	RefreshCodeList();
-	UDebuggerSetting::Get()->UpdateBreakPoint(BreakPoint);
+	UDebuggerSetting::Get()->UpdateBreakPoint(EnableBreakPoint);
 }
 
 
@@ -383,6 +477,7 @@ void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 		float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
 		LastTimeFileOffset.Add(NowLuaCodeFilePath, NowOffset);
 	}
+	RecentFilePath = FilePath;
 	NowLuaCodeFilePath = FilePath;
 	FString RawCode;
 	FFileHelper::LoadFileToString(RawCode, *FilePath);
@@ -416,7 +511,7 @@ void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 			LuaCodeListPtr.Pin()->SetItemSelection(NowLuaCodes[Line - 1], true);
 			float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
 // todo
-			if (FMath::Abs(NowOffset-Line)>5)
+			if (NowOffset>Line || Line>NowOffset + 15)
 				LuaCodeListPtr.Pin()->SetScrollOffset(Line-5);
 		}
 		
@@ -498,6 +593,18 @@ void FLuaDebuggerModule::HandleStackListSelectionChanged(TSharedPtr<FStackListNo
 }
 
 
+TSharedRef<ITableRow> FLuaDebuggerModule::HandleBreakPointListGenerateRow(FBreakPointNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(SBreakPointWidgetItem, OwnerTable, InNode);
+}
+
+
+void FLuaDebuggerModule::HandleBreakPointListSelectionChanged(TSharedPtr<FBreakPointNode> InNode, ESelectInfo::Type)
+{
+	if(InNode.IsValid())
+		ShowCode(InNode->FilePath, InNode->Line);
+}
+
 TSharedRef<ITableRow> FLuaDebuggerModule::HandleVarsTreeGenerateRow(FDebuggerVarNode_Ref InNode, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return SNew(SDebuggerVarTreeWidgetItem, OwnerTable, InNode);
@@ -521,6 +628,8 @@ void FLuaDebuggerModule::RefreshLuaFileData()
 	FLuaFileTreeNode_Ref RootNode = MakeShareable(new FLuaFileTreeNode(true, FString(""), BaseDir));
 	RootNode->FindChildren();
 	RootNode->GetAllChildren(LuaFiles);
+	const FText EmptyText = FText::FromString(L"");
+	OnFileFilterTextChanged(EmptyText);
 }
 
 
@@ -586,12 +695,82 @@ void FLuaDebuggerModule::DebugTabClose(TSharedRef<SDockTab> DockTab)
 	UDebuggerSetting::Get()->SetTabIsOpen(false);
 	DebugContinue();
 	FSlateApplication::Get().UnregisterInputPreProcessor(ptr_HandleKeyDown);
+	SaveDebuggerConfig();
 }
 
 
 void FLuaDebuggerModule::RegisterKeyDown()
 {
 	FSlateApplication::Get().RegisterInputPreProcessor(ptr_HandleKeyDown);
+}
+
+
+void FLuaDebuggerModule::BeforeExit()
+{
+	SaveDebuggerConfig();
+}
+
+void FLuaDebuggerModule::SaveDebuggerConfig()
+{
+	if (LuaCodeListPtr.IsValid())
+	{
+		float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
+		LastTimeFileOffset.Add(NowLuaCodeFilePath, NowOffset);
+	}
+	UDebuggerSetting::Get()->LastTimeFileOffset = LastTimeFileOffset;
+	UDebuggerSetting::Get()->RecentFilePath = RecentFilePath;
+	UDebuggerSetting::Get()->RecentBreakPoint.Reset();
+	for (FBreakPointNode_Ref &Node : BreakPointForView)
+	{
+		UDebuggerSetting::Get()->RecentBreakPoint.Add(*Node);
+	}
+	UDebuggerSetting::Get()->SaveConfig();
+}
+
+void FLuaDebuggerModule::OnFileFilterTextChanged(const FText& InFilterText)
+{
+	if (InFilterText.IsEmpty())
+		AfterFilterLuaFiles = LuaFiles;
+	else
+	{
+		FString FileStr = InFilterText.ToString();
+		FString FilePatternStr = ".*";
+		for (int i = 0; i < FileStr.Len(); i++)
+		{
+			FilePatternStr += FileStr[i];
+			FilePatternStr += ".*";
+		}
+		FRegexPattern FilePattern(FilePatternStr);
+		AfterFilterLuaFiles.Reset();
+		for (FLuaFileTreeNode_Ref& FileNode : LuaFiles)
+		{
+			FielterFileNode(FilePattern, FileNode);
+		}
+	}
+	if (LuaFileTreePtr.IsValid())
+		LuaFileTreePtr.Pin()->RequestTreeRefresh();
+}
+
+
+void FLuaDebuggerModule::FielterFileNode(FRegexPattern& Pattern, FLuaFileTreeNode_Ref& FileNode)
+{
+	if (FileNode->IsDir)
+	{
+		TArray<FLuaFileTreeNode_Ref> OutChildren;
+		FileNode->GetAllChildren(OutChildren);
+		for (FLuaFileTreeNode_Ref& Node : OutChildren)
+		{
+			FielterFileNode(Pattern, Node);
+		}
+	}
+	else
+	{
+		FRegexMatcher Matcher(Pattern, FileNode->FileName);
+		if (Matcher.FindNext())
+		{
+			AfterFilterLuaFiles.Add(FileNode);
+		}
+	}
 }
 
 void FLuaDebuggerModule::AddMenuExtension(FMenuBuilder& Builder)
@@ -794,4 +973,21 @@ bool FLuaDebuggerModule::FHandleKeyDown::HandleKeyDownEvent(FSlateApplication& S
 		return true;
 	}
 	return false;
+}
+
+void SBreakPointWidgetItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView, FBreakPointNode_Ref Node)
+{
+	STableRow<FBreakPointNode_Ref>::Construct(STableRow<FBreakPointNode_Ref>::FArguments(), InOwnerTableView);
+
+	FString LuaSourceDir = FLuaDebuggerModule::Get()->GetLuaSourceDir();
+	ChildSlot
+	[
+		SNew(SBox)
+		.MinDesiredHeight(20)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(FString::Printf(L"%s@Line %d", *Node->FilePath.Mid(LuaSourceDir.Len() + 1), Node->Line)))
+		]
+	];
 }

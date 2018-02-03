@@ -37,7 +37,22 @@ struct LUADEBUGGER_API FDebuggerVarNode
 using FDebuggerVarNode_Ref = TSharedRef<FDebuggerVarNode>;
 using SDebuggerVarTree = STreeView<FDebuggerVarNode_Ref>;
 
-UCLASS()
+USTRUCT()
+struct LUADEBUGGER_API FBreakPointNode
+{
+	GENERATED_BODY()
+	FBreakPointNode() {};
+	FBreakPointNode(int32 _Line, FString _FilePath)
+		:Line(_Line), FilePath(_FilePath)
+	{}
+	UPROPERTY()
+	FString FilePath;
+
+	UPROPERTY()
+	int32 Line;
+};
+
+UCLASS(config=Editor)
 class LUADEBUGGER_API UDebuggerSetting : public UObject
 {
 	GENERATED_BODY()
@@ -66,5 +81,13 @@ public:
 	void StepOver();
 	void StepIn();
 	void StepOut();
-// 	TArray<FDebuggerVarNode> GetStackVar(int32 StackIndex);
+
+	UPROPERTY(config)
+	TMap<FString, float> LastTimeFileOffset;
+
+	UPROPERTY(config)
+		FString RecentFilePath;
+	
+	UPROPERTY(config)
+		TArray<FBreakPointNode> RecentBreakPoint;
 };

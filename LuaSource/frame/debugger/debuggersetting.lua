@@ -84,7 +84,7 @@ local function CollectStackData()
 		local FilePath = GetFullFilePath(StackInfo.source)
 		local Line = StackInfo.currentline
 		local LuaPath = GetLuaPath(FilePath)
-		local Content = LuaPath..":"..tostring(StackInfo.name).." Line"..tostring(Line)
+		local Content = LuaPath.." @ "..tostring(StackInfo.name)..":Line "..tostring(Line)
 		table.insert(Contents, Content)
 		table.insert(FilePaths, FilePath)
 		table.insert(Lines, Line)
@@ -101,7 +101,7 @@ local function HookCallBack(Event, Line)
 			or (bStepOver and StepInStackCount<=0) 
 			or bStepIn 
 			or BreakPoints[FilePath..tostring(Line)] then
-			a_(StepOutStackCount)
+
 			StepInStackCount = 0
 			StepOutStackCount = 0
 			bStepIn = false
@@ -113,15 +113,19 @@ local function HookCallBack(Event, Line)
 	elseif bStepOver then
 		if Event == "call" then
 			StepInStackCount = StepInStackCount + 1
-		elseif Event == "return" then
+		else
 			StepInStackCount = StepInStackCount - 1
 		end
 	elseif bStepOut then
 		if Event == "call" then
 			StepOutStackCount = StepOutStackCount + 1
-		elseif Event == "return" then
+		else
 			StepOutStackCount = StepOutStackCount - 1
 		end 
+		if StepOutStackCount <= -1 then
+			bStepOut = false
+			bStepIn = true
+		end
 	end
 end
 
@@ -251,9 +255,6 @@ function DebuggerSetting:GetVarNodeChildren(ParentNode)
 	local Var = self.m_WeakVars[ParentNode.ValueWeakIndex]
 	if Var then	
 		local function AddNode(name, value)
-			if type(value) == "function" then
-				return
-			end
 			local NewNode = FDebuggerVarNode.New()
 			if MayHaveChildren(value) then
 				local WeakIndex = self:AddToWeak(value)
