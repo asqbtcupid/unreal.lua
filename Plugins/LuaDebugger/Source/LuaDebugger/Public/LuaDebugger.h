@@ -179,6 +179,7 @@ public:
 	TWeakPtr<SLuaFileTree> LuaFileTreePtr;
 
 	FString NowLuaCodeFilePath;
+	FDateTime ModifyTimeOfNowFile;
 	TArray<FCodeListNode_Ref> NowLuaCodes;
 	TWeakPtr<SLuaCodeList> LuaCodeListPtr;
 
@@ -243,7 +244,7 @@ public:
 	void SaveDebuggerConfig();
 	class FHandleKeyDown :public IInputProcessor
 	{
-		virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor) {};
+		virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor);
 		virtual bool HandleKeyDownEvent(FSlateApplication& SlateApp, const FKeyEvent& InKeyEvent);
 
 	};
@@ -251,6 +252,8 @@ public:
 
 	void OnFileFilterTextChanged(const FText& InFilterText);
 	void FielterFileNode(FRegexPattern& Pattern, FLuaFileTreeNode_Ref& FileNode);
+	float IntervalToCheckFileChange;
+	void Tick(float Delta);
 private:
 
 	void AddToolbarExtension(FToolBarBuilder& Builder);
