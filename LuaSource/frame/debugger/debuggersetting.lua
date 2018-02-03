@@ -255,9 +255,6 @@ function DebuggerSetting:GetVarNodeChildren(ParentNode)
 	local Var = self.m_WeakVars[ParentNode.ValueWeakIndex]
 	if Var then	
 		local function AddNode(name, value)
-			if type(value) == "function" then
-				return
-			end
 			local NewNode = FDebuggerVarNode.New()
 			if MayHaveChildren(value) then
 				local WeakIndex = self:AddToWeak(value)

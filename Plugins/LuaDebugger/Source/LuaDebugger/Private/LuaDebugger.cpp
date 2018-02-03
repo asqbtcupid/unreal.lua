@@ -511,7 +511,7 @@ void FLuaDebuggerModule::ShowCode(const FString& FilePath, int32 Line /*= 0*/)
 			LuaCodeListPtr.Pin()->SetItemSelection(NowLuaCodes[Line - 1], true);
 			float NowOffset = LuaCodeListPtr.Pin()->GetScrollOffset();
 // todo
-			if (FMath::Abs(NowOffset-Line)>5)
+			if (NowOffset>Line || Line>NowOffset + 15)
 				LuaCodeListPtr.Pin()->SetScrollOffset(Line-5);
 		}
 		
