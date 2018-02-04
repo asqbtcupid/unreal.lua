@@ -99,7 +99,7 @@ bool ACatchMePlayerController::S_PlaySkill_Validate(int32 SkillId, AActor* Targe
 
 void ACatchMePlayerController::S_MoveToLocation_Implementation(FVector Location)
 {
-	LuaCall("MoveToPos", this, &Location);
+	LuaCall("MoveToPos", this, Location);
 }
 
 bool ACatchMePlayerController::S_MoveToLocation_Validate(FVector Location)
