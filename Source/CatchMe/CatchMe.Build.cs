@@ -2,20 +2,16 @@
 
 using UnrealBuildTool;
 using System.IO;
- 
+
 public class CatchMe : ModuleRules
 {
     public CatchMe(ReadOnlyTargetRules Target) : base(Target)
-    { 
+    {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-           
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "Foliage","LuaPluginRuntime", "GameplayTasks" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG"});
-//         LinkTypePrivate = Monolithic;
-        if (Target.Platform == UnrealTargetPlatform.Mac)
-        {
-            CircularlyReferencedDependentModules.Add("LuaPluginRuntime");
-        } 
-    } 
-}                                    
-                                                                                                                                                               
+
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "AIModule", "Foliage", "GameplayTasks" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG" });
+
+        PublicDependencyModuleNames.Add("LuaPluginRuntime");
+    }
+}
