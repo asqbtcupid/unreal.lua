@@ -43,6 +43,13 @@ for your project:
     2.Lua Hot Reload, [luahotupdate](https://github.com/asqbtcupid/lua_hotupdate)
     
     3.Variable Watcher
+    
+    4.Debugger
+    
+## Documentation
+
+[wiki](https://github.com/asqbtcupid/unreal.lua/wiki)
+
 ## FAQ
 todo
 ## Finally
