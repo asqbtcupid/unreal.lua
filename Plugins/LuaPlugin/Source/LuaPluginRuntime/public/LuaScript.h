@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "LuaScript.generated.h"
 
-UCLASS(meta=(lua=1))
+UCLASS()
 class LUAPLUGINRUNTIME_API ULuaScript : public UObject
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = LuaScript)
 	FString Code;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = LuaScript)
+	FString ImportPath;
 };
