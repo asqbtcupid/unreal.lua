@@ -79,6 +79,7 @@ FLuaScriptCodeGenerator::FLuaScriptCodeGenerator(const FString& RootLocalPath, c
 	GConfig->GetArray(TEXT("Lua"), TEXT("CircularModules"), CircularModules, LuaConfigPath);
 
 	GConfig->GetString(TEXT("Lua"), TEXT("GeneratedCodeDir"), LuaGeneratedCodeDir, LuaConfigPath);
+	GConfig->GetString(TEXT("Lua"), TEXT("SublimeCompletionDir"), SublimeCompletionDir, LuaConfigPath);
 }
 
 FString FLuaScriptCodeGenerator::GenerateWrapperFunctionDeclaration(const FString& ClassNameCPP, FString classname, UFunction* Function)
@@ -1019,6 +1020,8 @@ FString FLuaScriptCodeGenerator::ExportFunction(const FString& ClassNameCPP, UCl
 			return "";
 		}
 	}
+	if(bExportSbCompletion())
+		AddFunctionToCompletions(Function);
 	return FuncCode(ClassNameCPP, Class->GetName(), Function, FuncSuper, Class);
 }
 
@@ -1688,6 +1691,8 @@ FString FLuaScriptCodeGenerator::ExportProperty(const FString& ClassNameCPP, UCl
 	}
 	else
 	{
+		if (bExportSbCompletion())
+			AddPropertyToCompletions(Property);
 		GeneratedGlue += GetterCode(ClassNameCPP, Class->GetName(), GetterName, Property, Class, PropertySuper);
 		Getter.FunctionName = FString::Printf(TEXT("%s_%s"), *ClassNameCPP, *GetterName);
 	}
@@ -1913,6 +1918,8 @@ void FLuaScriptCodeGenerator::ExportStruct()
 		StructSet.Add(*It);
 		// 		auto x = name == "AIRequestID";
 		FString namecpp = "F" + name;
+		if (bExportSbCompletion())
+			SublimeCompletions.Add(namecpp);
 		const FString ClassGlueFilename = GeneratedCodePath / (name + TEXT(".lua.h"));
 		AllStructFileArr.Add(name + TEXT(".lua.h"));
 
@@ -2028,7 +2035,10 @@ void FLuaScriptCodeGenerator::ExportEnum()
 		GeneratedGlue += FString::Printf(TEXT("static const EnumItem %s_Enum[] =\r\n{\r\n"), *name);
 		for (int32 i = 0; i < e->GetMaxEnumValue(); ++i)
 		{
-			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *e->GetNameStringByIndex(i), i);
+			FString ValueName = e->GetNameStringByIndex(i);
+			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *ValueName, i);
+			if (bExportSbCompletion())
+				SublimeCompletions.Add(name + "." + ValueName);
 		}
 		GeneratedGlue += TEXT("\t{ NULL, -1 }\r\n};\r\n\r\n");
 	}
@@ -2053,6 +2063,8 @@ void FLuaScriptCodeGenerator::ExportClass(UClass* Class, const FString& SourceHe
 	ExportingClassSourcefile = SourceHeaderFilename;
 
 	const FString ClassNameCPP = GetClassNameCPP(Class);
+	if(bExportSbCompletion())
+		SublimeCompletions.Add(ClassNameCPP);
 	FString GeneratedGlue(TEXT("#pragma once\r\n\r\n"));
 	ExtraIncludeHeader.Reset();
 	FString FixPath = SourceHeaderFilename;
@@ -2115,7 +2127,65 @@ void FLuaScriptCodeGenerator::FinishExport()
 	ExportStruct();
 	GlueAllGeneratedFiles();
 	GlueAllGeneratedFiles_CircularModule();
+	GenerateSBCompletion();
 	RenameTempFiles();
+}
+
+void FLuaScriptCodeGenerator::AddFunctionToCompletions(UFunction* Function)
+{
+	FString Snip = Function->GetName()+"(";
+	bool HasParam = false;
+	UProperty* ReturnValue = nullptr;
+	for (TFieldIterator<UProperty> ParamIt(Function); ParamIt; ++ParamIt)
+	{
+		UProperty* Param = *ParamIt;
+		if (Param->GetPropertyFlags() & CPF_ReturnParm)
+		{
+			ReturnValue = Param;
+			continue;
+		}
+		HasParam = true;
+		FString TypeName = GetPropertyTypeCPP(Param, CPPF_ArgumentOrReturnValue);
+		Snip += "--[[" + TypeName;
+		if ((Param->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) == CPF_OutParm)
+		{
+			Snip += "&";
+		}
+		Snip += "]]" + Param->GetName() + ",";
+	}
+	if (HasParam)
+	{
+		Snip = Snip.LeftChop(1);
+	}
+	Snip += ")";
+	if (ReturnValue)
+	{
+		FString TypeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
+		Snip += "--[[" + TypeName + "]]";
+	}
+	SublimeCompletions.Add(Snip);
+}
+
+void FLuaScriptCodeGenerator::AddPropertyToCompletions(UProperty* Property)
+{
+	FString TypeName = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
+	FString Snip = Property->GetName()+"--[["+TypeName+"]]";
+	SublimeCompletions.Add(Snip);
+}
+
+void FLuaScriptCodeGenerator::GenerateSBCompletion()
+{
+	if (bExportSbCompletion())
+	{
+		FString All = "{\"completions\":[\r\n";
+		for (FString& str : SublimeCompletions)
+		{
+			All += "\"" + str + "\",\r\n";
+		}
+		All += "]}";
+		FString CppFileName = SublimeCompletionDir / "ue4lua.sublime-completions";
+		SaveHeaderIfChanged(CppFileName, All);
+	}
 }
 
 void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()

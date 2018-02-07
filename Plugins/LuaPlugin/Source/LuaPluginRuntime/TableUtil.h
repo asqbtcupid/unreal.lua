@@ -30,6 +30,10 @@
 	#define STRONG_CHECK_GC_REF	0
 #endif
 
+#ifndef LuaDebug
+	#define LuaDebug 0
+#endif
+
 struct EnumItem
 {
 	const char* key;

@@ -136,7 +136,9 @@ void UTableUtil::init(bool IsManual)
 {
 	if (TheOnlyLuaState != nullptr)
 		return;
+#ifdef LuaDebug
 	bpname2bpclass.Reset();
+#endif
 	bpname2bpstruct.Reset();
 
 	SupportedNativeStruct.Reset();
