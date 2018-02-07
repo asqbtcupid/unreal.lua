@@ -12,6 +12,7 @@ protected:
 	FString IncludeBase;
 	FString ExportingClassSourcefile;
 	FString LuaGeneratedCodeDir;
+	FString SublimeCompletionDir;
 	TArray<FString> DelegateSourceFiles;
 	struct FPropertyAccessor
 	{
@@ -64,10 +65,15 @@ protected:
 	TArray<FString> ExtraIncludeHeader;
 
 	TArray<FDelegateExported> delegates;
+	inline bool bExportSbCompletion() { return !SublimeCompletionDir.IsEmpty(); };
+	TSet<FString> SublimeCompletions;
+	void AddFunctionToCompletions(UFunction* Function);
+	void AddPropertyToCompletions(UProperty* Property);
 	bool IsGameClass(UClass * Class);
 	bool IsChangebleClass(UStruct * Class);
 	bool bExportDelegateProxy;
 	/** Creats a 'glue' file that merges all generated script files */
+	void GenerateSBCompletion();
 	void GlueAllGeneratedFiles();
 	void GlueAllGeneratedFiles_CircularModule();
 	/** Exports a wrapper function */
