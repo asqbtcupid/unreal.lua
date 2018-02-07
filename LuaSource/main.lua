@@ -8,10 +8,11 @@ function Init(IsMannual)
     -- end
     -- TimerMgr:Get():On(ShowMem):Time(2)
 
+    require "frame.debugger.debuggersetting"
+
     if _platform == "PLATFORM_WINDOWS" and _WITH_EDITOR then
         -- InitLuahotupdate()
     end
-    require "frame.debugger.debuggersetting"
 end
 
 function InitLuahotupdate()
@@ -21,7 +22,12 @@ function InitLuahotupdate()
     hasInitHoupdate = true
     local HU = require "luahotupdate"
     HU.Init("hotupdatelist", {_luadir}, A_)
-    TimerMgr:Get():On(HU.Update):Time(1):Fire()
+    local function HotReloadUpdate()
+        DebuggerPause()
+        HU.Update() 
+        DebuggerResume()
+    end
+    TimerMgr:Get():On(HotReloadUpdate):Time(1):Fire()
 end
 
 function Tick(delta)

@@ -9,6 +9,7 @@ local bStepIn = false
 local bStepOut = false
 local StepInStackCount = 0
 local StepOutStackCount = 0
+
 function DebuggerSetting:Ctor()
 	LuaSourceDir = self:GetLuaSourceDir()
 	DebuggerSingleton = self
@@ -17,6 +18,7 @@ function DebuggerSetting:Ctor()
 	self.m_WeakVars = setmetatable({}, weakmeta)
 	self.m_bIsStart = false
 	self.m_bIsDebuging = false
+	self.m_bPaused = 0
 
 	self:Timer(self.Tick, self):Time(0.0001)
 	self:PullDataToLua()
@@ -132,7 +134,7 @@ end
 
 function DebuggerSetting:CheckToRun()
 	local function ShouldRunDebug()
-		return self.m_bIsTabOpen and self.m_bIsStart and self:HasAnyBreakPoint()
+		return self.m_bIsTabOpen and self.m_bIsStart and self:HasAnyBreakPoint() and self.m_bPaused == 0
 	end
 	if self.m_bIsDebuging then
 		if not ShouldRunDebug() then
@@ -311,6 +313,20 @@ end
 
 function DebuggerSetting:StepOut()
 	bStepOut = true	
+end
+
+function DebuggerPause( )
+	if DebuggerSingleton then
+		DebuggerSingleton.m_bPaused = DebuggerSingleton.m_bPaused + 1
+		DebuggerSingleton:CheckToRun()
+	end
+end
+
+function DebuggerResume( )
+	if DebuggerSingleton then
+		DebuggerSingleton.m_bPaused = math.max(DebuggerSingleton.m_bPaused - 1, 0)
+		DebuggerSingleton:CheckToRun()
+	end
 end
 
 function DebuggerSetting:Get( )
