@@ -3,6 +3,7 @@ local DebuggerSetting = Inherit(CppObjectBase)
 local DebuggerSingleton
 local LuaSourceDir 
 local BreakPoints = {}
+local BreakLines = {}
 local bStepOver = false
 local bStepIn = false
 local bStepOut = false
@@ -94,7 +95,7 @@ local function CollectStackData()
 end
 
 local function HookCallBack(Event, Line)
-	if Line then
+	if Line and BreakLines[Line] then
 		local StackInfo = getinfo(2, "S")
 		local FilePath = GetFullFilePath(StackInfo.source)
 		if 	(bStepOut and StepOutStackCount<=-1)
@@ -153,9 +154,11 @@ end
 
 function DebuggerSetting:UpdateBreakPoint(InBreakPoints)
 	BreakPoints = {}
+	BreakLines = {}
 	for FilePath, LineSet in pairs(InBreakPoints) do
 		for LineNum in pairs(LineSet) do
 			BreakPoints[FilePath..tostring(LineNum)] = true
+			BreakLines[LineNum] = true
 		end
 	end
 	self:CheckToRun()
