@@ -2159,6 +2159,11 @@ void UTableUtil::unref(lua_State*inL, luavalue_ref r)
 	luaL_unref(inL, LUA_REGISTRYINDEX, ref);
 }
 
+bool UTableUtil::bisRun()
+{
+	return TheOnlyLuaState != nullptr;
+}
+
 void UTableUtil::addgcref(UObject *p)
 {
 	FLuaGcObj::Get()->objs.Add(p);

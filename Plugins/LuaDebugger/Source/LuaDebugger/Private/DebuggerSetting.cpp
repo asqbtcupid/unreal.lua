@@ -31,19 +31,22 @@ void UDebuggerSetting::PullDataToLua()
 void UDebuggerSetting::UpdateBreakPoint(TMap<FString, TSet<int32>>& BreakPoint)
 {
 	BreakPoints = BreakPoint;
-	LuaCall("UpdateBreakPoint", this, BreakPoint);
+	if(UTableUtil::bisRun())
+		LuaCall("UpdateBreakPoint", this, BreakPoint);
 }
 
 void UDebuggerSetting::ToggleDebugStart(bool IsStart)
 {
 	bIsStart = IsStart;
-	LuaCall("ToggleDebugStart", this, IsStart);
+	if (UTableUtil::bisRun())
+		LuaCall("ToggleDebugStart", this, IsStart);
 }
 
 void UDebuggerSetting::SetTabIsOpen(bool IsOpen)
 {
 	bTabIsOpen = IsOpen;
-	LuaCall("SetTabIsOpen", this, IsOpen);
+	if (UTableUtil::bisRun())
+		LuaCall("SetTabIsOpen", this, IsOpen);
 }
 
 void UDebuggerSetting::GetStackVars(int32 StackIndex, TArray<FDebuggerVarNode_Ref>& Vars)
@@ -85,17 +88,20 @@ void UDebuggerSetting::SetStackData(const TArray<FString>& Content, const TArray
 
 void UDebuggerSetting::StepOver()
 {
-	LuaCall("StepOver", this);
+	if (UTableUtil::bisRun())
+		LuaCall("StepOver", this);
 }
 
 void UDebuggerSetting::StepIn()
 {
-	LuaCall("StepIn", this);
+	if (UTableUtil::bisRun())
+		LuaCall("StepIn", this);
 }
 
 void UDebuggerSetting::StepOut()
 {
-	LuaCall("StepOut", this);
+	if (UTableUtil::bisRun())
+		LuaCall("StepOut", this);
 }
 
 void FDebuggerVarNode::GetChildren(TArray<TSharedRef<FDebuggerVarNode>>& OutChildren)

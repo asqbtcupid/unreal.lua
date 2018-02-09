@@ -14,13 +14,13 @@
 #include "Engine/UserDefinedStruct.h"
 #include "TableUtil.generated.h"
 
+// most useful api
 #define LuaCtor(classname, ...) UTableUtil::call("Ctor", classname, this, ##__VA_ARGS__);
 #define LuaCall(functionname, ptr, ...) UTableUtil::inscall("Call", functionname, ptr, ##__VA_ARGS__);
-
 #define LuaCallr(ret, functionname, ptr,...) UTableUtil::inscallr<ret>("Call", functionname, ptr, ##__VA_ARGS__);
-
 #define LuaStaticCall(functionname, ...)	UTableUtil::call(functionname, ##__VA_ARGS__);
 #define LuaStaticCallr(ret, functionname, ...)	UTableUtil::callr<ret>(functionname, ##__VA_ARGS__);
+
 
 #ifndef USE_LUASOURCE
 	#define USE_LUASOURCE	0
@@ -267,7 +267,7 @@ public:
 	static luavalue_ref ref_luavalue(lua_State*inL, int index);
 	static void unref(lua_State*inL, luavalue_ref r);
 
-
+	static bool bisRun();
 	static void log(const FString& content);
 
 	static void shutdown();
