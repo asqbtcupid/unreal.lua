@@ -98,13 +98,18 @@ local function CollectStackData()
 end
 
 local function HookCallBack(Event, Line)
-	if Line and BreakLines[Line] then
+	if Line then
+		local IsDebugOperation = (bStepOut and StepOutStackCount<=-1)
+								or (bStepOver and StepInStackCount<=0) 
+								or bStepIn 
+		if not IsDebugOperation then
+			if not BreakLines[Line] then
+				return 
+			end
+		end								
 		local StackInfo = getinfo(2, "S")
 		local FilePath = GetFullFilePath(StackInfo.source)
-		if 	(bStepOut and StepOutStackCount<=-1)
-			or (bStepOver and StepInStackCount<=0) 
-			or bStepIn 
-			or BreakPoints[FilePath..tostring(Line)] then
+		if 	IsDebugOperation or BreakPoints[FilePath..tostring(Line)] then
 
 			StepInStackCount = 0
 			StepOutStackCount = 0
