@@ -2038,7 +2038,7 @@ void FLuaScriptCodeGenerator::ExportEnum()
 			FString ValueName = e->GetNameStringByIndex(i);
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *ValueName, i);
 			if (bExportSbCompletion())
-				SublimeCompletions.Add(name + "." + ValueName);
+				SublimeCompletions.Add(name + "." + ValueName+"--[[ZZ]]");
 		}
 		GeneratedGlue += TEXT("\t{ NULL, -1 }\r\n};\r\n\r\n");
 	}
@@ -2161,7 +2161,11 @@ void FLuaScriptCodeGenerator::AddFunctionToCompletions(UFunction* Function)
 	if (ReturnValue)
 	{
 		FString TypeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
-		Snip += "--[[" + TypeName + "]]";
+		Snip += "--[[" + TypeName + " ZZ]]";
+	}
+	else
+	{
+		Snip += "--[[ZZ]]";
 	}
 	SublimeCompletions.Add(Snip);
 }
@@ -2169,7 +2173,7 @@ void FLuaScriptCodeGenerator::AddFunctionToCompletions(UFunction* Function)
 void FLuaScriptCodeGenerator::AddPropertyToCompletions(UProperty* Property)
 {
 	FString TypeName = GetPropertyTypeCPP(Property, CPPF_ArgumentOrReturnValue);
-	FString Snip = Property->GetName()+"--[["+TypeName+"]]";
+	FString Snip = Property->GetName()+"--[["+TypeName+" ZZ]]";
 	SublimeCompletions.Add(Snip);
 }
 
