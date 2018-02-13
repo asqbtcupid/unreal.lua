@@ -34,7 +34,8 @@ local function GetFullFilePath(Path)
 		local FullPath = string.match(Path, "@.*LuaSource(.*%.lua)")
 		if FullPath then
 			FullPath = string.gsub(FullPath, "\\", "/")
-			Cached[Path] = LuaSourceDir..FullPath
+			FullPath = LuaSourceDir..FullPath
+			Cached[Path] = FullPath
 			return FullPath
 		end
 		local LuaPath = string.match(Path, "%-%-%[%[(.-)%]%]")
