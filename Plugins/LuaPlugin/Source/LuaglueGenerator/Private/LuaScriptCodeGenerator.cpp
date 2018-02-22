@@ -2033,9 +2033,12 @@ void FLuaScriptCodeGenerator::ExportEnum()
 		FString name = e->GetName();
 		EnumtNames.Add(name);
 		GeneratedGlue += FString::Printf(TEXT("static const EnumItem %s_Enum[] =\r\n{\r\n"), *name);
-		for (int32 i = 0; i < e->GetMaxEnumValue(); ++i)
+		
+		for (int32 i = 0; i <= e->GetMaxEnumValue(); ++i)
 		{
 			FString ValueName = e->GetNameStringByIndex(i);
+			if (ValueName.IsEmpty())
+				continue;
 			GeneratedGlue += FString::Printf(TEXT("\t{ \"%s\", %d },\r\n"), *ValueName, i);
 			if (bExportSbCompletion())
 				SublimeCompletions.Add(name + "." + ValueName+"--[[ZZ]]");

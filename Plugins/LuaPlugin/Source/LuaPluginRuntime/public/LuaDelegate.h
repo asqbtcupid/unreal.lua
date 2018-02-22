@@ -47,6 +47,8 @@ class LUAPLUGINRUNTIME_API ULuaDelegate : public UObject
 	TMulticastScriptDelegate<FWeakObjectPtr>* TheDelegatePtr;
 public:
 	TMap<lua_State*, TSet<int>> LuaCallBacks;
+	TMap<lua_State*, TSet<int>> LuaCallBacksToRemove;
+	bool bIsProcessingEvent;
 	UFunction* FunSig;
 
 	void Init(TMulticastScriptDelegate<FWeakObjectPtr>& Delegate, UFunction* _FunSig);

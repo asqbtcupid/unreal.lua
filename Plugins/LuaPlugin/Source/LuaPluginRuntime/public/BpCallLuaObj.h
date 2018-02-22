@@ -25,7 +25,8 @@ public:
 		P_GET_PROPERTY(UStrProperty, Z_Param_FunctionName);
 
 		P_NATIVE_BEGIN;
-		lua_State* L = UTableUtil::GetTheOnlyLuaState();
+		// lua_State* L = UTableUtil::GetTheOnlyLuaState();
+		lua_State* L = UTableUtil::GetRunningState();
 		lua_pushcfunction(L, ErrHandleFunc);
 		if (Z_Param_Ins == nullptr)
 		{

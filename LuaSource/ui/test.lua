@@ -3,7 +3,7 @@ local testUmg = Inherit(SimpleDlg)
 testUmg:DynamicLoad("test")
 function testUmg:Ctor(controller)
 	self.Controller = controller
-	self:Wnd("btn_clear"):Event("OnClicked", self.ClickClear, self)
+	self:Wnd("btn_testcoroutine"):Event("OnClicked", self.ClickCoroutine, self)
 	self:Wnd("Play"):Event("OnClicked", self.PlayAnim, self)
 
 	-- local MaterialFather = UMaterial.LoadObject(self, "/Game/Git/mt_fog.mt_fog")
@@ -13,13 +13,19 @@ function testUmg:Ctor(controller)
 	-- self:Wnd("img_fog"):SetBrushFromTexture(controller.m_FogMgr.Tx_Fog)
 
 end
+
 function testUmg:PlayAnim()
 	A_("Test Var Watcher")
 	LuaVarWatcher:Get():AddNode("_G", _G)
 end
 
-function testUmg:ClickClear( )
-	A_("you click button")
+function testUmg:TryCoroutine()
+	self.Controller:TryCoroutine()
+end
+
+function testUmg:ClickCoroutine( )
+	A_("you click TryCoroutine")
+	self:TryCoroutine()
 end
 
 function testUmg:Txt1(content)

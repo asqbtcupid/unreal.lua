@@ -15,6 +15,7 @@
 #endif
 #include "GameDelegates.h"
 #include "Platform.h"
+#include "NativeLuaFunc.h"
 
 DEFINE_LOG_CATEGORY(LuaLog);
 #define SetTableFunc(inL, index, FuncName, Func) lua_pushstring(inL, FuncName);\
@@ -35,9 +36,22 @@ lua_State* UTableUtil::GetTheOnlyLuaState()
 	return TheOnlyLuaState;
 }
 
+lua_State* UTableUtil::GetRunningState()
+{
+	if (RunningState == nullptr)
+		RunningState = GetTheOnlyLuaState();
+    return RunningState;
+}
+
+void UTableUtil::SetRunningState(Flua_State State, Flua_Index Index)
+{
+	RunningState = lua_tothread(State, Index);
+}
+
 TSet<FString> UTableUtil::NeedGcBpClassName;
 LuaTickObject* UTableUtil::PtrTickObject = nullptr;
 lua_State* UTableUtil::TheOnlyLuaState = nullptr;
+lua_State* UTableUtil::RunningState = nullptr;
 int32 UTableUtil::ManualInitCount = 0;
 bool UTableUtil::HasManualInit = false;
 TSet<FString> UTableUtil::SupportedNativeStruct;
@@ -64,60 +78,6 @@ static void* LuaAlloc(void *Ud, void *Ptr, size_t OldSize, size_t NewSize)
 		FMemory::Free(Ptr);
 		return NULL;
 	}
-}
-
-static int32 LuaPanic(lua_State *L)
-{
-	LuaFixLink();
-	UTableUtil::log(FString::Printf(TEXT("PANIC: unprotected error in call to Lua API(%s)"), ANSI_TO_TCHAR(lua_tostring(L, -1))));
-	return 0;
-}
-
-FString GetLuaCodeFromPath(FString FilePath)
-{
-	FString FirstLine = FString("--[[") + FilePath + FString("]]");
-
-	const static FString Prefix = "/Game/LuaSource/";
-	int32 IndexStart = 0;
-	FilePath.FindLastChar('.', IndexStart);
-	if (IndexStart != INDEX_NONE)
-	{
-		FString FileName = FilePath.Mid(IndexStart + 1, FilePath.Len() - IndexStart);
-		FilePath = FilePath.Replace(L".", L"/");
-		FilePath = FilePath + "." + FileName;
-	}
-	else
-	{
-		FilePath = FilePath + FString(".") + FilePath;
-	}
-	FilePath = Prefix + FilePath;
-	ULuaScript* CodeObject = LoadObject<ULuaScript>(nullptr, *FilePath);
-	if (CodeObject) {
-		return FirstLine + CodeObject->Code;
-	}
-	return "";
-}
-
-int CustomLuaLoader(lua_State* L)
-{
-	FString FilePath = lua_tostring(L, -1);
-	FString Code = GetLuaCodeFromPath(FilePath);
-	if (!Code.IsEmpty())
-	{
-		luaL_loadstring(L, TCHAR_TO_UTF8(*Code));
-		return 1;
-	}
-	return 0;
-}
-
-int SetExistTable(lua_State* inL)
-{
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
-	auto u = static_cast<void**>(lua_touserdata(inL, 1));
-	lua_pushlightuserdata(inL, *u);
-	lua_pushvalue(inL, 2);
-	lua_rawset(inL, -3);
-	return 0;
 }
 
 void UTableUtil::useCustomLoader()
@@ -278,209 +238,8 @@ void UTableUtil::shutdown_internal()
 #endif
 	FWorldDelegates::OnWorldCleanup.Remove(LuaOnWorldCleanUpDelegateHandle);
 	TheOnlyLuaState = nullptr;
+	RunningState = nullptr;
 }
-
-int32 indexFunc(lua_State* inL)
-{
-	lua_getmetatable(inL, 1);
-	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (lua_isnil(inL, -1))
-	{
-		FString property = FString(lua_tostring(inL, 2));
-		lua_pop(inL, 1);
-		FString propertyKey = FString::Printf(TEXT("LuaGet_%s"), *property);
-		UTableUtil::push(inL, propertyKey);
-		lua_rawget(inL, -2);
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_call(inL, 1, 1);
-		}
-	}
-	return 1;
-}
-
-int32 newindexFunc(lua_State* inL)
-{
-	lua_getmetatable(inL, 1);
-	FString property = FString(lua_tostring(inL, 2));
-	FString propertyKey = FString::Printf(TEXT("LuaSet_%s"), *property);
-	UTableUtil::push(inL, propertyKey);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
-	{
-		lua_pushvalue(inL, 1);
-		lua_pushvalue(inL, 3);
-		lua_call(inL, 2, 0);
-	}
-	else
-	{
-		ensureAlwaysMsgf(0, L"Set value to not exist key: %s", *property);
-	}
-	return 0;
-}
-
-int32 cast(lua_State* inL)
-{
-	if (lua_isnil(inL, 2))
-	{
-		UTableUtil::log(FString("cast error, nil"));
-		return 1;
-	}
-	lua_pushstring(inL, "classname");
-	lua_rawget(inL, 1);
-	luaL_getmetatable(inL, lua_tostring(inL, -1));
-	lua_setmetatable(inL, 2);
-	lua_pushvalue(inL, 2);
-	return 1;
-}
-
-int32 uobjcet_gcfunc(lua_State *inL)
-{
-	auto u = (void**)lua_touserdata(inL, -1);
-	UTableUtil::rmgcref(static_cast<UObject*>(*u));
-	lua_getmetatable(inL, 1);
-	lua_getfield(inL, -1, "Destroy");
-	if (lua_isfunction(inL, -1))
-	{
-		lua_pushvalue(inL, 1);
-		if (lua_pcall(inL, 1, 0, 0))
-		{
-			UTableUtil::log(FString(lua_tostring(inL, -1)));
-		}
-	}
-#ifdef LuaDebug
-	else
-		lua_pop(inL, 1);
-	lua_getfield(inL, -1, "classname");
-	FString n = lua_tostring(inL, -1);
-	UTableUtil::countforgc[n]--;
-#endif
-	return 0;
-}
-int32 struct_gcfunc(lua_State *inL)
-{
-	lua_getmetatable(inL, 1);
-	lua_getfield(inL, -1, "Destroy");
-	lua_pushvalue(inL, 1);
-	lua_call(inL, 1, 0);
-#ifdef LuaDebug
-	lua_getmetatable(inL, 1);
-	lua_getfield(inL, -1, "classname");
-	FString n = lua_tostring(inL, -1);
-	UTableUtil::countforgc[n]--;
-#endif
-	return 0;
-}
-
-int32 serialize_table(lua_State *inL)
-{
-	int top = lua_gettop(inL);
-	if (top == 1)
-	{
-		lua_newtable(inL);
-		lua_getmetatable(inL, 1);
-		lua_pushnil(inL);
-		while (lua_next(inL, -2))
-		{
-			FString Key = lua_tostring(inL, -2);
-			if (Key.Contains("LuaGet_"))
-			{
-				lua_pushvalue(inL, 1);
-				lua_call(inL, 1, 1);
-				UTableUtil::push(inL, Key.Mid(7));
-				lua_insert(inL, -2);
-				lua_rawset(inL, -5);
-				continue;
-			}
-			lua_pop(inL, 1);
-		}
-		lua_pop(inL, 1);
-		return 1;
-	}
-	else
-	{
-		lua_getmetatable(inL, 1);
-		lua_pushnil(inL);
-		while (lua_next(inL, 2))
-		{
-			FString Key = "LuaSet_" + FString(lua_tostring(inL, -2));
-			lua_getfield(inL, 3, TCHAR_TO_UTF8(*Key));
-			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, -3);
-			lua_call(inL, 2, 0);
-			lua_pop(inL, 1);
-		}
-		return 0;
-	}
-}
-
-int32 EnsureNew(lua_State* inL)
-{
-	ensureAlwaysMsgf(0, L"This class not api class, so don't have new, make it become api class if you want one.");
-	return 0;
-}
-
-int32 EnsureDestroy(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	if (Obj)
-	{
-		UTableUtil::rmgcref(Obj);
-	}
-	return 0;
-}
-
-int32 UObject_GetName(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	UTableUtil::push(inL, Obj->GetName());
-	return 1;
-}
-
-int32 UObject_GetClass(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	pushuobject(inL, Obj->GetClass());
-	return 1;
-}
-
-int32 UObject_GetOuter(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	pushuobject(inL, Obj->GetOuter());
-	return 1;
-}
-
-int32 UObject_IsPendingKill(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	UTableUtil::push(inL, Obj->IsPendingKill());
-	return 1;
-}
-
-int32 UObject_MarkPendingKill(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	Obj->MarkPendingKill();
-	return 0;
-}
-
-int32 UObject_AddToRoot(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	Obj->AddToRoot();
-	return 0;
-}
-
-int32 UObject_RemoveFromRoot(lua_State* inL)
-{
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	Obj->RemoveFromRoot();
-	return 0;
-}
-
 
 void UTableUtil::initmeta(bool bIsStruct, bool bNeedGc)
 {
@@ -609,34 +368,6 @@ void* tostruct(lua_State* L, int i)
 	return *u;
 }
 
-
-int ErrHandleFunc(lua_State*L)
-{
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-	lua_getfield(L, -1, "traceback");
-	lua_pushthread(L);
-	lua_pushvalue(L, 1);
-	lua_pushinteger(L, 2);
-	lua_call(L, 3, 1);
-	lua_remove(L, -2);
-	lua_concat(L, 2);
-	lua_getfield(L, LUA_GLOBALSINDEX, "ErrHandleInLua");
-	if (lua_isnil(L, -1))
-	{
-		lua_pop(L, 1);
-	}
-	else
-	{
-		lua_pushvalue(L, -2);
-		lua_call(L, 1, 0);
-#ifdef LuaDebug
-		FString error = lua_tostring(L, -2);
-		ensureAlwaysMsgf(0, *error);
-#endif
-	}
-	return 1;
-}
-
 void PrintLuaStack(lua_State*L /*= nullptr*/)
 {
 	if (L == nullptr)
@@ -664,86 +395,6 @@ void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool 
 		luaL_getmetatable(inL, classname);
 		lua_setmetatable(inL, index - 1);
 	}
-}
-
-static int32 BpCall(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UFunction* Function = (UFunction*)(*p);
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	uint8* Buffer = (uint8*)FMemory_Alloca(Function->ParmsSize);
-	FScopedArguments scoped_arguments(Function, Buffer);
-
-	int ArgIndex = 2;
-	int ArgCount = lua_gettop(inL);
-
-	// Iterate over input parameters
-	TArray<UProperty*> PushBackParms;
-	TArray<UProperty*> ReturnParms;
-	TArray<int32> StackIndexs;
-	for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
-	{
-		auto Prop = *It;
-
-		if (Prop->GetPropertyFlags() & CPF_ReferenceParm)
-		{
-			PushBackParms.Add(Prop);
-			StackIndexs.Add(ArgIndex);
-		}
-		else if ((Prop->GetPropertyFlags() & (CPF_OutParm | CPF_ReturnParm)))
-		{
-			ReturnParms.Insert(Prop, 0);
-			continue;
-		}
-
-		if (ArgIndex <= ArgCount)
-		{
-			UTableUtil::popproperty(inL, ArgIndex, Prop, Buffer);
-			++ArgIndex;
-		}
-		else if (Prop->GetPropertyFlags() & CPF_ReferenceParm)
-		{
-			ensureMsgf(0, L"you should pass reference, other wise there will be bug");
-		}
-	}
-	Obj->ProcessEvent(Function, Buffer);
-	for (UProperty* Prop : ReturnParms)
-	{
-		UTableUtil::push_ret_property(inL, Prop, Buffer);
-	}
-	for (int i = 0; i < PushBackParms.Num(); i++)
-	{
-		UProperty* Prop = PushBackParms[i];
-		UTableUtil::pushback_ref_property(inL, StackIndexs[i], Prop, Buffer);
-	}
-
-	return PushBackParms.Num() + ReturnParms.Num();
-}
-
-static int32 GetBpProp(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	UTableUtil::pushproperty(inL, Property, Obj);
-	return 1;
-}
-
-static int32 SetBpProp(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
-	UObject* Obj = (UObject*)touobject(inL, 1);
-	UTableUtil::popproperty(inL, 2, Property, Obj);
-	return 0;
-}
-
-static int32 GetBpClass(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UClass* Class = (UClass*)(*p);
-	pushuobject(inL, Class);
-	return 1;
 }
 
 void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
@@ -839,11 +490,97 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 						{
 							push(inL, "LuaGet_" + Property->GetName());
 							pushuobject(inL, Property);
-							lua_pushcclosure(inL, GetBpProp, 1);
+							if(Property->IsA(UBoolProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UBoolProperty), 1);
+							else if(Property->IsA(UIntProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UIntProperty), 1);
+							else if(Property->IsA(UUInt32Property::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UUInt32Property), 1);
+							else if(Property->IsA(UInt64Property::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UInt64Property), 1);
+							else if(Property->IsA(UFloatProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UFloatProperty), 1);
+							else if(Property->IsA(UDoubleProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UDoubleProperty), 1);
+							else if(Property->IsA(UObjectPropertyBase::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UObjectPropertyBase), 1);
+							else if(Property->IsA(UStrProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UStrProperty), 1);
+							else if(Property->IsA(UNameProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UNameProperty), 1);
+							else if(Property->IsA(UTextProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UTextProperty), 1);
+							else if(Property->IsA(UByteProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UByteProperty), 1);
+							else if(Property->IsA(UEnumProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UEnumProperty), 1);
+							else if(Property->IsA(UStructProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UStructProperty), 1);
+							else if(Property->IsA(UMulticastDelegateProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UMulticastDelegateProperty), 1);
+							else if(Property->IsA(UWeakObjectProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UWeakObjectProperty), 1);
+							else if(Property->IsA(UArrayProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UArrayProperty), 1);
+							else if(Property->IsA(UMapProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UMapProperty), 1);
+							else if(Property->IsA(USetProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(USetProperty), 1);
+							else if(Property->IsA(UInterfaceProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertyGetterName(UInterfaceProperty), 1);
+							else
+							{
+								ensureAlwaysMsgf(0, L"");
+								lua_pushcclosure(inL, GetBpProp, 1);
+							}
+
 							lua_rawset(inL, -3);
 							push(inL, "LuaSet_" + Property->GetName());
 							pushuobject(inL, Property);
-							lua_pushcclosure(inL, SetBpProp, 1);
+
+							if(Property->IsA(UBoolProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UBoolProperty), 1);
+							else if(Property->IsA(UIntProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UIntProperty), 1);
+							else if(Property->IsA(UUInt32Property::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UUInt32Property), 1);
+							else if(Property->IsA(UInt64Property::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UInt64Property), 1);
+							else if(Property->IsA(UFloatProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UFloatProperty), 1);
+							else if(Property->IsA(UDoubleProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UDoubleProperty), 1);
+							else if(Property->IsA(UObjectPropertyBase::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UObjectPropertyBase), 1);
+							else if(Property->IsA(UStrProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UStrProperty), 1);
+							else if(Property->IsA(UNameProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UNameProperty), 1);
+							else if(Property->IsA(UTextProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UTextProperty), 1);
+							else if(Property->IsA(UByteProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UByteProperty), 1);
+							else if(Property->IsA(UEnumProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UEnumProperty), 1);
+							else if(Property->IsA(UStructProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UStructProperty), 1);
+							else if(Property->IsA(UMulticastDelegateProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UMulticastDelegateProperty), 1);
+							else if(Property->IsA(UWeakObjectProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UWeakObjectProperty), 1);
+							else if(Property->IsA(UArrayProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UArrayProperty), 1);
+							else if(Property->IsA(UMapProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UMapProperty), 1);
+							else if(Property->IsA(USetProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(USetProperty), 1);
+							else if(Property->IsA(UInterfaceProperty::StaticClass()))
+								lua_pushcclosure(inL, BpPropertySetterName(UInterfaceProperty), 1);
+							else
+							{
+								ensureAlwaysMsgf(0, L"");
+								lua_pushcclosure(inL, SetBpProp, 1);
+							}
 							lua_rawset(inL, -3);
 						}
 
@@ -914,47 +651,6 @@ void UTableUtil::call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr)
 		log(lua_tostring(inL, -1));
 	}
 }
-
-
-void UTableUtil::bpcall(const char* funcname, UFunction* funcsig, void* ptr)
-{
-	if (TheOnlyLuaState == nullptr)
-		init();
-	ue_lua_pushcfunction(TheOnlyLuaState, ErrHandleFunc);
-	lua_getfield(TheOnlyLuaState, LUA_GLOBALSINDEX, "Call");
-	push(TheOnlyLuaState, funcname);
-	push(TheOnlyLuaState, (UObject*)ptr);
-	int ParamCount = 2;
-	TArray<UProperty*> PushBackParms;
-	for (TFieldIterator<UProperty> It(funcsig); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
-	{
-		auto Prop = *It;
-
-		if ((Prop->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) & CPF_ReturnParm)
-		{
-			PushBackParms.Insert(Prop, 0);
-		}
-		else if ((Prop->GetPropertyFlags() & (CPF_ConstParm | CPF_OutParm | CPF_ReturnParm)) & CPF_OutParm)
-		{
-			PushBackParms.Add(Prop);
-		}
-		else
-		{
-			pushproperty(TheOnlyLuaState, Prop, ptr);
-			++ParamCount;
-		}
-	}
-	if (lua_pcall(TheOnlyLuaState, ParamCount, 0, -(ParamCount + 2)))
-	{
-#ifdef LuaDebug
-		FString error = lua_tostring(TheOnlyLuaState, -1);
-		ensureAlwaysMsgf(0, *error);
-#endif
-		log(lua_tostring(TheOnlyLuaState, -1));
-	}
-	lua_pop(TheOnlyLuaState, 1);
-}
-
 
 void UTableUtil::pushcontainer(lua_State* inL, void *Obj, UArrayProperty* Property)
 {
@@ -1579,59 +1275,6 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInterfaceProperty* p
 	pushuobject(inL, (void*)result->GetObject());
 }
 
-static int32 BpStructGetProp(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
-	UTableUtil::pushproperty(inL, Property, tostruct(inL, 1));
-	return 1;
-}
-
-static int32 BpStructSetProp(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
-	UTableUtil::popproperty(inL, 2, Property, tostruct(inL, 1));
-	return 0;
-}
-
-static int32 BpStructNew(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	int Size = lua_tointeger(inL, lua_upvalueindex(2));
-	const char* name = lua_tostring(inL, lua_upvalueindex(3));
-	UScriptStruct* Struct = (UScriptStruct*)(*p);
-	uint8* result = (uint8*)FMemory::Malloc(Size);
-	Struct->InitializeStruct(result);
-	pushstruct_gc(inL, name, result);
-	return 1;
-}
-
-static int32 BpStructDestroy(lua_State* inL)
-{
-	void* ptr = tostruct(inL, 1);
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UScriptStruct* Struct = (UScriptStruct*)(*p);
-
-	Struct->DestroyStruct(ptr);
-	FMemory::Free(ptr);
-	return 0;
-}
-
-static int32 BpStructCopy(lua_State* inL)
-{
-	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	int Size = lua_tointeger(inL, lua_upvalueindex(2));
-	const char* name = lua_tostring(inL, lua_upvalueindex(3));
-	UScriptStruct* Struct = (UScriptStruct*)(*p);
-	uint8* result = (uint8*)FMemory::Malloc(Size);
-	Struct->InitializeStruct(result);
-	void* ptr = tostruct(inL, 1);
-	Struct->CopyScriptStruct(result, ptr);
-	pushstruct_gc(inL, name, result);
-	return 1;
-}
-
 void UTableUtil::MayAddNewStructType(UUserDefinedStruct* BpStruct)
 {
 	FString TypeName = BpStruct->GetName();
@@ -1661,11 +1304,89 @@ void UTableUtil::MayAddNewStructType(UUserDefinedStruct* BpStruct)
 		PropertyName = PropertyName.LeftChop(PropertyName.Len() - Index);
 		push(TheOnlyLuaState, "LuaGet_" + PropertyName);
 		pushuobject(TheOnlyLuaState, Property);
-		lua_pushcclosure(TheOnlyLuaState, BpStructGetProp, 1);
+		if(Property->IsA(UBoolProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UBoolProperty), 1);
+		else if(Property->IsA(UIntProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UIntProperty), 1);
+		else if(Property->IsA(UUInt32Property::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UUInt32Property), 1);
+		else if(Property->IsA(UInt64Property::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UInt64Property), 1);
+		else if(Property->IsA(UFloatProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UFloatProperty), 1);
+		else if(Property->IsA(UDoubleProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UDoubleProperty), 1);
+		else if(Property->IsA(UObjectPropertyBase::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UObjectPropertyBase), 1);
+		else if(Property->IsA(UStrProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UStrProperty), 1);
+		else if(Property->IsA(UNameProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UNameProperty), 1);
+		else if(Property->IsA(UTextProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UTextProperty), 1);
+		else if(Property->IsA(UByteProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UByteProperty), 1);
+		else if(Property->IsA(UEnumProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UEnumProperty), 1);
+		else if(Property->IsA(UStructProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UStructProperty), 1);
+		else if(Property->IsA(UMulticastDelegateProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UMulticastDelegateProperty), 1);
+		else if(Property->IsA(UWeakObjectProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UWeakObjectProperty), 1);
+		else if(Property->IsA(UArrayProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UArrayProperty), 1);
+		else if(Property->IsA(UMapProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UMapProperty), 1);
+		else if(Property->IsA(USetProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(USetProperty), 1);
+		else if(Property->IsA(UInterfaceProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UInterfaceProperty), 1);
+		else
+			lua_pushcclosure(TheOnlyLuaState, BpStructGetProp, 1);
 		lua_rawset(TheOnlyLuaState, -3);
 		push(TheOnlyLuaState, "LuaSet_" + PropertyName);
 		pushuobject(TheOnlyLuaState, Property);
-		lua_pushcclosure(TheOnlyLuaState, BpStructSetProp, 1);
+		if(Property->IsA(UBoolProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UBoolProperty), 1);
+		else if(Property->IsA(UIntProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UIntProperty), 1);
+		else if(Property->IsA(UUInt32Property::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UUInt32Property), 1);
+		else if(Property->IsA(UInt64Property::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UInt64Property), 1);
+		else if(Property->IsA(UFloatProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UFloatProperty), 1);
+		else if(Property->IsA(UDoubleProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UDoubleProperty), 1);
+		else if(Property->IsA(UObjectPropertyBase::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UObjectPropertyBase), 1);
+		else if(Property->IsA(UStrProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UStrProperty), 1);
+		else if(Property->IsA(UNameProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UNameProperty), 1);
+		else if(Property->IsA(UTextProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UTextProperty), 1);
+		else if(Property->IsA(UByteProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UByteProperty), 1);
+		else if(Property->IsA(UEnumProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UEnumProperty), 1);
+		else if(Property->IsA(UStructProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UStructProperty), 1);
+		else if(Property->IsA(UMulticastDelegateProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UMulticastDelegateProperty), 1);
+		else if(Property->IsA(UWeakObjectProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UWeakObjectProperty), 1);
+		else if(Property->IsA(UArrayProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UArrayProperty), 1);
+		else if(Property->IsA(UMapProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UMapProperty), 1);
+		else if(Property->IsA(USetProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(USetProperty), 1);
+		else if(Property->IsA(UInterfaceProperty::StaticClass()))
+			lua_pushcclosure(TheOnlyLuaState, BpStructPropertySetterName(UInterfaceProperty), 1);
+		else
+			lua_pushcclosure(TheOnlyLuaState, BpStructSetProp, 1);
 		lua_rawset(TheOnlyLuaState, -3);
 	}
 	lua_pushstring(TheOnlyLuaState, "Copy");
