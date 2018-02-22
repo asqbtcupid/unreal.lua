@@ -63,6 +63,10 @@ function FRotator:Vector()
 	return UKismetMathLibrary.Conv_RotatorToVector(self)
 end
 
+function FRotator:Forward()
+	return UKismetMathLibrary.GetForwardVector(self)
+end
+
 function FRotator:__tostring()
 	return string.format("X:%.1f  Y:%.1f  Z:%.1f", self.Pitch, self.Yaw, self.Roll)
 end

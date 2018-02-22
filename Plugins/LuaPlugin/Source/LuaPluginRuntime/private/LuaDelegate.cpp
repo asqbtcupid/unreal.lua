@@ -25,27 +25,32 @@ void ULuaDelegate::NoUseAtAll()
 
 void ULuaDelegate::ProcessEvent(UFunction* Function, void* Parms)
 {
+	TSet<int> LuaFuncToCall;
 	for (auto& v : LuaCallBacks) 
 	{
 		for(int ref:v.Value)
-			UTableUtil::call(UTableUtil::GetTheOnlyLuaState(), ref, FunSig, Parms);
+			LuaFuncToCall.Add(ref);
+	}
+	for(int ref : LuaFuncToCall)
+	{
+		UTableUtil::call(UTableUtil::GetRunningState(), ref, FunSig, Parms);
 	}
 }
 
 int ULuaDelegate::Add(Flua_State inL, Flua_Index StackIndex)
 {
 	luavalue_ref r = UTableUtil::ref_luavalue(inL.TheState, StackIndex);
-	TSet<int>& CallBacksOfState = LuaCallBacks.FindOrAdd(inL.TheState);
+	TSet<int>& CallBacksOfState = LuaCallBacks.FindOrAdd(UTableUtil::GetTheOnlyLuaState());
 	CallBacksOfState.Add(r);
 	return r; 
 }
 
 void ULuaDelegate::Remove(Flua_State inL, int32 r)
 {
-	TSet<int>& CallBacksOfState = LuaCallBacks.FindOrAdd(inL.TheState);
+	TSet<int>& CallBacksOfState = LuaCallBacks.FindOrAdd(UTableUtil::GetTheOnlyLuaState());
 	if (CallBacksOfState.Contains(r))
 	{
-		UTableUtil::unref(inL.TheState, r);
+		UTableUtil::unref(UTableUtil::GetTheOnlyLuaState(), r);
 		CallBacksOfState.Remove(r);
  	}
 }

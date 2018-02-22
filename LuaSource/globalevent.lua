@@ -103,7 +103,15 @@ function GlobalEvent.Subscribe(EventName, Callbackfunction, ...)
 		GlobalEvent.SubscriberList[Event][Subscriber] = true
 	end
 	local Handle = {EventName, Subscriber}
-	function Handle.Destroy() GlobalEvent.UnSubscribe(Handle) end
+	function Handle.SetOwner(ObjectBaseOwner)
+		Handle.Owner = ObjectBaseOwner
+	end
+	function Handle.Destroy() 
+		GlobalEvent.UnSubscribe(Handle)
+		if Handle.Owner then
+			Handle.Owner:RemoveEventHandle(Handle)
+		end 
+	end
 	function Handle.Fire()
 		local data = {GlobalEvent.Data(EventName[1])}
 		CallBack(Callbackfunction, parameters, data)

@@ -25,6 +25,7 @@ function TestBpClass:BeginPlay( )
 		self:TestEnum()
 		self:TestBpStructType()
 		self:TestInterface()
+		self:TestCoroutinue()
 	end
 end
 
@@ -943,6 +944,29 @@ end
 
 function TestBpClass:TestBpCall(param1,param2,param3,param4,param5,param6,param7)
     return param1,param2,param3,param4,param5,param6,param7
+end
+
+function TestBpClass:RunCo2()
+	local DelayTime = 2
+	local PassTime = CoroutineUtil.Delay(DelayTime)
+	assert(PassTime >= DelayTime)
 end	
+
+function TestBpClass:RunCo1()
+	self:Coroutine(self.RunCo2, self)
+	local DelayTime = 1
+	local PassTime = CoroutineUtil.Delay(DelayTime, 1, 2, 3)
+	assert(PassTime >= DelayTime)
+end	
+
+function TestBpClass:TestCoroutinue()
+	local handle, IsYield, a, b, c = self:Coroutine(self.RunCo1, self)
+	assert(handle.owner == self)
+	assert(handle:GetStatus() == "suspended")
+	assert(IsYield)
+	assert(a ==1)
+	assert(b ==2)
+	assert(c ==3)
+end
 
 return TestBpClass

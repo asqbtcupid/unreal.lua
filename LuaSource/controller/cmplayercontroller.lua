@@ -110,6 +110,24 @@ function CMPlayerController:InputTap_Press(Pos)
 	self.m_Pawn:StartPress(Pos)
 end	
 
+function CMPlayerController:TryCoroutine()
+	self:Coroutine(self.TryCoroutine_Imp, self)
+end
+
+function CMPlayerController:TryCoroutine_Imp()
+	local Rotation = self.m_PlayCharacter:K2_GetActorRotation():Copy()
+	local NowPos = self.m_PlayCharacter:K2_GetActorLocation():Copy()
+	local TargetPos = NowPos + (Rotation:Forward() * 200)
+	local AIController = self.m_PlayCharacter:GetController()
+	CoroutineUtil.MoveToLocation(AIController, TargetPos)
+	CoroutineUtil.Delay(1)
+	CoroutineUtil.MoveToLocation(AIController, NowPos)
+	CoroutineUtil.MoveToLocation(AIController, NowPos)
+	TargetPos = NowPos - (Rotation:Forward() * 200)
+	CoroutineUtil.Delay(1)
+	CoroutineUtil.MoveToLocation(AIController, TargetPos)
+end
+
 function CMPlayerController:InputTap_Release(Pos, HoldTime)
 	if not self.m_bHasMoveScreen then
 		local Hit = FHitResult.Temp()

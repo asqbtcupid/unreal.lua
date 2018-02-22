@@ -9,6 +9,7 @@ local bStepIn = false
 local bStepOut = false
 local StepInStackCount = 0
 local StepOutStackCount = 0
+local bPauseForMainThread = false
 
 function DebuggerSetting:Ctor()
 	LuaSourceDir = self:GetLuaSourceDir()
@@ -20,6 +21,7 @@ function DebuggerSetting:Ctor()
 	self.m_bIsDebuging = false
 	self.m_bPaused = 0
 
+	self.m_TheCoHooking = nil
 	self:Timer(self.Tick, self):Time(0.0001)
 	self:PullDataToLua()
 end
@@ -83,7 +85,13 @@ local function CollectStackData()
 	local Lines={}
 	local StackIndexs={}
 	for i = 3, math.huge do
-		local StackInfo = getinfo(i)
+		local StackInfo
+		local RunningCoroutine = coroutine.running()
+		if RunningCoroutine then
+			StackInfo = getinfo(RunningCoroutine, i)
+		else
+			StackInfo = getinfo(i)
+		end
 		if not StackInfo then break end
 		local FilePath = GetFullFilePath(StackInfo.source)
 		local Line = StackInfo.currentline
@@ -106,8 +114,17 @@ local function HookCallBack(Event, Line)
 			if not BreakLines[Line] then
 				return 
 			end
-		end								
-		local StackInfo = getinfo(2, "S")
+		end				
+		local RunningCoroutine = coroutine.running()
+		if RunningCoroutine == nil and bPauseForMainThread then
+			return
+		end	
+		local StackInfo
+		if RunningCoroutine then
+			StackInfo = getinfo(RunningCoroutine, 2, "S")
+		else
+			StackInfo = getinfo(2, "S")
+		end
 		local FilePath = GetFullFilePath(StackInfo.source)
 		if 	IsDebugOperation or BreakPoints[FilePath..tostring(Line)] then
 
@@ -138,17 +155,28 @@ local function HookCallBack(Event, Line)
 	end
 end
 
-function DebuggerSetting:CheckToRun()
-	local function ShouldRunDebug()
-		return self.m_bIsTabOpen and self.m_bIsStart and self:HasAnyBreakPoint() and self.m_bPaused == 0
+function DebuggerSetting:ShouldRunDebug()
+	return self.m_bIsTabOpen and self.m_bIsStart and self:HasAnyBreakPoint() and self.m_bPaused == 0
+end
+
+function DebuggerSetting:HookCoroutine(co)
+	if self:ShouldRunDebug() then
+		debug.sethook(co, HookCallBack, "lcr")
 	end
+end
+
+function DebuggerSetting:UnHookCoroutine(co)
+	debug.sethook(co)
+end
+
+function DebuggerSetting:CheckToRun()
 	if self.m_bIsDebuging then
-		if not ShouldRunDebug() then
+		if not self:ShouldRunDebug() then
 			debug.sethook()
 			self.m_bIsDebuging = false
 		end	
 	else
-		if ShouldRunDebug() then
+		if self:ShouldRunDebug() then
 			debug.sethook(HookCallBack, "lcr")
 			self.m_bIsDebuging = true
 		end	
@@ -231,9 +259,16 @@ end
 function DebuggerSetting:GetStackVars(StackIndex)
 	local result = {}
 	StackIndex = StackIndex + 2
-	local StackInfo = getinfo(StackIndex, "f")
-	local func = StackInfo.func
-	if StackInfo and func then
+	local StackInfo
+	local RunningCoroutine = coroutine.running()
+
+	if RunningCoroutine then
+		StackInfo = getinfo(RunningCoroutine, StackIndex, "f")
+	else
+		StackInfo = getinfo(StackIndex, "f")
+	end
+	local func = StackInfo and StackInfo.func
+	if func then
 		local function AddNode(name, value, isupvalue)
 			local NewNode = FDebuggerVarNode.New()
 			if MayHaveChildren(value) then
@@ -253,7 +288,12 @@ function DebuggerSetting:GetStackVars(StackIndex)
 			AddNode(name, value, true)
 		end
 		for i = 1, math.huge do
-			local name, value = debug.getlocal(StackIndex, i)
+			local name, value
+			if RunningCoroutine then
+				name, value = debug.getlocal(RunningCoroutine, StackIndex, i)
+			else
+				name, value = debug.getlocal(StackIndex, i)
+			end			
 			if not name then break end
 			AddNode(name,value)
 		end
@@ -341,5 +381,36 @@ end
 
 if UDebuggerSetting then
 	DebuggerSetting:NewOn(UDebuggerSetting.Get())
+	local oldresume = coroutine.resume 
+	local oldyield = coroutine.yield 
+	local oldwrap  = coroutine.wrap 
+	local coroutinestack = {} 
+	local function newresume(co, ...)
+		DebuggerSingleton:HookCoroutine(co)
+		bPauseForMainThread = true
+		UTableUtil.SetRunningState(co)
+		local result = {oldresume(co, ...)}
+		UTableUtil.SetRunningState(nil)
+		bPauseForMainThread = false
+		if coroutine.status(co) == "dead" then
+			DebuggerSingleton:UnHookCoroutine(co)
+		end
+		return unpack(result, 1, 10)
+	end 
+	local function newyield(...)
+		DebuggerSingleton:UnHookCoroutine(coroutine.running())
+		return oldyield(...)
+	end
+	local function newwrap(func)
+		local co = coroutine.create(func)
+		local function f(...)
+			newresume(co, ...)
+		end
+		return f
+	end
+	coroutine.resume = newresume
+	coroutine.yield = newyield
+	coroutine.wrap = newwrap
 end
+
 return DebuggerSetting

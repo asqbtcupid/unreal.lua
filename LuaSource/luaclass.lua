@@ -206,34 +206,75 @@ Class = Inherit
 
 ObjectBase = Inherit(Object)
 ObjectBase.New = Object.NewIns
+-- local weakmeta = {__mode = "kv"}
 function ObjectBase:Ctor()
 	rawset(self, "_timer_handles_", {})
 	rawset(self, "_event_handles_", {})
 	rawset(self, "_childs_", {})
+	-- rawset(self, "_coroutine_", setmetatable({}, weakmeta))
+	rawset(self, "_coroutine_", {})
 end
 
 function ObjectBase:Destroy()
-	for i, v in ipairs(self._timer_handles_) do
+	local ItemToDestroy = {}
+	local function TravelToAddDestroyItem(Key, bDestroyKey, bDestroyValue)
+		for i, v in pairs(self[Key]) do
+			if bDestroyKey then
+				ItemToDestroy[i] = true
+			end
+			if bDestroyValue then
+				ItemToDestroy[v] = true
+			end
+		end
+		self[Key] = nil
+	end
+	TravelToAddDestroyItem("_timer_handles_", true, false)
+	TravelToAddDestroyItem("_event_handles_", true, false)
+	TravelToAddDestroyItem("_childs_", false, true)
+	TravelToAddDestroyItem("_coroutine_", true, false)
+
+	for v in pairs(ItemToDestroy) do
 		v:Destroy()
 	end
-	for i, v in ipairs(self._event_handles_) do
-		v:Destroy()
+end
+
+function ObjectBase:RemoveTimerHandle(handle)
+	if self._timer_handles_ then
+		self._timer_handles_[handle] = nil
 	end
-	for i, v in ipairs(self._childs_) do
-		v:Release()
+end
+
+function ObjectBase:RemoveCoHandle(handle)
+	if self._coroutine_ then
+		self._coroutine_[handle] = nil
+	end
+end
+
+function ObjectBase:RemoveEventHandle(handle)
+	if self._event_handles_ then
+		self._event_handles_[handle] = nil
 	end
 end
 
 function ObjectBase:Timer(...)
 	local handle = TimerMgr:Get():On(...):Bound(true)
-	table.insert(self._timer_handles_, handle)
+	handle:SetOwner(self)
+	self._timer_handles_[handle] = true
 	return handle
 end
 
 function ObjectBase:On(...)
 	local handle = GlobalEvent.On(...)
-	table.insert(self._event_handles_, handle)
+	handle.SetOwner(self)
+	self._event_handles_[handle] = true
 	return handle
+end
+
+function ObjectBase:Coroutine(func, ...)
+	local handle = CoroutineMgr:Get():Create(func)
+	self._coroutine_[handle] = true
+	handle:SetOwner(self)
+	return handle, handle:Resume(...)
 end
 
 function ObjectBase:AddChild(ins)

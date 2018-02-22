@@ -226,7 +226,7 @@ public:
 	virtual TStatId GetStatId() const override;
 };
 
-DECLARE_MULTICAST_DELEGATE(FLuaInitDelegates)
+DECLARE_MULTICAST_DELEGATE(FLuaInitDelegates);
 
 UCLASS()
 class LUAPLUGINRUNTIME_API UTableUtil : public UBlueprintFunctionLibrary
@@ -235,6 +235,7 @@ class LUAPLUGINRUNTIME_API UTableUtil : public UBlueprintFunctionLibrary
 
 		static LuaTickObject* PtrTickObject;
 	static lua_State* TheOnlyLuaState;
+	static lua_State* RunningState;
 	// temporarily for multi gameinstance, later I will add Multi Lua_State
 	static int32 ManualInitCount;
 	static bool HasManualInit;
@@ -242,6 +243,9 @@ class LUAPLUGINRUNTIME_API UTableUtil : public UBlueprintFunctionLibrary
 public:
 	static FLuaInitDelegates& GetInitDelegates();
 	static lua_State* GetTheOnlyLuaState();
+	static lua_State* GetRunningState();
+	UFUNCTION()
+	static void SetRunningState(Flua_State State, Flua_Index Index);
 	static TSet<FString> NeedGcBpClassName;
 #ifdef LuaDebug
 	static TMap<FString, int> countforgc;
@@ -913,19 +917,39 @@ public:
 	}
 
 	template<class returnType, class... T>
+	static returnType callr_with_state(lua_State* TheState, const char* funcname, T&&... args)
+	{
+		ue_lua_pushcfunction(TheState, ErrHandleFunc);
+		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
+		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
+		if (ue_lua_pcall(TheState, ParamCount, 1, -(ParamCount + 2)))
+		{
+			log(ue_lua_tostring(TheState, -1));
+		}
+		ue_lua_remove(TheState, -2);
+		return pop<returnType>(TheState, -1);
+	}
+	
+	template<class returnType, class... T>
 	static returnType callr(const char* funcname, T&&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
-		ue_lua_pushcfunction(TheOnlyLuaState, ErrHandleFunc);
-		ue_lua_getfield(TheOnlyLuaState, LUA_GLOBALSINDEX, funcname);
-		int32 ParamCount = pushall(TheOnlyLuaState, Forward<T>(args)...);
-		if (ue_lua_pcall(TheOnlyLuaState, ParamCount, 1, -(ParamCount + 2)))
+		return callr_with_state<returnType>(GetRunningState(), funcname, Forward<T>(args)...);
+		
+	}
+
+	template<class... T>
+	static void call_with_state(lua_State* TheState, const char* funcname, T&&... args)
+	{
+		ue_lua_pushcfunction(TheState, ErrHandleFunc);
+		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
+		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
+		if (ue_lua_pcall(TheState, ParamCount, 0, -(ParamCount + 2)))
 		{
-			log(ue_lua_tostring(TheOnlyLuaState, -1));
+			log(ue_lua_tostring(TheState, -1));
 		}
-		ue_lua_remove(TheOnlyLuaState, -2);
-		return pop<returnType>(TheOnlyLuaState, -1);
+		ue_lua_pop(TheState, 1);
 	}
 
 	template<class... T>
@@ -933,14 +957,7 @@ public:
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
-		ue_lua_pushcfunction(TheOnlyLuaState, ErrHandleFunc);
-		ue_lua_getfield(TheOnlyLuaState, LUA_GLOBALSINDEX, funcname);
-		int32 ParamCount = pushall(TheOnlyLuaState, Forward<T>(args)...);
-		if (ue_lua_pcall(TheOnlyLuaState, ParamCount, 0, -(ParamCount + 2)))
-		{
-			log(ue_lua_tostring(TheOnlyLuaState, -1));
-		}
-		ue_lua_pop(TheOnlyLuaState, 1);
+		call_with_state(GetRunningState(), funcname, Forward<T>(args)...);
 	}
 
 	template<class... T>
@@ -995,11 +1012,11 @@ public:
 	}
 
 	static void call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr);
-	static void bpcall(const char* funname, UFunction* funcsig, void* ptr);
 
 	static void pushcontainer(lua_State* inL, void *Obj, UArrayProperty* Property);
 	static void pushcontainer(lua_State* inL, void *Obj, UMapProperty* Property);
 	static void pushcontainer(lua_State* inL, void *Obj, USetProperty* Property);
+
 
 	template<class T>
 	static T& GetTempIns()
