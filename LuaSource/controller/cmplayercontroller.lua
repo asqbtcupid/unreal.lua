@@ -123,8 +123,8 @@ function CMPlayerController:TryCoroutine_Imp()
 	CoroutineUtil.Delay(1)
 	CoroutineUtil.MoveToLocation(AIController, NowPos)
 	CoroutineUtil.MoveToLocation(AIController, NowPos)
-	TargetPos = NowPos - (Rotation:Forward() * 200)
 	CoroutineUtil.Delay(1)
+	TargetPos = NowPos - (Rotation:Forward() * 200)
 	CoroutineUtil.MoveToLocation(AIController, TargetPos)
 end
 
