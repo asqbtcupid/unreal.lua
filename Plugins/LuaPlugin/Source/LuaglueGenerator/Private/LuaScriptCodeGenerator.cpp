@@ -997,6 +997,8 @@ FString FLuaScriptCodeGenerator::ExportInterfaceFunc(UClass* Class)
 					Exports.Add(Function->GetFName());
 
 					GeneratedGlueBody += FuncCode(ClassNameCPP, Class->GetName(), Function, nullptr, Class, InterfaceClass);
+					if (bExportSbCompletion())
+						AddFunctionToCompletions(Function);
 				}
 			}
 		}
