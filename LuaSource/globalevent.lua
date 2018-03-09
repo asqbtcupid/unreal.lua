@@ -103,13 +103,15 @@ function GlobalEvent.Subscribe(EventName, Callbackfunction, ...)
 		GlobalEvent.SubscriberList[Event][Subscriber] = true
 	end
 	local Handle = {EventName, Subscriber}
+	Handle.OwnerTable = setmetatable({}, weakmeta)
 	function Handle.SetOwner(ObjectBaseOwner)
-		Handle.Owner = ObjectBaseOwner
+		Handle.OwnerTable[1] = ObjectBaseOwner
 	end
 	function Handle.Destroy() 
 		GlobalEvent.UnSubscribe(Handle)
-		if Handle.Owner then
-			Handle.Owner:RemoveEventHandle(Handle)
+		local Owner = Handle.OwnerTable[1]
+		if Owner then
+			Owner:RemoveEventHandle(Handle)
 		end 
 	end
 	function Handle.Fire()

@@ -961,7 +961,7 @@ end
 
 function TestBpClass:TestCoroutinue()
 	local handle, IsYield, a, b, c = self:Coroutine(self.RunCo1, self)
-	assert(handle.owner == self)
+	assert(handle:GetOwner() == self)
 	assert(handle:GetStatus() == "suspended")
 	assert(IsYield)
 	assert(a ==1)
