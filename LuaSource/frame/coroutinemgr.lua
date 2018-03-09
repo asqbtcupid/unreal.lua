@@ -1,8 +1,10 @@
 local Handle = Inherit(Object)
 
+local weakmeta = {__mode = "v"}
 function Handle:Ctor(mgr, newcoroutine)
 	self.mgr = mgr
 	self.coroutine = newcoroutine
+	self.OwnerTable = setmetatable({}, weakmeta)
 end
 
 function Handle:Resume( ... )
@@ -32,18 +34,19 @@ function Handle:IsDead()
 end
 
 function Handle:SetOwner(ObjectBaseOnwer)
-	self.owner = ObjectBaseOnwer
+	self.OwnerTable[1] = ObjectBaseOnwer
 end
 
 function Handle:GetOwner()
-	return self.owner
+	return self.OwnerTable[1]
 end
 
 function Handle:Destroy()
 	self.m_NotValid = true
 	self.mgr:DestroyHandle(self)
-	if self.owner then
-		self.owner:RemoveCoHandle(self)
+	local Owner = self.OwnerTable[1]
+	if Owner then
+		Owner:RemoveCoHandle(self)
 	end
 end
 

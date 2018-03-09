@@ -1,5 +1,6 @@
 local Handle = Inherit(Object)
 
+local weakmeta = {__mode = "v"}
 function Handle:Ctor(mgr, callback, EventHandle)
 	self.passtime = 0
 	self.num = 0
@@ -8,6 +9,7 @@ function Handle:Ctor(mgr, callback, EventHandle)
 	self.callback = callback
 	self.bIsBound = false
 	self.EventHandle = EventHandle
+	self.OwnerTable = setmetatable({}, weakmeta)
 end
 
 function Handle:CallBack( ... )
@@ -51,13 +53,14 @@ function Handle:Fire(...)
 end
 
 function Handle:SetOwner(ObjectBaseOwner)
-	self.owner = ObjectBaseOwner
+	self.OwnerTable[1] = ObjectBaseOwner
 end
 
 function Handle:Destroy()
 	self.mgr.deletes[self] = true
-	if self.owner then
-		self.owner:RemoveTimerHandle(self)
+	local Owner = self.OwnerTable[1]
+	if Owner then
+		Owner:RemoveTimerHandle(self)
 	end
 end
 
