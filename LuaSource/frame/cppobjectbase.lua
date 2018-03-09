@@ -2,6 +2,7 @@ require "luaclass"
 CppObjectBase = Class(ObjectBase)
 CppSingleton = Class(CppObjectBase)
 addfunc(CppSingleton, Singleton)
+local setexisttable = _setexisttable 
 local LinkAgainstGC = {}
 local LevelActors = {}
 function CppObjectBase:EndPlay(Reason)
@@ -23,6 +24,7 @@ function CppObjectBase:Destroy()
 		if _cppinstance_.Destroy then
 			_cppinstance_:Destroy()
 		end
+		setexisttable(_cppinstance_, nil)
 		rawset(self, "_cppinstance_", nil)
 	end
 	LevelActors[self] = nil
@@ -90,7 +92,7 @@ end
 function CppObjectBase:Property(property)
 	return rawget(self._meta_, property)	
 end
-local setexisttable = _setexisttable 
+
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
 	rawset(ins, "_cppinstance_", inscpp)
