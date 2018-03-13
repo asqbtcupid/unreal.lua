@@ -321,13 +321,10 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	else if (ReturnValue->IsA(UStructProperty::StaticClass()))
 	{
 		FString typeName = GetPropertyTypeCPP(ReturnValue, CPPF_ArgumentOrReturnValue);
-		if (Function)
-			Initializer = FString::Printf(TEXT("UTableUtil::push(L, %s);"), *name);
+		if (ReturnValue->GetOuter()->IsA(UScriptStruct::StaticClass()) && ReturnValue->GetOffset_ForInternal() == 0)
+			Initializer = FString::Printf(TEXT("pushstruct_nogc_firstmem(L, \"%s\", (void*)(&%s));"), *typeName, *name);
 		else
-			if (ReturnValue->GetOuter()->IsA(UFunction::StaticClass()))
-				Initializer = FString::Printf(TEXT("pushstruct(L,\"%s\", (void*)(%s));"), *typeName, *name);
-			else
-				Initializer = FString::Printf(TEXT("UTableUtil::push(L, %s);"), *name);
+			Initializer = FString::Printf(TEXT("pushstruct_nogc(L, \"%s\", (void*)(&%s));"), *typeName, *name);
 	}
 	else if (ReturnValue->IsA(UWeakObjectProperty::StaticClass()))
 	{
@@ -1464,8 +1461,12 @@ FString FLuaScriptCodeGenerator::GetterCode(FString ClassNameCPP, FString classn
 						FunctionBody += FString::Printf(TEXT("\tstatic %s* p = (%s*)%s->FindPropertyByName(\"%s\");\r\n"), *statictype, *statictype, *GetStructClassStr, *Property->GetName());
 					}
 				}
-
-				FunctionBody += TEXT("\tUTableUtil::pushproperty_type(L, p, Obj);\r\n");
+				if (Property->IsA(UStructProperty::StaticClass())&&
+					Property->GetOuter()->IsA(UScriptStruct::StaticClass()) &&
+					Property->GetOffset_ForInternal() == 0)
+					FunctionBody += TEXT("\tUTableUtil::pushproperty_type_firstmem(L, p, Obj);\r\n");
+				else
+					FunctionBody += TEXT("\tUTableUtil::pushproperty_type(L, p, Obj);\r\n");
 			}
 		}
 		FunctionBody += FString::Printf(TEXT("\treturn 1;\r\n"));

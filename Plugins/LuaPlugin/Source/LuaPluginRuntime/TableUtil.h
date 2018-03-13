@@ -56,6 +56,7 @@ bool existdata(lua_State*inL, void * p);
 LUAPLUGINRUNTIME_API void pushuobject(lua_State *inL, void* p, bool bgcrecord = false);
 LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, void* p);
+LUAPLUGINRUNTIME_API void pushstruct_nogc_firstmem(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_stack(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
@@ -410,6 +411,7 @@ public:
 	static void pushproperty_type(lua_State*inL, UByteProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UEnumProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UStructProperty* p, const void*ptr);
+	static void pushproperty_type_firstmem(lua_State*inL, UStructProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UMulticastDelegateProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UWeakObjectProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr);

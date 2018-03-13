@@ -15,6 +15,9 @@ extern void FixLinkFunc_CatchMe_CatchMePlayerController();
 extern void FixLinkFunc_LuaDebugger_uclass_all();
 extern void FixLinkFunc_CatchMe_CharacterInfo();
 extern void FixLinkFunc_CatchMe_SkillInfo();
+extern void FixLinkFunc_CatchMe_TestFirstMemStruct_Public();
+extern void FixLinkFunc_CatchMe_TestFirstMemStruct_Private();
+extern void FixLinkFunc_CatchMe_TestFirstMemStruct_Nest();
 extern void FixLinkFunc_LuaDebugger_ustruct_all();
 void LuaFixLink1()
 {
@@ -34,5 +37,8 @@ void LuaFixLink1()
 	FixLinkFunc_LuaDebugger_uclass_all();
 	FixLinkFunc_CatchMe_CharacterInfo();
 	FixLinkFunc_CatchMe_SkillInfo();
+	FixLinkFunc_CatchMe_TestFirstMemStruct_Public();
+	FixLinkFunc_CatchMe_TestFirstMemStruct_Private();
+	FixLinkFunc_CatchMe_TestFirstMemStruct_Nest();
 	FixLinkFunc_LuaDebugger_ustruct_all();
 }
