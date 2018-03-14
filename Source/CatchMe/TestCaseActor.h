@@ -188,6 +188,9 @@ public:
 
 	UFUNCTION()
 		void Test_FirstMem_Struct();
+
+	UFUNCTION()
+		void Test_PushStack_Struct();
 private:
 	UFUNCTION()
 		void Test_Param_Interface_private(TScriptInterface<IForTestInterface> I);

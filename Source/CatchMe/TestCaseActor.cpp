@@ -279,6 +279,12 @@ void ATestCaseActor::Test_FirstMem_Struct()
 	LuaCall("TestFistMemOfStruct_Internal", this, FTestFirstMemStruct_Public(), FTestFirstMemStruct_Nest(), FTestFirstMemStruct_Private());
 }
 
+void ATestCaseActor::Test_PushStack_Struct()
+{
+	FVector test(1,2,3);
+	LuaCall("PushStackStruct", this, test, test);
+}
+
 void ATestCaseActor::Test_Param_Interface_private(TScriptInterface<IForTestInterface> I)
 {
 	checkf(I.GetObject() == this, L"");

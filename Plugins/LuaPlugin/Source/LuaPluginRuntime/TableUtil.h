@@ -63,6 +63,29 @@ LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
 LUAPLUGINRUNTIME_API void PrintLuaStack(lua_State*L = nullptr);
 
+class UTableUtil;
+template<class T>
+struct pickoutstruct{};
+
+template<>
+struct pickoutstruct<NotNeedTempInsType> 
+{
+	template<class T>
+	inline static void call(lua_State* inL, T&& value)
+	{
+		UTableUtil::push(inL, value);
+	}
+};
+
+template<>
+struct pickoutstruct<NeedTempInsType>
+{
+	template<class T>
+	inline static void call(lua_State* inL, const T& value)
+	{
+		pushstruct_stack(inL, traitstructclass<T>::name(), (void*)(&value));
+	}
+};
 
 template<class T>
 static T popinternal(lua_State *L, int index, typename TEnableIf< TIsSame<typename traitstructclass<T>::NotStructType, NotNeedTempInsType>::Value,T>::Type* pp = nullptr )
@@ -489,23 +512,25 @@ public:
 		return 0;
 	}
 
-	template<class T>
-	static int pushall(lua_State *inL, const T& value, typename traitstructclass<T>::value* t = nullptr)
-	{
-		pushstruct_stack(inL, traitstructclass<T>::name(), (void*)(&value));
-		return 1;
-	}
+// 	template<class T>
+// 	static int pushall(lua_State *inL, const T& value, typename traitstructclass<T>::value* t = nullptr)
+// 	{
+// 		pushstruct_stack(inL, traitstructclass<T>::name(), (void*)(&value));
+// 		return 1;
+// 	}
 
 	template<class T>
 	static int pushall(lua_State *inL, T&& value)
 	{
-		push(inL, Forward<T>(value));
+		using IsStructType = typename traitstructclass<typename TRemoveReference<typename TRemoveCV<T>::Type>::Type>::NotStructType;
+		pickoutstruct<IsStructType>::call(inL, value);
+// 		push(inL, Forward<T>(value));
 		return 1;
 	}
 	template<class T1, class... T2>
 	static int pushall(lua_State *inL, T1&& value, T2&&... args)
 	{
-		push(inL, Forward<T1>(value));
+		pushall(inL, Forward<T1>(value));
 		return 1 + pushall(inL, Forward<T2>(args)...);
 	}
 
