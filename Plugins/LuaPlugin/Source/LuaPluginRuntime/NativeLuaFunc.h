@@ -413,6 +413,15 @@ BpSetterAndGetter(UMapProperty)
 BpSetterAndGetter(USetProperty)
 BpSetterAndGetter(UInterfaceProperty)
 
+static int32 StructProperty_FirstMem_Getter(lua_State* inL)
+{
+	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1)); 
+	UStructProperty* Property = (UStructProperty*)(*p);
+	UObject* Obj = (UObject*)touobject(inL, 1); 
+	UTableUtil::pushproperty_type_firstmem(inL, Property, Obj); 
+	return 1; 
+}
+
 static int32 GetBpProp(lua_State* inL)
 {
 	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));

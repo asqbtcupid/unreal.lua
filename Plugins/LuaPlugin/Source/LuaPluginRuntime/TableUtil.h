@@ -56,12 +56,12 @@ bool existdata(lua_State*inL, void * p);
 LUAPLUGINRUNTIME_API void pushuobject(lua_State *inL, void* p, bool bgcrecord = false);
 LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, void* p);
+LUAPLUGINRUNTIME_API void pushstruct_nogc_firstmem(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_stack(lua_State *inL, const char* structname, void* p);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
 LUAPLUGINRUNTIME_API void PrintLuaStack(lua_State*L = nullptr);
-
 
 template<class T>
 static T popinternal(lua_State *L, int index, typename TEnableIf< TIsSame<typename traitstructclass<T>::NotStructType, NotNeedTempInsType>::Value,T>::Type* pp = nullptr )
@@ -410,6 +410,7 @@ public:
 	static void pushproperty_type(lua_State*inL, UByteProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UEnumProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UStructProperty* p, const void*ptr);
+	static void pushproperty_type_firstmem(lua_State*inL, UStructProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UMulticastDelegateProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UWeakObjectProperty* p, const void*ptr);
 	static void pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr);
@@ -488,22 +489,29 @@ public:
 	}
 
 	template<class T>
-	static int pushall(lua_State *inL, const T& value, typename traitstructclass<T>::value* t = nullptr)
+	inline static void pickoutstruct(lua_State*inL, const T& value,
+		typename TEnableIf<TIsSame<typename traitstructclass<typename TRemoveReference<typename TRemoveCV<T>::Type>::Type>::NotStructType, NeedTempInsType>::Value, NeedTempInsType>::Type *p = nullptr)
 	{
 		pushstruct_stack(inL, traitstructclass<T>::name(), (void*)(&value));
-		return 1;
+	}
+
+	template<class T>
+	inline static void pickoutstruct(lua_State*inL, T&& value,
+		typename TEnableIf<TIsSame<typename traitstructclass<typename TRemoveReference<typename TRemoveCV<T>::Type>::Type>::NotStructType, NotNeedTempInsType>::Value, NotNeedTempInsType>::Type *p = nullptr)
+	{
+		push(inL, Forward<T>(value));
 	}
 
 	template<class T>
 	static int pushall(lua_State *inL, T&& value)
 	{
-		push(inL, Forward<T>(value));
+		pickoutstruct(inL, Forward<T>(value));
 		return 1;
 	}
 	template<class T1, class... T2>
 	static int pushall(lua_State *inL, T1&& value, T2&&... args)
 	{
-		push(inL, Forward<T1>(value));
+		pushall(inL, Forward<T1>(value));
 		return 1 + pushall(inL, Forward<T2>(args)...);
 	}
 

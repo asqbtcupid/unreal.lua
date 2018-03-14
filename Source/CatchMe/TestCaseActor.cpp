@@ -3,6 +3,9 @@
 #include "TestCaseActor.h"
 #include "TableUtil.h"
 #include "Vector.lua.h"
+#include "TestFirstMemStruct_Public.lua.h"
+#include "TestFirstMemStruct_Nest.lua.h"
+#include "TestFirstMemStruct_Private.lua.h"
 
 // Sets default values
 ATestCaseActor::ATestCaseActor()
@@ -269,6 +272,17 @@ int32 ATestCaseActor::Interface_NativeEvent_Implementation(int32 v)
 void ATestCaseActor::Test_Param_Interface_public(TScriptInterface<IForTestInterface> I)
 {
 	checkf(I.GetObject() == this, L"");
+}
+
+void ATestCaseActor::Test_FirstMem_Struct()
+{
+	LuaCall("TestFistMemOfStruct_Internal", this, FTestFirstMemStruct_Public(), FTestFirstMemStruct_Nest(), FTestFirstMemStruct_Private());
+}
+
+void ATestCaseActor::Test_PushStack_Struct()
+{
+	FVector test(1,2,3);
+	LuaCall("PushStackStruct", this, test, test);
 }
 
 void ATestCaseActor::Test_Param_Interface_private(TScriptInterface<IForTestInterface> I)

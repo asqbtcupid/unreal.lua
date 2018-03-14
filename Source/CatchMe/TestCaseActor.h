@@ -17,6 +17,34 @@ enum class TestEnum : uint8
 	two,
 };
 
+
+USTRUCT()
+struct FTestFirstMemStruct_Public
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector value;
+};
+
+USTRUCT()
+struct FTestFirstMemStruct_Private
+{
+	GENERATED_BODY()
+private:
+	UPROPERTY()
+	FVector value;
+};
+
+USTRUCT()
+struct FTestFirstMemStruct_Nest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FTestFirstMemStruct_Public value;
+};
+
 UCLASS()
 class CATCHME_API ATestCaseActor : public AActor, public IForTestInterface
 {
@@ -157,6 +185,12 @@ public:
 
 	UFUNCTION()
 		void Test_Param_Interface_public(TScriptInterface<IForTestInterface> I);
+
+	UFUNCTION()
+		void Test_FirstMem_Struct();
+
+	UFUNCTION()
+		void Test_PushStack_Struct();
 private:
 	UFUNCTION()
 		void Test_Param_Interface_private(TScriptInterface<IForTestInterface> I);

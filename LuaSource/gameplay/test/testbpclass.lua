@@ -26,6 +26,8 @@ function TestBpClass:BeginPlay( )
 		self:TestBpStructType()
 		self:TestInterface()
 		self:TestCoroutinue()
+		self:TestFistMemOfStruct()
+		self:TestPushStructStack()
 	end
 end
 
@@ -968,5 +970,47 @@ function TestBpClass:TestCoroutinue()
 	assert(b ==2)
 	assert(c ==3)
 end
+
+function TestBpClass:TestFistMemOfStruct()
+	self:Test_FirstMem_Struct()
+end
+
+function TestBpClass:TestFistMemOfStruct_Internal(t, t1, t2)
+	assert(t.value == t.value)
+	t.value.X=1
+	t.value.Y=2
+	t.value.Z=3
+	assert(t.value.X==1)
+	assert(t.value.Y==2)
+	assert(t.value.Z==3)
+
+	assert(t1.value == t1.value)
+	assert(t1.value.value == t1.value.value)
+
+	assert(t2.value.X ~= nil)
+	assert(t2.value.Y ~= nil)
+	assert(t2.value.Z ~= nil)
+	assert(t2.value == t2.value)
+
+	assert(self.bp_testfirstmemstruct.value.X == 1)
+	assert(self.bp_testfirstmemstruct.value.Y == 2)
+	assert(self.bp_testfirstmemstruct.value.Z == 3)
+	assert(self.bp_testfirstmemstruct.value == self.bp_testfirstmemstruct.value)
+end
+
+function TestBpClass:TestPushStructStack( )
+	self:Test_PushStack_Struct()
+end
+
+function TestBpClass:PushStackStruct(v1, v2)
+	assert(v1 ~= v2)
+	assert(v1.X == 1)
+	assert(v1.Y == 2)
+	assert(v1.Z == 3)
+	assert(v2.X == 1)
+	assert(v2.Y == 2)
+	assert(v2.Z == 3)
+end
+
 
 return TestBpClass

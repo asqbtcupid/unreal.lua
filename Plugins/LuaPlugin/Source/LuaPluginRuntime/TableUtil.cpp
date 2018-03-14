@@ -136,6 +136,9 @@ void UTableUtil::init(bool IsManual)
 		lua_setmetatable(TheOnlyLuaState, -2);
 		lua_setfield(TheOnlyLuaState, LUA_REGISTRYINDEX, "_existuserdata");
 
+		lua_newtable(TheOnlyLuaState);
+		lua_setfield(TheOnlyLuaState, LUA_REGISTRYINDEX, "_existfirststruct");
+
 		//when lua has correspond table of the ins, push the table
 		lua_pushcfunction(TheOnlyLuaState, SetExistTable);
 		lua_setglobal(TheOnlyLuaState, "_setexisttable");
@@ -1084,7 +1087,6 @@ void UTableUtil::pushproperty_type(lua_State*inL, UInterfaceProperty* p, const v
 	pushuobject(inL, (void*)result->GetObject());
 }
 
-
 void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr)
 {
 	if (property == nullptr)
@@ -1328,8 +1330,13 @@ void UTableUtil::MayAddNewStructType(UUserDefinedStruct* BpStruct)
 			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UByteProperty), 1);
 		else if(Property->IsA(UEnumProperty::StaticClass()))
 			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UEnumProperty), 1);
-		else if(Property->IsA(UStructProperty::StaticClass()))
-			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UStructProperty), 1);
+		else if (Property->IsA(UStructProperty::StaticClass()))
+		{
+			if(Property->GetOuter()->IsA(UScriptStruct::StaticClass()) && Property->GetOffset_ForInternal() == 0)
+				lua_pushcclosure(TheOnlyLuaState, StructProperty_FirstMem_Getter, 1);
+			else
+				lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UStructProperty), 1);
+		}
 		else if(Property->IsA(UMulticastDelegateProperty::StaticClass()))
 			lua_pushcclosure(TheOnlyLuaState, BpStructPropertyGetterName(UMulticastDelegateProperty), 1);
 		else if(Property->IsA(UWeakObjectProperty::StaticClass()))
@@ -1442,6 +1449,23 @@ void UTableUtil::pushproperty_type(lua_State*inL, UStructProperty* p, const void
 
 	void* result = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
 	pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), result);
+}
+
+
+
+void UTableUtil::pushproperty_type_firstmem(lua_State*inL, UStructProperty* p, const void*ptr)
+{
+	FString TypeName;
+	if (UUserDefinedStruct* BpStruct = Cast<UUserDefinedStruct>(p->Struct))
+	{
+		MayAddNewStructType(BpStruct);
+		TypeName = BpStruct->GetName();
+	}
+	else
+		TypeName = p->Struct->GetStructCPPName();
+
+	void* result = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
+	pushstruct_nogc_firstmem(inL, TCHAR_TO_UTF8(*TypeName), result);
 }
 
 void UTableUtil::pushproperty_type(lua_State*inL, UArrayProperty* property, const void* ptr)
@@ -1770,6 +1794,43 @@ void pushstruct_nogc(lua_State *inL, const char* structname, void* p)
 		lua_pop(inL, 1);
 		UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true, false);
 	}
+}
+
+void pushstruct_nogc_firstmem(lua_State *inL, const char* structname, void* p)
+{
+	lua_getfield(inL, LUA_REGISTRYINDEX, "_existfirststruct");
+	lua_getfield(inL, -1, structname);
+	if (lua_isnil(inL, -1))
+	{
+// _existfirststruct[structname] = setmetatable({}, weak)
+		lua_pop(inL, 1);
+		lua_newtable(inL);
+
+		lua_newtable(inL);
+		lua_pushstring(inL, "v");
+		lua_setfield(inL, -2, "__mode");
+		lua_setmetatable(inL, -2);
+
+		lua_pushstring(inL, structname);
+		lua_pushvalue(inL, -2);
+		lua_rawset(inL, -4);
+	}
+	lua_remove(inL, -2);
+
+	lua_pushlightuserdata(inL, p);
+	lua_rawget(inL, -2);
+
+	if (lua_isnil(inL, -1))
+	{
+		lua_pop(inL, 1);
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
+		lua_pushlightuserdata(inL, p);
+		lua_pushvalue(inL, -2);
+		lua_rawset(inL, -4);
+		UTableUtil::setmeta(inL, TCHAR_TO_ANSI(*FString::Printf(L"%s_nogc", ANSI_TO_TCHAR(structname))), -1, true);
+	}
+
+	lua_replace(inL, -2);
 }
 
 void pushstruct_stack(lua_State *inL, const char* structname, void* p)
