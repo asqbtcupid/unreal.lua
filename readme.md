@@ -38,13 +38,13 @@ for your project:
     
 ## Feature
 
-    1.Full Aceess Engine API, include blueprint.
+   1.Full Aceess Engine API, include blueprint.
 
-    2.Lua Hot Reload, [luahotupdate](https://github.com/asqbtcupid/lua_hotupdate)
+   2.[Lua Hot Reload](https://github.com/asqbtcupid/lua_hotupdate)
     
-    3.Variable Watcher
+   3.[Variable Watcher](https://github.com/asqbtcupid/unreal.lua/wiki/var-watcher)
     
-    4.Debugger
+   4.[Debugger](https://github.com/asqbtcupid/unreal.lua/wiki/debugger)
     
 ## Documentation
 
