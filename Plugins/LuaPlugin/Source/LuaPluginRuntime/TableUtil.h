@@ -483,10 +483,8 @@ public:
 		ue_lua_pop(inL, 1);
 	}
 
-	static int pushall(lua_State *inL)
-	{
-		return 0;
-	}
+	inline static void pushall(lua_State *inL)
+	{}
 
 	template<class T>
 	inline static void pickoutstruct(lua_State*inL, const T& value,
@@ -496,23 +494,17 @@ public:
 	}
 
 	template<class T>
-	inline static void pickoutstruct(lua_State*inL, T&& value,
+	inline static void pickoutstruct(lua_State*inL, const T& value,
 		typename TEnableIf<TIsSame<typename traitstructclass<typename TRemoveReference<typename TRemoveCV<T>::Type>::Type>::NotStructType, NotNeedTempInsType>::Value, NotNeedTempInsType>::Type *p = nullptr)
 	{
-		push(inL, Forward<T>(value));
+		push(inL, value);
 	}
 
-	template<class T>
-	static int pushall(lua_State *inL, T&& value)
-	{
-		pickoutstruct(inL, Forward<T>(value));
-		return 1;
-	}
 	template<class T1, class... T2>
-	static int pushall(lua_State *inL, T1&& value, T2&&... args)
+	inline static void pushall(lua_State *inL, const T1& value, const T2&... args)
 	{
-		pushall(inL, Forward<T1>(value));
-		return 1 + pushall(inL, Forward<T2>(args)...);
+		pickoutstruct(inL, value);
+		pushall(inL, args...);
 	}
 
 	template<typename T>
@@ -919,17 +911,19 @@ public:
 	static void popproperty_type(lua_State*inL, int index, UMulticastDelegateProperty* p, void*ptr);
 
 	template<class returnType, class... T>
-	static returnType callr(const FString& funcname, T&&... args)
+	static returnType callr(const FString& funcname, const T&... args)
 	{
-		return callr<returnType>(TCHAR_TO_UTF8(*funcname), Forward<T>(args)...);
+		return callr<returnType>(TCHAR_TO_UTF8(*funcname), args...);
 	}
 
 	template<class returnType, class... T>
-	static returnType callr_with_state(lua_State* TheState, const char* funcname, T&&... args)
+	static returnType callr_with_state(lua_State* TheState, const char* funcname, const T&... args)
 	{
 		ue_lua_pushcfunction(TheState, ErrHandleFunc);
 		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
-		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
+		pushall(TheState, args...);
+		int32 ParamCount = sizeof...(args);
+// 		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
 		if (ue_lua_pcall(TheState, ParamCount, 1, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheState, -1));
@@ -939,20 +933,21 @@ public:
 	}
 	
 	template<class returnType, class... T>
-	static returnType callr(const char* funcname, T&&... args)
+	static returnType callr(const char* funcname, const T&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
-		return callr_with_state<returnType>(GetRunningState(), funcname, Forward<T>(args)...);
+		return callr_with_state<returnType>(GetRunningState(), funcname, args...);
 		
 	}
 
 	template<class... T>
-	static void call_with_state(lua_State* TheState, const char* funcname, T&&... args)
+	static void call_with_state(lua_State* TheState, const char* funcname, const T&... args)
 	{
 		ue_lua_pushcfunction(TheState, ErrHandleFunc);
 		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
-		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
+		pushall(TheState, args...);
+		int32 ParamCount = sizeof...(args);
 		if (ue_lua_pcall(TheState, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheState, -1));
@@ -961,27 +956,28 @@ public:
 	}
 
 	template<class... T>
-	static void call(const char* funcname, T&&... args)
+	static void call(const char* funcname, const T&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
-		call_with_state(GetRunningState(), funcname, Forward<T>(args)...);
+		call_with_state(GetRunningState(), funcname, args...);
 	}
 
 	template<class... T>
-	static void call(const FString& funcname, T&&... args)
+	static void call(const FString& funcname, const T&... args)
 	{
-		call(TCHAR_TO_UTF8(*funcname), Forward<T>(args)...);
+		call(TCHAR_TO_UTF8(*funcname), args...);
 	}
 
 	template<class... T>
-	static void call(int funcid, T&&... args)
+	static void call(int funcid, const T&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
 		ue_lua_pushcfunction(TheOnlyLuaState, ErrHandleFunc);
 		ue_lua_rawgeti(TheOnlyLuaState, LUA_REGISTRYINDEX, funcid);
-		int32 ParamCount = pushall(TheOnlyLuaState, Forward<T>(args)...);
+		pushall(TheOnlyLuaState, args...);
+		int32 ParamCount = sizeof...(args);
 		if (ue_lua_pcall(TheOnlyLuaState, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheOnlyLuaState, -1));
@@ -990,7 +986,7 @@ public:
 	}
 
 	template<class ReturnType, class UObjectPtrType, class... T>
-	static ReturnType inscallr(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
+	static ReturnType inscallr(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, const T&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
@@ -1001,11 +997,11 @@ public:
 			return ReturnType();
 		}
 #endif
-		return callr<ReturnType>(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
+		return callr<ReturnType>(staticfuncname, memberfuncname, ptr, args...);
 	}
 
 	template<class UObjectPtrType, class... T>
-	static void inscall(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, T&&... args)
+	static void inscall(const char* staticfuncname, const char* memberfuncname, const UObjectPtrType* ptr, const T&... args)
 	{
 		if (TheOnlyLuaState == nullptr)
 			init();
@@ -1016,7 +1012,7 @@ public:
 			return;
 		}
 #endif
-		call(staticfuncname, memberfuncname, ptr, Forward<T>(args)...);
+		call(staticfuncname, memberfuncname, ptr, args...);
 	}
 
 	static void call(lua_State* inL, int funcid, UFunction* funcsig, void* ptr);

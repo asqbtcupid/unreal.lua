@@ -2,6 +2,7 @@
 #include "Actor.lua.h"
 #include "ActorComponent.lua.h"
 #include "AISystemBase.lua.h"
+#include "AmbisonicsSubmixSettingsBase.lua.h"
 #include "AnimationAsset.lua.h"
 #include "AnimClassData.lua.h"
 #include "AnimClassInterface.lua.h"
@@ -50,7 +51,7 @@
 #include "DamageType.lua.h"
 #include "DataAsset.lua.h"
 #include "DataTable.lua.h"
-#include "DestructibleFractureSettings.lua.h"
+#include "DestructibleInterface.lua.h"
 #include "DeveloperSettings.lua.h"
 #include "DeviceProfileManager.lua.h"
 #include "DialogueVoice.lua.h"
@@ -76,6 +77,7 @@
 #include "GameInstance.lua.h"
 #include "GameUserSettings.lua.h"
 #include "HapticFeedbackEffect_Base.lua.h"
+#include "HierarchicalLODSetup.lua.h"
 #include "ImportantToggleSettingInterface.lua.h"
 #include "InheritableComponentHandler.lua.h"
 #include "InputSettings.lua.h"
@@ -99,7 +101,7 @@
 #include "LocalMessage.lua.h"
 #include "MapBuildDataRegistry.lua.h"
 #include "MaterialExpression.lua.h"
-#include "MaterialFunction.lua.h"
+#include "MaterialFunctionInterface.lua.h"
 #include "MaterialInterface.lua.h"
 #include "MaterialParameterCollection.lua.h"
 #include "MaterialParameterCollectionInstance.lua.h"
@@ -203,7 +205,6 @@
 #include "CameraActor.lua.h"
 #include "Controller.lua.h"
 #include "DecalActor.lua.h"
-#include "DestructibleActor.lua.h"
 #include "DocumentationActor.lua.h"
 #include "Emitter.lua.h"
 #include "HUD.lua.h"
@@ -251,6 +252,7 @@
 #include "PrecomputedVisibilityOverrideVolume.lua.h"
 #include "PrecomputedVisibilityVolume.lua.h"
 #include "TriggerVolume.lua.h"
+#include "VolumetricLightmapDensityVolume.lua.h"
 #include "DefaultPhysicsVolume.lua.h"
 #include "KillZVolume.lua.h"
 #include "PainCausingVolume.lua.h"
@@ -265,6 +267,7 @@
 #include "GameSession.lua.h"
 #include "GameStateBase.lua.h"
 #include "PlayerState.lua.h"
+#include "ServerStatReplicator.lua.h"
 #include "SkyLight.lua.h"
 #include "WindDirectionalSource.lua.h"
 #include "WorldSettings.lua.h"
@@ -306,6 +309,7 @@
 #include "PlatformEventsComponent.lua.h"
 #include "SceneComponent.lua.h"
 #include "TimelineComponent.lua.h"
+#include "VOIPTalker.lua.h"
 #include "InterpToMovementComponent.lua.h"
 #include "NavMovementComponent.lua.h"
 #include "ProjectileMovementComponent.lua.h"
@@ -361,7 +365,6 @@
 #include "VectorFieldComponent.lua.h"
 #include "SkinnedMeshComponent.lua.h"
 #include "StaticMeshComponent.lua.h"
-#include "DestructibleComponent.lua.h"
 #include "PoseableMeshComponent.lua.h"
 #include "SkeletalMeshComponent.lua.h"
 #include "InstancedStaticMeshComponent.lua.h"
@@ -431,8 +434,8 @@
 #include "NavigationSystem.lua.h"
 #include "StereoLayerFunctionLibrary.lua.h"
 #include "VisualLoggerKismetLibrary.lua.h"
+#include "VOIPStatics.lua.h"
 #include "AnimBlueprintGeneratedClass.lua.h"
-#include "BodySetup2D.lua.h"
 #include "SkeletalBodySetup.lua.h"
 #include "CameraModifier_CameraShake.lua.h"
 #include "ActorChannel.lua.h"
@@ -455,6 +458,7 @@
 #include "MeshSimplificationSettings.lua.h"
 #include "NetworkSettings.lua.h"
 #include "PhysicsSettings.lua.h"
+#include "ProxyLODMeshSimplificationSettings.lua.h"
 #include "RendererOverrideSettings.lua.h"
 #include "RendererSettings.lua.h"
 #include "StreamingSettings.lua.h"
@@ -614,6 +618,7 @@
 #include "MaterialExpressionLogarithm10.lua.h"
 #include "MaterialExpressionLogarithm2.lua.h"
 #include "MaterialExpressionMakeMaterialAttributes.lua.h"
+#include "MaterialExpressionMaterialAttributeLayers.lua.h"
 #include "MaterialExpressionMaterialFunctionCall.lua.h"
 #include "MaterialExpressionMaterialProxyReplace.lua.h"
 #include "MaterialExpressionMax.lua.h"
@@ -691,11 +696,13 @@
 #include "MaterialExpressionTangentOutput.lua.h"
 #include "MaterialExpressionVertexInterpolator.lua.h"
 #include "MaterialExpressionFontSampleParameter.lua.h"
+#include "MaterialExpressionMaterialLayerOutput.lua.h"
 #include "MaterialExpressionScalarParameter.lua.h"
 #include "MaterialExpressionStaticBoolParameter.lua.h"
 #include "MaterialExpressionStaticComponentMaskParameter.lua.h"
 #include "MaterialExpressionVectorParameter.lua.h"
 #include "MaterialExpressionStaticSwitchParameter.lua.h"
+#include "MaterialExpressionChannelMaskParameter.lua.h"
 #include "MaterialExpressionTextureObject.lua.h"
 #include "MaterialExpressionTextureSample.lua.h"
 #include "MaterialExpressionParticleSubUV.lua.h"
@@ -705,6 +712,12 @@
 #include "MaterialExpressionTextureSampleParameterCube.lua.h"
 #include "MaterialExpressionAntialiasedTextureMask.lua.h"
 #include "MaterialExpressionTextureSampleParameterSubUV.lua.h"
+#include "MaterialFunction.lua.h"
+#include "MaterialFunctionInstance.lua.h"
+#include "MaterialFunctionMaterialLayer.lua.h"
+#include "MaterialFunctionMaterialLayerBlend.lua.h"
+#include "MaterialFunctionMaterialLayerBlendInstance.lua.h"
+#include "MaterialFunctionMaterialLayerInstance.lua.h"
 #include "Material.lua.h"
 #include "MaterialInstance.lua.h"
 #include "MaterialInstanceConstant.lua.h"
@@ -845,10 +858,10 @@
 #include "DemoNetConnection.lua.h"
 #include "ReporterGraph.lua.h"
 #include "GameViewportClient.lua.h"
-#include "DestructibleMesh.lua.h"
 #include "DialogueSoundWaveProxy.lua.h"
 #include "SoundCue.lua.h"
 #include "SoundWave.lua.h"
+#include "SoundSourceBus.lua.h"
 #include "SoundWaveProcedural.lua.h"
 #include "SoundEffectSourcePreset.lua.h"
 #include "SoundEffectSubmixPreset.lua.h"
@@ -895,6 +908,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(Actor_Lib, "AActor");
 		UTableUtil::loadlib(ActorComponent_Lib, "UActorComponent");
 		UTableUtil::loadlib(AISystemBase_Lib, "UAISystemBase");
+		UTableUtil::loadlib(AmbisonicsSubmixSettingsBase_Lib, "UAmbisonicsSubmixSettingsBase");
 		UTableUtil::loadlib(AnimationAsset_Lib, "UAnimationAsset");
 		UTableUtil::loadlib(AnimClassData_Lib, "UAnimClassData");
 		UTableUtil::loadlib(AnimClassInterface_Lib, "IAnimClassInterface");
@@ -943,7 +957,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(DamageType_Lib, "UDamageType");
 		UTableUtil::loadlib(DataAsset_Lib, "UDataAsset");
 		UTableUtil::loadlib(DataTable_Lib, "UDataTable");
-		UTableUtil::loadlib(DestructibleFractureSettings_Lib, "UDestructibleFractureSettings");
+		UTableUtil::loadlib(DestructibleInterface_Lib, "IDestructibleInterface");
 		UTableUtil::loadlib(DeveloperSettings_Lib, "UDeveloperSettings");
 		UTableUtil::loadlib(DeviceProfileManager_Lib, "UDeviceProfileManager");
 		UTableUtil::loadlib(DialogueVoice_Lib, "UDialogueVoice");
@@ -969,6 +983,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(GameInstance_Lib, "UGameInstance");
 		UTableUtil::loadlib(GameUserSettings_Lib, "UGameUserSettings");
 		UTableUtil::loadlib(HapticFeedbackEffect_Base_Lib, "UHapticFeedbackEffect_Base");
+		UTableUtil::loadlib(HierarchicalLODSetup_Lib, "UHierarchicalLODSetup");
 		UTableUtil::loadlib(ImportantToggleSettingInterface_Lib, "IImportantToggleSettingInterface");
 		UTableUtil::loadlib(InheritableComponentHandler_Lib, "UInheritableComponentHandler");
 		UTableUtil::loadlib(InputSettings_Lib, "UInputSettings");
@@ -992,7 +1007,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(LocalMessage_Lib, "ULocalMessage");
 		UTableUtil::loadlib(MapBuildDataRegistry_Lib, "UMapBuildDataRegistry");
 		UTableUtil::loadlib(MaterialExpression_Lib, "UMaterialExpression");
-		UTableUtil::loadlib(MaterialFunction_Lib, "UMaterialFunction");
+		UTableUtil::loadlib(MaterialFunctionInterface_Lib, "UMaterialFunctionInterface");
 		UTableUtil::loadlib(MaterialInterface_Lib, "UMaterialInterface");
 		UTableUtil::loadlib(MaterialParameterCollection_Lib, "UMaterialParameterCollection");
 		UTableUtil::loadlib(MaterialParameterCollectionInstance_Lib, "UMaterialParameterCollectionInstance");
@@ -1096,7 +1111,6 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(CameraActor_Lib, "ACameraActor");
 		UTableUtil::loadlib(Controller_Lib, "AController");
 		UTableUtil::loadlib(DecalActor_Lib, "ADecalActor");
-		UTableUtil::loadlib(DestructibleActor_Lib, "ADestructibleActor");
 		UTableUtil::loadlib(DocumentationActor_Lib, "ADocumentationActor");
 		UTableUtil::loadlib(Emitter_Lib, "AEmitter");
 		UTableUtil::loadlib(HUD_Lib, "AHUD");
@@ -1144,6 +1158,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(PrecomputedVisibilityOverrideVolume_Lib, "APrecomputedVisibilityOverrideVolume");
 		UTableUtil::loadlib(PrecomputedVisibilityVolume_Lib, "APrecomputedVisibilityVolume");
 		UTableUtil::loadlib(TriggerVolume_Lib, "ATriggerVolume");
+		UTableUtil::loadlib(VolumetricLightmapDensityVolume_Lib, "AVolumetricLightmapDensityVolume");
 		UTableUtil::loadlib(DefaultPhysicsVolume_Lib, "ADefaultPhysicsVolume");
 		UTableUtil::loadlib(KillZVolume_Lib, "AKillZVolume");
 		UTableUtil::loadlib(PainCausingVolume_Lib, "APainCausingVolume");
@@ -1158,6 +1173,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(GameSession_Lib, "AGameSession");
 		UTableUtil::loadlib(GameStateBase_Lib, "AGameStateBase");
 		UTableUtil::loadlib(PlayerState_Lib, "APlayerState");
+		UTableUtil::loadlib(ServerStatReplicator_Lib, "AServerStatReplicator");
 		UTableUtil::loadlib(SkyLight_Lib, "ASkyLight");
 		UTableUtil::loadlib(WindDirectionalSource_Lib, "AWindDirectionalSource");
 		UTableUtil::loadlib(WorldSettings_Lib, "AWorldSettings");
@@ -1199,6 +1215,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(PlatformEventsComponent_Lib, "UPlatformEventsComponent");
 		UTableUtil::loadlib(SceneComponent_Lib, "USceneComponent");
 		UTableUtil::loadlib(TimelineComponent_Lib, "UTimelineComponent");
+		UTableUtil::loadlib(VOIPTalker_Lib, "UVOIPTalker");
 		UTableUtil::loadlib(InterpToMovementComponent_Lib, "UInterpToMovementComponent");
 		UTableUtil::loadlib(NavMovementComponent_Lib, "UNavMovementComponent");
 		UTableUtil::loadlib(ProjectileMovementComponent_Lib, "UProjectileMovementComponent");
@@ -1254,7 +1271,6 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(VectorFieldComponent_Lib, "UVectorFieldComponent");
 		UTableUtil::loadlib(SkinnedMeshComponent_Lib, "USkinnedMeshComponent");
 		UTableUtil::loadlib(StaticMeshComponent_Lib, "UStaticMeshComponent");
-		UTableUtil::loadlib(DestructibleComponent_Lib, "UDestructibleComponent");
 		UTableUtil::loadlib(PoseableMeshComponent_Lib, "UPoseableMeshComponent");
 		UTableUtil::loadlib(SkeletalMeshComponent_Lib, "USkeletalMeshComponent");
 		UTableUtil::loadlib(InstancedStaticMeshComponent_Lib, "UInstancedStaticMeshComponent");
@@ -1324,8 +1340,8 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(NavigationSystem_Lib, "UNavigationSystem");
 		UTableUtil::loadlib(StereoLayerFunctionLibrary_Lib, "UStereoLayerFunctionLibrary");
 		UTableUtil::loadlib(VisualLoggerKismetLibrary_Lib, "UVisualLoggerKismetLibrary");
+		UTableUtil::loadlib(VOIPStatics_Lib, "UVOIPStatics");
 		UTableUtil::loadlib(AnimBlueprintGeneratedClass_Lib, "UAnimBlueprintGeneratedClass");
-		UTableUtil::loadlib(BodySetup2D_Lib, "UBodySetup2D");
 		UTableUtil::loadlib(SkeletalBodySetup_Lib, "USkeletalBodySetup");
 		UTableUtil::loadlib(CameraModifier_CameraShake_Lib, "UCameraModifier_CameraShake");
 		UTableUtil::loadlib(ActorChannel_Lib, "UActorChannel");
@@ -1348,6 +1364,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MeshSimplificationSettings_Lib, "UMeshSimplificationSettings");
 		UTableUtil::loadlib(NetworkSettings_Lib, "UNetworkSettings");
 		UTableUtil::loadlib(PhysicsSettings_Lib, "UPhysicsSettings");
+		UTableUtil::loadlib(ProxyLODMeshSimplificationSettings_Lib, "UProxyLODMeshSimplificationSettings");
 		UTableUtil::loadlib(RendererOverrideSettings_Lib, "URendererOverrideSettings");
 		UTableUtil::loadlib(RendererSettings_Lib, "URendererSettings");
 		UTableUtil::loadlib(StreamingSettings_Lib, "UStreamingSettings");
@@ -1507,6 +1524,7 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialExpressionLogarithm10_Lib, "UMaterialExpressionLogarithm10");
 		UTableUtil::loadlib(MaterialExpressionLogarithm2_Lib, "UMaterialExpressionLogarithm2");
 		UTableUtil::loadlib(MaterialExpressionMakeMaterialAttributes_Lib, "UMaterialExpressionMakeMaterialAttributes");
+		UTableUtil::loadlib(MaterialExpressionMaterialAttributeLayers_Lib, "UMaterialExpressionMaterialAttributeLayers");
 		UTableUtil::loadlib(MaterialExpressionMaterialFunctionCall_Lib, "UMaterialExpressionMaterialFunctionCall");
 		UTableUtil::loadlib(MaterialExpressionMaterialProxyReplace_Lib, "UMaterialExpressionMaterialProxyReplace");
 		UTableUtil::loadlib(MaterialExpressionMax_Lib, "UMaterialExpressionMax");
@@ -1584,11 +1602,13 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialExpressionTangentOutput_Lib, "UMaterialExpressionTangentOutput");
 		UTableUtil::loadlib(MaterialExpressionVertexInterpolator_Lib, "UMaterialExpressionVertexInterpolator");
 		UTableUtil::loadlib(MaterialExpressionFontSampleParameter_Lib, "UMaterialExpressionFontSampleParameter");
+		UTableUtil::loadlib(MaterialExpressionMaterialLayerOutput_Lib, "UMaterialExpressionMaterialLayerOutput");
 		UTableUtil::loadlib(MaterialExpressionScalarParameter_Lib, "UMaterialExpressionScalarParameter");
 		UTableUtil::loadlib(MaterialExpressionStaticBoolParameter_Lib, "UMaterialExpressionStaticBoolParameter");
 		UTableUtil::loadlib(MaterialExpressionStaticComponentMaskParameter_Lib, "UMaterialExpressionStaticComponentMaskParameter");
 		UTableUtil::loadlib(MaterialExpressionVectorParameter_Lib, "UMaterialExpressionVectorParameter");
 		UTableUtil::loadlib(MaterialExpressionStaticSwitchParameter_Lib, "UMaterialExpressionStaticSwitchParameter");
+		UTableUtil::loadlib(MaterialExpressionChannelMaskParameter_Lib, "UMaterialExpressionChannelMaskParameter");
 		UTableUtil::loadlib(MaterialExpressionTextureObject_Lib, "UMaterialExpressionTextureObject");
 		UTableUtil::loadlib(MaterialExpressionTextureSample_Lib, "UMaterialExpressionTextureSample");
 		UTableUtil::loadlib(MaterialExpressionParticleSubUV_Lib, "UMaterialExpressionParticleSubUV");
@@ -1598,6 +1618,12 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(MaterialExpressionTextureSampleParameterCube_Lib, "UMaterialExpressionTextureSampleParameterCube");
 		UTableUtil::loadlib(MaterialExpressionAntialiasedTextureMask_Lib, "UMaterialExpressionAntialiasedTextureMask");
 		UTableUtil::loadlib(MaterialExpressionTextureSampleParameterSubUV_Lib, "UMaterialExpressionTextureSampleParameterSubUV");
+		UTableUtil::loadlib(MaterialFunction_Lib, "UMaterialFunction");
+		UTableUtil::loadlib(MaterialFunctionInstance_Lib, "UMaterialFunctionInstance");
+		UTableUtil::loadlib(MaterialFunctionMaterialLayer_Lib, "UMaterialFunctionMaterialLayer");
+		UTableUtil::loadlib(MaterialFunctionMaterialLayerBlend_Lib, "UMaterialFunctionMaterialLayerBlend");
+		UTableUtil::loadlib(MaterialFunctionMaterialLayerBlendInstance_Lib, "UMaterialFunctionMaterialLayerBlendInstance");
+		UTableUtil::loadlib(MaterialFunctionMaterialLayerInstance_Lib, "UMaterialFunctionMaterialLayerInstance");
 		UTableUtil::loadlib(Material_Lib, "UMaterial");
 		UTableUtil::loadlib(MaterialInstance_Lib, "UMaterialInstance");
 		UTableUtil::loadlib(MaterialInstanceConstant_Lib, "UMaterialInstanceConstant");
@@ -1738,10 +1764,10 @@ struct lua_static_load_Engine_uclass_all_struct
 		UTableUtil::loadlib(DemoNetConnection_Lib, "UDemoNetConnection");
 		UTableUtil::loadlib(ReporterGraph_Lib, "UReporterGraph");
 		UTableUtil::loadlib(GameViewportClient_Lib, "UGameViewportClient");
-		UTableUtil::loadlib(DestructibleMesh_Lib, "UDestructibleMesh");
 		UTableUtil::loadlib(DialogueSoundWaveProxy_Lib, "UDialogueSoundWaveProxy");
 		UTableUtil::loadlib(SoundCue_Lib, "USoundCue");
 		UTableUtil::loadlib(SoundWave_Lib, "USoundWave");
+		UTableUtil::loadlib(SoundSourceBus_Lib, "USoundSourceBus");
 		UTableUtil::loadlib(SoundWaveProcedural_Lib, "USoundWaveProcedural");
 		UTableUtil::loadlib(SoundEffectSourcePreset_Lib, "USoundEffectSourcePreset");
 		UTableUtil::loadlib(SoundEffectSubmixPreset_Lib, "USoundEffectSubmixPreset");

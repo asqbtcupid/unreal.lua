@@ -55,6 +55,7 @@
 #include "ComponentReference.lua.h"
 #include "FilePath.lua.h"
 #include "DirectoryPath.lua.h"
+#include "CollectionReference.lua.h"
 #include "Redirector.lua.h"
 #include "DebugFloatHistory.lua.h"
 #include "DepthFieldGlowInfo.lua.h"
@@ -84,6 +85,13 @@
 #include "NavigationLink.lua.h"
 #include "NavigationSegmentLink.lua.h"
 #include "GeomSelection.lua.h"
+#include "MaterialParameterInfo.lua.h"
+#include "MaterialLayersFunctions.lua.h"
+#include "StaticSwitchParameter.lua.h"
+#include "StaticComponentMaskParameter.lua.h"
+#include "StaticTerrainLayerWeightParameter.lua.h"
+#include "StaticMaterialLayersParameter.lua.h"
+#include "StaticParameterSet.lua.h"
 #include "AnimLinkableElement.lua.h"
 #include "PerBoneBlendWeight.lua.h"
 #include "PerBoneBlendWeights.lua.h"
@@ -95,9 +103,13 @@
 #include "MeshUVChannelInfo.lua.h"
 #include "PreviewAttachedObjectPair.lua.h"
 #include "PreviewAssetAttachContainer.lua.h"
+#include "SkeletalMeshSamplingRegionBuiltData.lua.h"
+#include "SkeletalMeshSamplingLODBuiltData.lua.h"
+#include "SkeletalMeshSamplingBuiltData.lua.h"
+#include "SkeletalMeshSamplingRegion.lua.h"
+#include "SkeletalMeshSamplingInfo.lua.h"
 #include "BoneMirrorInfo.lua.h"
 #include "BoneMirrorExport.lua.h"
-#include "TriangleSortSettings.lua.h"
 #include "SkeletalMeshOptimizationSettings.lua.h"
 #include "SkeletalMeshClothBuildParams.lua.h"
 #include "SkeletalMeshLODInfo.lua.h"
@@ -117,6 +129,10 @@
 #include "EditorElement.lua.h"
 #include "GridBlendSample.lua.h"
 #include "PerBoneInterpolation.lua.h"
+#include "KeyHandleMap.lua.h"
+#include "IndexedCurve.lua.h"
+#include "RichCurveKey.lua.h"
+#include "RichCurve.lua.h"
 #include "AnimationRecordingSettings.lua.h"
 #include "AnimCurveType.lua.h"
 #include "CurveMetaData.lua.h"
@@ -131,16 +147,15 @@
 #include "RigConfiguration.lua.h"
 #include "AnimSlotGroup.lua.h"
 #include "VirtualBone.lua.h"
-#include "KeyHandleMap.lua.h"
-#include "IndexedCurve.lua.h"
-#include "RichCurveKey.lua.h"
-#include "RichCurve.lua.h"
 #include "AnimCurveParam.lua.h"
 #include "AnimCurveBase.lua.h"
 #include "FloatCurve.lua.h"
 #include "VectorCurve.lua.h"
 #include "TransformCurve.lua.h"
 #include "RawCurveTracks.lua.h"
+#include "AnimNotifyEventReference.lua.h"
+#include "AnimNotifyArray.lua.h"
+#include "AnimNotifyQueue.lua.h"
 #include "RawAnimSequenceTrack.lua.h"
 #include "AnimSequenceTrackContainer.lua.h"
 #include "TrackToSkeletonMap.lua.h"
@@ -186,6 +201,9 @@
 #include "AnimTrack.lua.h"
 #include "BranchFilter.lua.h"
 #include "InputBlendPose.lua.h"
+#include "TimeStretchCurveMarker.lua.h"
+#include "TimeStretchCurve.lua.h"
+#include "TimeStretchCurveInstance.lua.h"
 #include "CompositeSection.lua.h"
 #include "SlotAnimationTrack.lua.h"
 #include "BranchingPoint.lua.h"
@@ -251,6 +269,8 @@
 #include "ViewTargetTransitionParams.lua.h"
 #include "RuntimeFloatCurve.lua.h"
 #include "BaseAttenuationSettings.lua.h"
+#include "SoundSubmixSendInfo.lua.h"
+#include "SoundAttenuationPluginSettings.lua.h"
 #include "SoundAttenuationSettings.lua.h"
 #include "AudioComponentParam.lua.h"
 #include "ForceFeedbackAttenuationSettings.lua.h"
@@ -324,18 +344,11 @@
 #include "PlayerMuteList.lua.h"
 #include "ForceFeedbackChannelDetails.lua.h"
 #include "ActiveForceFeedbackEffect.lua.h"
+#include "UpdateLevelStreamingLevelStatus.lua.h"
+#include "UpdateLevelVisibilityLevelInfo.lua.h"
 #include "DebugTextInfo.lua.h"
 #include "LevelNameAndTime.lua.h"
 #include "RollbackNetStartupActorInfo.lua.h"
-#include "FractureMaterial.lua.h"
-#include "DestructibleChunkParameters.lua.h"
-#include "DestructibleDepthParameters.lua.h"
-#include "DestructibleParametersFlag.lua.h"
-#include "DestructibleDamageParameters.lua.h"
-#include "DestructibleDebrisParameters.lua.h"
-#include "DestructibleAdvancedParameters.lua.h"
-#include "DestructibleSpecialHierarchyDepths.lua.h"
-#include "DestructibleParameters.lua.h"
 #include "LevelViewportInfo.lua.h"
 #include "LevelCollection.lua.h"
 #include "FullyLoadedPackagesInfo.lua.h"
@@ -422,10 +435,10 @@
 #include "ParameterGroupData.lua.h"
 #include "CustomInput.lua.h"
 #include "MaterialInstanceBasePropertyOverrides.lua.h"
-#include "FontParameterValue.lua.h"
 #include "ScalarParameterValue.lua.h"
-#include "TextureParameterValue.lua.h"
 #include "VectorParameterValue.lua.h"
+#include "TextureParameterValue.lua.h"
+#include "FontParameterValue.lua.h"
 #include "CollectionParameterBase.lua.h"
 #include "CollectionScalarParameter.lua.h"
 #include "CollectionVectorParameter.lua.h"
@@ -469,10 +482,6 @@
 #include "KSphereElem.lua.h"
 #include "KSphylElem.lua.h"
 #include "KAggregateGeom.lua.h"
-#include "ConvexElement2D.lua.h"
-#include "CircleElement2D.lua.h"
-#include "BoxElement2D.lua.h"
-#include "AggregateGeometry2D.lua.h"
 #include "ConstraintDrive.lua.h"
 #include "LinearDriveConstraint.lua.h"
 #include "AngularDriveConstraint.lua.h"
@@ -488,7 +497,7 @@
 #include "PhysicalSurfaceName.lua.h"
 #include "AudioQualitySettings.lua.h"
 #include "SoundConcurrencySettings.lua.h"
-#include "SoundSubmixSendInfo.lua.h"
+#include "SoundSourceBusSendInfo.lua.h"
 #include "DialogueContextMapping.lua.h"
 #include "SoundClassEditorData.lua.h"
 #include "SoundClassProperties.lua.h"
@@ -523,6 +532,7 @@
 #include "CachedAnimRelevancyData.lua.h"
 #include "CachedAnimTransitionData.lua.h"
 #include "NodeMap.lua.h"
+#include "VoiceSettings.lua.h"
 struct lua_static_load_Engine_ustruct_all_struct
 {
 	static void load()
@@ -583,6 +593,7 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FComponentReference_Lib, "FComponentReference");
 		UTableUtil::loadstruct(FFilePath_Lib, "FFilePath");
 		UTableUtil::loadstruct(FDirectoryPath_Lib, "FDirectoryPath");
+		UTableUtil::loadstruct(FCollectionReference_Lib, "FCollectionReference");
 		UTableUtil::loadstruct(FRedirector_Lib, "FRedirector");
 		UTableUtil::loadstruct(FDebugFloatHistory_Lib, "FDebugFloatHistory");
 		UTableUtil::loadstruct(FDepthFieldGlowInfo_Lib, "FDepthFieldGlowInfo");
@@ -612,6 +623,13 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FNavigationLink_Lib, "FNavigationLink");
 		UTableUtil::loadstruct(FNavigationSegmentLink_Lib, "FNavigationSegmentLink");
 		UTableUtil::loadstruct(FGeomSelection_Lib, "FGeomSelection");
+		UTableUtil::loadstruct(FMaterialParameterInfo_Lib, "FMaterialParameterInfo");
+		UTableUtil::loadstruct(FMaterialLayersFunctions_Lib, "FMaterialLayersFunctions");
+		UTableUtil::loadstruct(FStaticSwitchParameter_Lib, "FStaticSwitchParameter");
+		UTableUtil::loadstruct(FStaticComponentMaskParameter_Lib, "FStaticComponentMaskParameter");
+		UTableUtil::loadstruct(FStaticTerrainLayerWeightParameter_Lib, "FStaticTerrainLayerWeightParameter");
+		UTableUtil::loadstruct(FStaticMaterialLayersParameter_Lib, "FStaticMaterialLayersParameter");
+		UTableUtil::loadstruct(FStaticParameterSet_Lib, "FStaticParameterSet");
 		UTableUtil::loadstruct(FAnimLinkableElement_Lib, "FAnimLinkableElement");
 		UTableUtil::loadstruct(FPerBoneBlendWeight_Lib, "FPerBoneBlendWeight");
 		UTableUtil::loadstruct(FPerBoneBlendWeights_Lib, "FPerBoneBlendWeights");
@@ -623,9 +641,13 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FMeshUVChannelInfo_Lib, "FMeshUVChannelInfo");
 		UTableUtil::loadstruct(FPreviewAttachedObjectPair_Lib, "FPreviewAttachedObjectPair");
 		UTableUtil::loadstruct(FPreviewAssetAttachContainer_Lib, "FPreviewAssetAttachContainer");
+		UTableUtil::loadstruct(FSkeletalMeshSamplingRegionBuiltData_Lib, "FSkeletalMeshSamplingRegionBuiltData");
+		UTableUtil::loadstruct(FSkeletalMeshSamplingLODBuiltData_Lib, "FSkeletalMeshSamplingLODBuiltData");
+		UTableUtil::loadstruct(FSkeletalMeshSamplingBuiltData_Lib, "FSkeletalMeshSamplingBuiltData");
+		UTableUtil::loadstruct(FSkeletalMeshSamplingRegion_Lib, "FSkeletalMeshSamplingRegion");
+		UTableUtil::loadstruct(FSkeletalMeshSamplingInfo_Lib, "FSkeletalMeshSamplingInfo");
 		UTableUtil::loadstruct(FBoneMirrorInfo_Lib, "FBoneMirrorInfo");
 		UTableUtil::loadstruct(FBoneMirrorExport_Lib, "FBoneMirrorExport");
-		UTableUtil::loadstruct(FTriangleSortSettings_Lib, "FTriangleSortSettings");
 		UTableUtil::loadstruct(FSkeletalMeshOptimizationSettings_Lib, "FSkeletalMeshOptimizationSettings");
 		UTableUtil::loadstruct(FSkeletalMeshClothBuildParams_Lib, "FSkeletalMeshClothBuildParams");
 		UTableUtil::loadstruct(FSkeletalMeshLODInfo_Lib, "FSkeletalMeshLODInfo");
@@ -645,6 +667,10 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FEditorElement_Lib, "FEditorElement");
 		UTableUtil::loadstruct(FGridBlendSample_Lib, "FGridBlendSample");
 		UTableUtil::loadstruct(FPerBoneInterpolation_Lib, "FPerBoneInterpolation");
+		UTableUtil::loadstruct(FKeyHandleMap_Lib, "FKeyHandleMap");
+		UTableUtil::loadstruct(FIndexedCurve_Lib, "FIndexedCurve");
+		UTableUtil::loadstruct(FRichCurveKey_Lib, "FRichCurveKey");
+		UTableUtil::loadstruct(FRichCurve_Lib, "FRichCurve");
 		UTableUtil::loadstruct(FAnimationRecordingSettings_Lib, "FAnimationRecordingSettings");
 		UTableUtil::loadstruct(FAnimCurveType_Lib, "FAnimCurveType");
 		UTableUtil::loadstruct(FCurveMetaData_Lib, "FCurveMetaData");
@@ -659,16 +685,15 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FRigConfiguration_Lib, "FRigConfiguration");
 		UTableUtil::loadstruct(FAnimSlotGroup_Lib, "FAnimSlotGroup");
 		UTableUtil::loadstruct(FVirtualBone_Lib, "FVirtualBone");
-		UTableUtil::loadstruct(FKeyHandleMap_Lib, "FKeyHandleMap");
-		UTableUtil::loadstruct(FIndexedCurve_Lib, "FIndexedCurve");
-		UTableUtil::loadstruct(FRichCurveKey_Lib, "FRichCurveKey");
-		UTableUtil::loadstruct(FRichCurve_Lib, "FRichCurve");
 		UTableUtil::loadstruct(FAnimCurveParam_Lib, "FAnimCurveParam");
 		UTableUtil::loadstruct(FAnimCurveBase_Lib, "FAnimCurveBase");
 		UTableUtil::loadstruct(FFloatCurve_Lib, "FFloatCurve");
 		UTableUtil::loadstruct(FVectorCurve_Lib, "FVectorCurve");
 		UTableUtil::loadstruct(FTransformCurve_Lib, "FTransformCurve");
 		UTableUtil::loadstruct(FRawCurveTracks_Lib, "FRawCurveTracks");
+		UTableUtil::loadstruct(FAnimNotifyEventReference_Lib, "FAnimNotifyEventReference");
+		UTableUtil::loadstruct(FAnimNotifyArray_Lib, "FAnimNotifyArray");
+		UTableUtil::loadstruct(FAnimNotifyQueue_Lib, "FAnimNotifyQueue");
 		UTableUtil::loadstruct(FRawAnimSequenceTrack_Lib, "FRawAnimSequenceTrack");
 		UTableUtil::loadstruct(FAnimSequenceTrackContainer_Lib, "FAnimSequenceTrackContainer");
 		UTableUtil::loadstruct(FTrackToSkeletonMap_Lib, "FTrackToSkeletonMap");
@@ -714,6 +739,9 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FAnimTrack_Lib, "FAnimTrack");
 		UTableUtil::loadstruct(FBranchFilter_Lib, "FBranchFilter");
 		UTableUtil::loadstruct(FInputBlendPose_Lib, "FInputBlendPose");
+		UTableUtil::loadstruct(FTimeStretchCurveMarker_Lib, "FTimeStretchCurveMarker");
+		UTableUtil::loadstruct(FTimeStretchCurve_Lib, "FTimeStretchCurve");
+		UTableUtil::loadstruct(FTimeStretchCurveInstance_Lib, "FTimeStretchCurveInstance");
 		UTableUtil::loadstruct(FCompositeSection_Lib, "FCompositeSection");
 		UTableUtil::loadstruct(FSlotAnimationTrack_Lib, "FSlotAnimationTrack");
 		UTableUtil::loadstruct(FBranchingPoint_Lib, "FBranchingPoint");
@@ -779,6 +807,8 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FViewTargetTransitionParams_Lib, "FViewTargetTransitionParams");
 		UTableUtil::loadstruct(FRuntimeFloatCurve_Lib, "FRuntimeFloatCurve");
 		UTableUtil::loadstruct(FBaseAttenuationSettings_Lib, "FBaseAttenuationSettings");
+		UTableUtil::loadstruct(FSoundSubmixSendInfo_Lib, "FSoundSubmixSendInfo");
+		UTableUtil::loadstruct(FSoundAttenuationPluginSettings_Lib, "FSoundAttenuationPluginSettings");
 		UTableUtil::loadstruct(FSoundAttenuationSettings_Lib, "FSoundAttenuationSettings");
 		UTableUtil::loadstruct(FAudioComponentParam_Lib, "FAudioComponentParam");
 		UTableUtil::loadstruct(FForceFeedbackAttenuationSettings_Lib, "FForceFeedbackAttenuationSettings");
@@ -852,18 +882,11 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FPlayerMuteList_Lib, "FPlayerMuteList");
 		UTableUtil::loadstruct(FForceFeedbackChannelDetails_Lib, "FForceFeedbackChannelDetails");
 		UTableUtil::loadstruct(FActiveForceFeedbackEffect_Lib, "FActiveForceFeedbackEffect");
+		UTableUtil::loadstruct(FUpdateLevelStreamingLevelStatus_Lib, "FUpdateLevelStreamingLevelStatus");
+		UTableUtil::loadstruct(FUpdateLevelVisibilityLevelInfo_Lib, "FUpdateLevelVisibilityLevelInfo");
 		UTableUtil::loadstruct(FDebugTextInfo_Lib, "FDebugTextInfo");
 		UTableUtil::loadstruct(FLevelNameAndTime_Lib, "FLevelNameAndTime");
 		UTableUtil::loadstruct(FRollbackNetStartupActorInfo_Lib, "FRollbackNetStartupActorInfo");
-		UTableUtil::loadstruct(FFractureMaterial_Lib, "FFractureMaterial");
-		UTableUtil::loadstruct(FDestructibleChunkParameters_Lib, "FDestructibleChunkParameters");
-		UTableUtil::loadstruct(FDestructibleDepthParameters_Lib, "FDestructibleDepthParameters");
-		UTableUtil::loadstruct(FDestructibleParametersFlag_Lib, "FDestructibleParametersFlag");
-		UTableUtil::loadstruct(FDestructibleDamageParameters_Lib, "FDestructibleDamageParameters");
-		UTableUtil::loadstruct(FDestructibleDebrisParameters_Lib, "FDestructibleDebrisParameters");
-		UTableUtil::loadstruct(FDestructibleAdvancedParameters_Lib, "FDestructibleAdvancedParameters");
-		UTableUtil::loadstruct(FDestructibleSpecialHierarchyDepths_Lib, "FDestructibleSpecialHierarchyDepths");
-		UTableUtil::loadstruct(FDestructibleParameters_Lib, "FDestructibleParameters");
 		UTableUtil::loadstruct(FLevelViewportInfo_Lib, "FLevelViewportInfo");
 		UTableUtil::loadstruct(FLevelCollection_Lib, "FLevelCollection");
 		UTableUtil::loadstruct(FFullyLoadedPackagesInfo_Lib, "FFullyLoadedPackagesInfo");
@@ -950,10 +973,10 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FParameterGroupData_Lib, "FParameterGroupData");
 		UTableUtil::loadstruct(FCustomInput_Lib, "FCustomInput");
 		UTableUtil::loadstruct(FMaterialInstanceBasePropertyOverrides_Lib, "FMaterialInstanceBasePropertyOverrides");
-		UTableUtil::loadstruct(FFontParameterValue_Lib, "FFontParameterValue");
 		UTableUtil::loadstruct(FScalarParameterValue_Lib, "FScalarParameterValue");
-		UTableUtil::loadstruct(FTextureParameterValue_Lib, "FTextureParameterValue");
 		UTableUtil::loadstruct(FVectorParameterValue_Lib, "FVectorParameterValue");
+		UTableUtil::loadstruct(FTextureParameterValue_Lib, "FTextureParameterValue");
+		UTableUtil::loadstruct(FFontParameterValue_Lib, "FFontParameterValue");
 		UTableUtil::loadstruct(FCollectionParameterBase_Lib, "FCollectionParameterBase");
 		UTableUtil::loadstruct(FCollectionScalarParameter_Lib, "FCollectionScalarParameter");
 		UTableUtil::loadstruct(FCollectionVectorParameter_Lib, "FCollectionVectorParameter");
@@ -997,10 +1020,6 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FKSphereElem_Lib, "FKSphereElem");
 		UTableUtil::loadstruct(FKSphylElem_Lib, "FKSphylElem");
 		UTableUtil::loadstruct(FKAggregateGeom_Lib, "FKAggregateGeom");
-		UTableUtil::loadstruct(FConvexElement2D_Lib, "FConvexElement2D");
-		UTableUtil::loadstruct(FCircleElement2D_Lib, "FCircleElement2D");
-		UTableUtil::loadstruct(FBoxElement2D_Lib, "FBoxElement2D");
-		UTableUtil::loadstruct(FAggregateGeometry2D_Lib, "FAggregateGeometry2D");
 		UTableUtil::loadstruct(FConstraintDrive_Lib, "FConstraintDrive");
 		UTableUtil::loadstruct(FLinearDriveConstraint_Lib, "FLinearDriveConstraint");
 		UTableUtil::loadstruct(FAngularDriveConstraint_Lib, "FAngularDriveConstraint");
@@ -1016,7 +1035,7 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FPhysicalSurfaceName_Lib, "FPhysicalSurfaceName");
 		UTableUtil::loadstruct(FAudioQualitySettings_Lib, "FAudioQualitySettings");
 		UTableUtil::loadstruct(FSoundConcurrencySettings_Lib, "FSoundConcurrencySettings");
-		UTableUtil::loadstruct(FSoundSubmixSendInfo_Lib, "FSoundSubmixSendInfo");
+		UTableUtil::loadstruct(FSoundSourceBusSendInfo_Lib, "FSoundSourceBusSendInfo");
 		UTableUtil::loadstruct(FDialogueContextMapping_Lib, "FDialogueContextMapping");
 		UTableUtil::loadstruct(FSoundClassEditorData_Lib, "FSoundClassEditorData");
 		UTableUtil::loadstruct(FSoundClassProperties_Lib, "FSoundClassProperties");
@@ -1051,6 +1070,7 @@ struct lua_static_load_Engine_ustruct_all_struct
 		UTableUtil::loadstruct(FCachedAnimRelevancyData_Lib, "FCachedAnimRelevancyData");
 		UTableUtil::loadstruct(FCachedAnimTransitionData_Lib, "FCachedAnimTransitionData");
 		UTableUtil::loadstruct(FNodeMap_Lib, "FNodeMap");
+		UTableUtil::loadstruct(FVoiceSettings_Lib, "FVoiceSettings");
 	}
 	lua_static_load_Engine_ustruct_all_struct(){UTableUtil::GetInitDelegates().AddStatic(&load);}
 };
