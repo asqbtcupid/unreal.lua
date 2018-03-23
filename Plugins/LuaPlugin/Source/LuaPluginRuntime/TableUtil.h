@@ -922,8 +922,7 @@ public:
 		ue_lua_pushcfunction(TheState, ErrHandleFunc);
 		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
 		pushall(TheState, args...);
-		int32 ParamCount = sizeof...(args);
-// 		int32 ParamCount = pushall(TheState, Forward<T>(args)...);
+		const int32 ParamCount = sizeof...(args);
 		if (ue_lua_pcall(TheState, ParamCount, 1, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheState, -1));
@@ -947,7 +946,7 @@ public:
 		ue_lua_pushcfunction(TheState, ErrHandleFunc);
 		ue_lua_getfield(TheState, LUA_GLOBALSINDEX, funcname);
 		pushall(TheState, args...);
-		int32 ParamCount = sizeof...(args);
+		const int32 ParamCount = sizeof...(args);
 		if (ue_lua_pcall(TheState, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheState, -1));
@@ -977,7 +976,7 @@ public:
 		ue_lua_pushcfunction(TheOnlyLuaState, ErrHandleFunc);
 		ue_lua_rawgeti(TheOnlyLuaState, LUA_REGISTRYINDEX, funcid);
 		pushall(TheOnlyLuaState, args...);
-		int32 ParamCount = sizeof...(args);
+		const int32 ParamCount = sizeof...(args);
 		if (ue_lua_pcall(TheOnlyLuaState, ParamCount, 0, -(ParamCount + 2)))
 		{
 			log(ue_lua_tostring(TheOnlyLuaState, -1));
