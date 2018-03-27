@@ -76,7 +76,7 @@ public:
 
 	UPROPERTY()
 	int32 test_int_public;
-
+	
 	UPROPERTY()
 	int64 test_int64_public;
 

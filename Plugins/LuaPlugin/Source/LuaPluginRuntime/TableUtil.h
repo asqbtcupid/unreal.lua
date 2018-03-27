@@ -160,7 +160,7 @@ public:
 
 template<> class popiml<uint32> {
 public:
-	static uint32 pop(lua_State *L, int index) { return (uint32)ue_lua_tointeger(L, index); }
+	static uint32 pop(lua_State *L, int index) { return (uint32)ue_lua_tonumber(L, index); }
 };
 
 template<> class popiml<int32> {
@@ -185,7 +185,7 @@ public:
 
 template<> class popiml<int64> {
 public:
-	static int64 pop(lua_State *L, int index) { return (int64)ue_lua_tointeger(L, index); }
+	static int64 pop(lua_State *L, int index) { return (int64)ue_lua_tonumber(L, index); }
 };
 
 template<> class popiml<bool> {

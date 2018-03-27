@@ -112,11 +112,13 @@ FString FLuaScriptCodeGenerator::InitializeParam(UProperty* Param, int32 ParamIn
 		// In Lua, the first param index on the stack is 1 and it's the object we're invoking the function on
 		ParamIndex += 2;
 
-		if (Param->IsA(UIntProperty::StaticClass()) ||
-			Param->IsA(UUInt32Property::StaticClass()) ||
-			Param->IsA(UInt64Property::StaticClass()) ||
-			Param->IsA(UUInt16Property::StaticClass())
-			)
+		if (Param->IsA(UInt64Property::StaticClass()) || Param->IsA(UUInt64Property::StaticClass()))
+		{
+			Initializer = TEXT("(" + CircularModulesLuaPrefix + "lua_tonumber");
+		}
+		else if (Param->IsA(UIntProperty::StaticClass()) ||
+			Param->IsA(UUInt16Property::StaticClass())||
+			Param->IsA(UUInt32Property::StaticClass()))
 		{
 			Initializer = TEXT("("+ CircularModulesLuaPrefix+ "lua_tointeger");
 		}
@@ -289,10 +291,13 @@ FString FLuaScriptCodeGenerator::Push(const FString& ClassNameCPP, UFunction* Fu
 	else if (ReturnValue->IsA(UIntProperty::StaticClass()) ||
 		ReturnValue->IsA(UInt8Property::StaticClass()) ||
 		ReturnValue->IsA(UUInt32Property::StaticClass()) ||
-		ReturnValue->IsA(UUInt16Property::StaticClass()) ||
-		ReturnValue->IsA(UInt64Property::StaticClass()))
+		ReturnValue->IsA(UUInt16Property::StaticClass()) )
 	{
 		Initializer = FString::Printf(TEXT("ue_lua_pushinteger(L, %s);"), *name);
+	}
+	else if (ReturnValue->IsA(UInt64Property::StaticClass()) || ReturnValue->IsA(UUInt64Property::StaticClass()))
+	{
+		Initializer = FString::Printf(TEXT("ue_lua_pushnumber(L, %s);"), *name);
 	}
 	else if (ReturnValue->IsA(UFloatProperty::StaticClass()) || ReturnValue->IsA(UDoubleProperty::StaticClass()))
 	{
@@ -1492,6 +1497,14 @@ FString FLuaScriptCodeGenerator::SetterBody(UProperty* Property)
 	if (Property->ArrayDim > 1)
 	{
 		return "";
+	}
+	if (Property->IsA(UInt64Property::StaticClass()))
+	{
+		Initializer += TEXT("(int64)(" + CircularModulesLuaPrefix + "lua_tonumber");
+	}
+	else if (Property->IsA(UUInt64Property::StaticClass()))
+	{
+		Initializer += TEXT("(uint64)(" + CircularModulesLuaPrefix + "lua_tonumber");
 	}
 	else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
 	{

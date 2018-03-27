@@ -1017,7 +1017,7 @@ void UTableUtil::pushproperty_type(lua_State*inL, UIntProperty* p, const void*pt
 
 void UTableUtil::pushproperty_type(lua_State*inL, UInt64Property* p, const void*ptr)
 {
-	lua_pushinteger(inL, (int64)p->GetPropertyValue_InContainer(ptr));
+	lua_pushnumber(inL, (int64)p->GetPropertyValue_InContainer(ptr));
 }
 
 void UTableUtil::pushproperty_type(lua_State*inL, UFloatProperty* p, const void*ptr)
@@ -1182,7 +1182,7 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UIntProperty* p, cons
 
 void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInt64Property* p, const void*ptr)
 {
-	lua_pushinteger(inL, (int64)p->GetPropertyValue(ptr));
+	lua_pushnumber(inL, (int64)p->GetPropertyValue(ptr));
 }
 
 void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UFloatProperty* p, const void*ptr)
@@ -1578,13 +1578,13 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, UIntProperty* p, voi
 
 void UTableUtil::popproperty_type(lua_State*inL, int index, UInt64Property* p, void*ptr)
 {
-	int32 value = popiml<int64>::pop(inL, index);
+	int64 value = popiml<int64>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
 void UTableUtil::popproperty_type(lua_State*inL, int index, UUInt32Property* p, void*ptr)
 {
-	int32 value = popiml<int>::pop(inL, index);
+	uint32 value = popiml<uint32>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
