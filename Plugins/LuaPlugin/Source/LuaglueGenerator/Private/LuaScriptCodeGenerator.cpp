@@ -2226,7 +2226,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles()
 
 	FString CommonInclude;
 
-	CommonInclude += "#include \"tableutil.h\"\r\n";
+	CommonInclude += "#include \"TableUtil.h\"\r\n";
 	TArray<FString> FixLinkFuncs;
 	for (const auto& ModuleClassSet : ModulesClass)
 	{
@@ -2385,7 +2385,7 @@ void FLuaScriptCodeGenerator::GlueAllGeneratedFiles_CircularModule()
 	}
 
 	FString CommonInclude;
-	CommonInclude += "#include \"tableutil.h\"\r\n";
+	CommonInclude += "#include \"TableUtil.h\"\r\n";
 	TArray<FString> FixLinkFuncs;
 	for (const auto& ModuleClassSet : ModulesClass)
 	{

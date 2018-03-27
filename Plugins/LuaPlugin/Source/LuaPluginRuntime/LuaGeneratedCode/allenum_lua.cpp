@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "allenum.lua.h"
 struct lua_static_load_allenum_struct
 {

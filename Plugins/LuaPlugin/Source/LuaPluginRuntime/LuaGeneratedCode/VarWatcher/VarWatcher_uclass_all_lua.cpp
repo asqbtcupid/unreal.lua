@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "VarNode.lua.h"
 struct lua_static_load_VarWatcher_uclass_all_struct
 {

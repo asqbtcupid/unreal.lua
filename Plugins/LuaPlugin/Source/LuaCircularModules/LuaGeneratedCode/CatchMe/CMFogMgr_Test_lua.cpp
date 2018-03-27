@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "CMFogMgr_Test.lua.h"
 struct lua_static_load_CMFogMgr_Test_struct
 {

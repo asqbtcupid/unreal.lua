@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "InputCoreTypes.lua.h"
 struct lua_static_load_InputCore_uclass_all_struct
 {

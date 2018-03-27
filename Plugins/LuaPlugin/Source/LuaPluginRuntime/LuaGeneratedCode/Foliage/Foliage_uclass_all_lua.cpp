@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "FoliageInstancedStaticMeshComponent.lua.h"
 #include "FoliageStatistics.lua.h"
 #include "FoliageType.lua.h"

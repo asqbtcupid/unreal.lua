@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "lua_State.lua.h"
 #include "lua_Index.lua.h"
 #include "ReplifetimeCond.lua.h"

@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "CMPlayerControllerBase.lua.h"
 struct lua_static_load_CMPlayerControllerBase_struct
 {

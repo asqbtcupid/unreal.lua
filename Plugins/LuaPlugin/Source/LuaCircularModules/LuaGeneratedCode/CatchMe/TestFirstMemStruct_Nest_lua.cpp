@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "TestFirstMemStruct_Nest.lua.h"
 struct lua_static_load_TestFirstMemStruct_Nest_struct
 {

@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "AssetRegistry.lua.h"
 #include "AssetRegistryHelpers.lua.h"
 #include "AssetRegistryImpl.lua.h"

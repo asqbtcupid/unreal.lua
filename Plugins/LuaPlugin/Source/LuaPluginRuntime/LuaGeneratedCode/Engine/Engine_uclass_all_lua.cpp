@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "Actor.lua.h"
 #include "ActorComponent.lua.h"
 #include "AISystemBase.lua.h"

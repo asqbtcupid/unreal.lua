@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "SkillInfo.lua.h"
 struct lua_static_load_SkillInfo_struct
 {

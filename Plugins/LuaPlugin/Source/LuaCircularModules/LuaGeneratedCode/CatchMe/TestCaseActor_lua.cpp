@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "TestCaseActor.lua.h"
 struct lua_static_load_TestCaseActor_struct
 {

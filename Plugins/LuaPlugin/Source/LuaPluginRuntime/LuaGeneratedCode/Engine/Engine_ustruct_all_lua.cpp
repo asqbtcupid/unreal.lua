@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "TickPrerequisite.lua.h"
 #include "TickFunction.lua.h"
 #include "ActorTickFunction.lua.h"

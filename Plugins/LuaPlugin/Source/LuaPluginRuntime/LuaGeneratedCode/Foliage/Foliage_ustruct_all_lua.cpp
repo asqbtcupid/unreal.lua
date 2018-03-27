@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "FoliageVertexColorChannelMask.lua.h"
 #include "FoliageTypeObject.lua.h"
 #include "ProceduralFoliageInstance.lua.h"

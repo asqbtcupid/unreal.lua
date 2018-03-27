@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "Object.lua.h"
 struct lua_static_load_CoreUObject_uclass_all_struct
 {

@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "CMCharacterBase.lua.h"
 struct lua_static_load_CMCharacterBase_struct
 {

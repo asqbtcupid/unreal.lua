@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "Guid.lua.h"
 #include "Vector.lua.h"
 #include "Vector4.lua.h"

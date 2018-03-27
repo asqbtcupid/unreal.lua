@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "CatchMeCharacter.lua.h"
 struct lua_static_load_CatchMeCharacter_struct
 {

@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "Key.lua.h"
 struct lua_static_load_InputCore_ustruct_all_struct
 {

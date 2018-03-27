@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "AsyncTaskDownloadImage.lua.h"
 #include "DragDropOperation.lua.h"
 #include "MovieScene2DTransformSection.lua.h"

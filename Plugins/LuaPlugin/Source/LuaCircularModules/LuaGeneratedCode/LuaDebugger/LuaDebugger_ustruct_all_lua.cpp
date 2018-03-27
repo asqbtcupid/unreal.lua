@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "DebuggerVarNode.lua.h"
 #include "BreakPointNode.lua.h"
 struct lua_static_load_LuaDebugger_ustruct_all_struct

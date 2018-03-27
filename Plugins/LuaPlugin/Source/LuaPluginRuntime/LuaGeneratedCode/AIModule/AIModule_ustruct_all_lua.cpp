@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "AIRequestID.lua.h"
 #include "AIMoveRequest.lua.h"
 #include "PawnActionEvent.lua.h"

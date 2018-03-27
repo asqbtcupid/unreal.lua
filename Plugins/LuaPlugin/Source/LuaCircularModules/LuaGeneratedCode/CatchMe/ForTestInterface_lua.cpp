@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "ForTestInterface.lua.h"
 struct lua_static_load_ForTestInterface_struct
 {

@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "LuaAnimInstance.lua.h"
 struct lua_static_load_LuaAnimInstance_struct
 {

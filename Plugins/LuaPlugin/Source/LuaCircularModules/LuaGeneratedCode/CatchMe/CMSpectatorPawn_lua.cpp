@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "CMSpectatorPawn.lua.h"
 struct lua_static_load_CMSpectatorPawn_struct
 {

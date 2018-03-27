@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "BPAndLuaBridge.lua.h"
 #include "LuaArrayHelper.lua.h"
 #include "LuaDelegate.lua.h"

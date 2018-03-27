@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "DebuggerSetting.lua.h"
 struct lua_static_load_LuaDebugger_uclass_all_struct
 {

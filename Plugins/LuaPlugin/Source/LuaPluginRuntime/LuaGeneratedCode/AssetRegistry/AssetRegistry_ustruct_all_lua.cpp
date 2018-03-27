@@ -1,4 +1,4 @@
-#include "tableutil.h"
+#include "TableUtil.h"
 #include "ARFilter.lua.h"
 #include "AssetBundleEntry.lua.h"
 #include "AssetBundleData.lua.h"
