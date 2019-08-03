@@ -1,0 +1,48 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "ljh Lua Plugin",
+	"Description" : "Generate Lua Glue",
+	"Category" : "Examples",
+	"CreatedBy" : "asqbtcupid",
+	"CreatedByURL" : "https://github.com/asqbtcupid",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : false,
+	"IsBetaVersion" : false,
+	"Installed" : true,
+	"CanBeUsedWithUnrealHeaderTool" : false,
+	
+	"Modules" :
+	[
+    {
+		"Name" : "LuaPluginRuntime",
+		"Type" : "Runtime",
+		"LoadingPhase" : "PreDefault"
+	  },
+    {
+		"Name" : "LuaManuallyGlue",
+		  "Type" : "Runtime",
+		  "LoadingPhase" : "PreDefault"
+	  },
+    {
+      "Name": "LuaPluginEditor",
+      "Type":  "Editor",
+      "LoadingPhase": "PreDefault"
+    }
+
+	],
+	"Plugins": [
+		{
+			"Name": "Lua53",
+			"Enabled": true
+		},
+		{
+			"Name": "VarWatcher",
+			"Enabled": true
+		}
+	]
+}

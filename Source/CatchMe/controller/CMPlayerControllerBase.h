@@ -10,6 +10,7 @@ class CATCHME_API ACMPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	ACMPlayerControllerBase();
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -26,10 +27,12 @@ public:
 
 	virtual void SetPawn(APawn* aPawn) override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void TestBpImp(int i, float j, FVector l);
 	
 	UFUNCTION()
-	void GetInputState(TArray<float>& result);
+	void GetInputState(UPARAM(ref) TArray<float>& result);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerControllerBase")
-	bool GetHitResult(float x, float y, FHitResult& HitResult, int TraceChannel = -1, bool bTraceComplex = true);
+	bool GetHitResult(float x, float y, UPARAM(ref) FHitResult& HitResult, int TraceChannel = -1, bool bTraceComplex = true);
 };

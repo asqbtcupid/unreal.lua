@@ -8,7 +8,7 @@ USTRUCT()
 struct CATCHME_API FCharacterInfo {
 
 	GENERATED_BODY()
-		 
+
 	UPROPERTY()
 	int32 MaxHp;
 	    

@@ -4,48 +4,43 @@ UE4 is not good enough.
     
 Lua make UE4 perfect, hahaha~~
     
-
+## What is this?
+  This is a framework for binding UE4 to lua.
 ## Platform & Version
 
 Windows, Mac, Android, IOS
 
-4.16, 4.17, 4.18
+UE4 : 4.20 4.21
+Lua : 5.3
 
 ## How to build
 for this repository:
 
     Right click CatchMe.uproject then Generate project.
 
-    If you use launcher engine and is under 4.18, try CatchMe_for4.17launcherengine.uproject.
-
 for your project:
     
-    1.copy LuaSource and Plugins to your project.
+    1.copy Plugins to your project.
     
-    2.modify luaconfig.ini, Replace all "CatchMe" with your GameModule's name."CatchMe" belong to me,haha~
-    
-    3.modify LuaPluginRuntime.build.cs, Replace "CatchMe" with your GameModule's name.
-    
-    4.modify LuaCircularModules.build.cs, Replace "CatchMe" with your GameModule's name.
-    
-    5.If you want to use Lua in c++, modify your project.build.cs, add "LuaPluginRuntime" to your PublicDependencyModuleNames.
-### Attention
-    You will probably meet link error for the first time compile,No need to panic.
-    
-    Just make a little change to you project.build.cs, such as an empty space.Then complie again.
-    
-    If error still exist,see FAQ below.
-    
+    2.If you want to use Lua in c++, modify your modulesname.build.cs, add "InputCore","Lua53","LuaPluginRuntime","LuaManuallyGlue" to your PublicDependencyModuleNames.Take a look at CatchMe.build.cs.
+  
+  drag Plugins/UnrealLua/LuaSource folder to editor content to generate UE4 asset before package.
+
 ## Feature
 
-   1.Full Aceess Engine API, include blueprint.
+   1.Full Aceess to blueprint API.
 
    2.[Lua Hot Reload](https://github.com/asqbtcupid/lua_hotupdate)
     
    3.[Variable Watcher](https://github.com/asqbtcupid/unreal.lua/wiki/var-watcher)
     
    4.[Debugger](https://github.com/asqbtcupid/unreal.lua/wiki/debugger)
-    
+  
+   5.extremely easy for c++ binding. [binding](https://github.com/asqbtcupid/unreal.lua/wiki/Bindding),It's the most powerful lua binding framework in the world.
+
+   6.write slate by lua(expertimental),[example](https://github.com/asqbtcupid/unreal.lua/wiki/slate_lua)
+
+   7.extremely high performance.
 ## Documentation
 
 [wiki](https://github.com/asqbtcupid/unreal.lua/wiki)

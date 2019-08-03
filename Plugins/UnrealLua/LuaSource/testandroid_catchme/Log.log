@@ -1,0 +1,408 @@
+﻿[2018.07.14-16.21.49:854]][17601][    0]Log file open, 07/14/18 16:21:49 bDisableBackup:0
+[2018.07.14-16.21.49:854]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogConsoleManager: Warning: Console object named 'r.SortStaticMeshByRenderLayer' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+[2018.07.14-16.21.49:855]][17601][    0]LogAndroid: Nicochen Game thread 17601
+[2018.07.14-16.21.49:855]][17601][    0]LogAndroid: Display: Android Version Make Model Language: 7.1.1 OPPO OPPO R11s zh_CN
+[2018.07.14-16.21.49:855]][17601][    0]LogAndroid: Case APP_CMD_START
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_RESUME
+[2018.07.14-16.21.49:856]][17601][    0]LogInit: Display: RandInit(1235735524) SRandInit(1235735524).
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_INPUT_CHANGED
+[2018.07.14-16.21.49:856]][17601][    0]LogTaskGraph: Started task graph with 5 named threads and 8 total threads with 1 sets of task threads.
+[2018.07.14-16.21.49:856]][17601][    0]LogStats: Stats thread started at 0.273598
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_INIT_WINDOW
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_SAVE_STATE
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_PAUSE
+[2018.07.14-16.21.49:856]][17601][    0]LogAndroid: Case APP_CMD_RESUME
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin LuaPlugin
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin HoudiniEngine
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin Paper2D
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin LightPropagationVolume
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin FacialAnimation
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin CharacterAI
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin AndroidMedia
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin ImgMedia
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin MediaCompositing
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin TcpMessaging
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin UdpMessaging
+[2018.07.14-16.21.49:856]][17601][    0]LogPluginManager: Mounting plugin ActorSequence
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin OnlineSubsystemGooglePlay
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin OnlineSubsystem
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin AndroidPermission
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin OnlineSubsystemNull
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin OnlineSubsystemUtils
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin AndroidDeviceProfileSelector
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin AndroidMoviePlayer
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin AppleARKit
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin ArchVisCharacter
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin CableComponent
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin CustomMeshComponent
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin ExampleDeviceProfileSelector
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin GoogleCloudMessaging
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin ImmediatePhysics
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin LocationServicesBPLibrary
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin MobilePatchingUtils
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin OculusVR
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin PhysXVehicles
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin ProceduralMeshComponent
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin RuntimePhysXCooking
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin SteamVR
+[2018.07.14-16.21.49:857]][17601][    0]LogPluginManager: Mounting plugin SoftwareOcclusionCulling
+[2018.07.14-16.21.49:858]][17601][    0]LogInit: Using libcurl 7.46.0
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - built for arm-unknown-linux-androideabi
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - supports SSL with OpenSSL/1.0.1s
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - supports HTTP deflate (compression) using libz 1.2.8
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - other features:
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:      CURL_VERSION_SSL
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:      CURL_VERSION_LIBZ
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:      CURL_VERSION_IPV6
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:      CURL_VERSION_ASYNCHDNS
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:      CURL_VERSION_TLSAUTH_SRP
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  Libcurl: using existing PEM file: '/storage/emulated/0/Android/data/com.YourCompany.CatchMe/files/ca-bundle.pem'
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  CurlRequestOptions (configurable via config and command line):
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - bVerifyPeer = true  - Libcurl will verify peer certificate
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - bUseHttpProxy = false  - Libcurl will NOT use HTTP proxy
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - bDontReuseConnections = false  - Libcurl will reuse connections
+[2018.07.14-16.21.49:858]][17601][    0]LogInit:  - CertBundlePath = /storage/emulated/0/Android/data/com.YourCompany.CatchMe/files/ca-bundle.pem  - Libcurl will set CURLOPT_CAINFO to it
+[2018.07.14-16.21.49:858]][17601][    0]LogOnline: Display: OnlineSubsystemGooglePlayModule::StartupModule()
+[2018.07.14-16.21.49:858]][17601][    0]LogOnline: Warning: FOnlineSubsystemGooglePlayModule was disabled
+[2018.07.14-16.21.49:858]][17601][    0]LogOnline: Warning: FOnlineSubsystemGooglePlayModule was disabled
+[2018.07.14-16.21.49:858]][17601][    0]LogHMD: App is not packaged for GearVR
+[2018.07.14-16.21.49:858]][17601][    0]LogInit: Build: ++UE4+Release-4.18-CL-0
+[2018.07.14-16.21.49:858]][17601][    0]LogInit: Engine Version: 4.18.0-0+++UE4+Release-4.18
+[2018.07.14-16.21.49:859]][17601][    0]LogInit: Compatible Engine Version: 4.18.0-0+++UE4+Release-4.18
+[2018.07.14-16.21.49:859]][17601][    0]LogInit: Net CL: 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion: Number of dev versions registered: 16
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Blueprints (B0D832E4-1F89-4F0D-ACCF-7EB736FD4AA2): 10
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Build (E1C64328-A22C-4D53-A36C-8E866417BD8C): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Core (375EC13C-06E4-48FB-B500-84F0262A717E): 2
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Editor (E4B068ED-F494-42E9-A231-DA0B2E46BB41): 20
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Framework (CFFC743F-43B0-4480-9391-14DF171D2073): 30
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Mobile (B02B49B5-BB20-44E9-A304-32B752E40360): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Networking (A4E4105C-59A1-49B5-A7C5-40C4547EDFEE): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Online (39C831C9-5AE6-47DC-9A44-9C173E1C8E7C): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Physics (78F01B33-EBEA-4F98-B9B4-84EACCB95AA2): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Platform (6631380F-2D4D-43E0-8009-CF276956A95A): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Rendering (12F88B9F-8875-4AFC-A67C-D90C383ABD29): 21
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-Sequencer (7B5AE74C-D270-4C10-A958-57980B212A5A): 4
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-VR (D7296918-1DD6-4BDD-9DE2-64A83CC13884): 0
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-LoadTimes (C2A15278-BFE7-4AFE-6C17-90FF531DF755): 1
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Private-Geometry (6EACA3D4-40EC-4CC1-B786-8BED09428FC5): 1
+[2018.07.14-16.21.49:859]][17601][    0]LogDevObjectVersion:   Dev-AnimPhys (29E575DD-E0A3-4627-9D10-D276232CDCEA): 12
+[2018.07.14-16.21.49:859]][17601][    0]LogInit: Compiled (32-bit): Jul 14 2018 15:19:33
+[2018.07.14-16.21.49:859]][17601][    0]LogInit: Compiled with Clang: 3.8.256229 
+[2018.07.14-16.21.49:859]][17601][    0]LogInit: Build Configuration: Development
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Branch Name: ++UE4+Release-4.18
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Command line:  
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Base directory: 
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Installed Engine Build: 0
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Presizing for max 300000 objects, including 0 objects not considered by GC, pre-allocating 0 bytes for permanent pool.
+[2018.07.14-16.21.49:860]][17601][    0]LogStreaming: Display: Async Loading initialized: Event Driven Loader: true, Async Loading Thread: false
+[2018.07.14-16.21.49:860]][17601][    0]LogInit: Object subsystem initialized
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid: Mobile HDR: YES
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid: Device requires 32BPP mode : no
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid: Device requires mosaic: no
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid: Setting Width=1440 and Height=720 (requested scale = 1.000000)
+[2018.07.14-16.21.49:860]][17601][    0]LogTemp: [LOG AERON]: SetPipelineQuality: 4
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid: Checking 26 rules from DeviceProfile ini file.
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   Default profile: Android_Default
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   GpuFamily: Adreno (TM) 512
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   GlVersion: OpenGL ES 3.2 V@207.0 (GIT@abd12f4, I92eb381bc9) (Date:01/23/18)
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   VulkanVersion: 1.0.38
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   AndroidVersion: 7.1.1
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   DeviceMake: OPPO
+[2018.07.14-16.21.49:860]][17601][    0]LogAndroid:   DeviceModel: OPPO R11s
+[2018.07.14-16.21.49:861]][17601][    0]LogAndroid:   UsingHoudini: false
+[2018.07.14-16.21.49:861]][17601][    0]LogAndroid: Selected Device Profile: [Android_Adreno51x]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Applying CVar settings loaded from the selected device profile: [Android_Adreno51x]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.OpenGL.StripExtensions:GL_EXT_shader_framebuffer_fetch]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.BloomQuality:1]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.DepthOfFieldQuality:1]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.LightShaftQuality:1]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.RefractionQuality:1]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.MobileContentScaleFactor:1.0]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[r.ShadowQuality:2]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Setting Device Profile CVar: [[slate.AbsoluteIndices:1]]
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Memory total: Physical=3744.57MB (4GB approx) Available=1609.71MB PageSize=4.0KB
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Using OS detected language (zh-CN).
+[2018.07.14-16.21.49:861]][17601][    0]LogInit: Using OS detected locale (zh-CN).
+[2018.07.14-16.21.49:861]][17601][    0]LogTextLocalizationManager: No localization for 'zh-CN' exists, so 'en' will be used for the language.
+[2018.07.14-16.21.49:861]][17601][    0]LogTextLocalizationManager: No localization for 'zh-CN' exists, so 'en' will be used for the locale.
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI: Initializing OpenGL RHI
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI:   GL_VENDOR: Qualcomm
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI:   GL_RENDERER: Adreno (TM) 512
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI:   GL_VERSION: OpenGL ES 3.2 V@207.0 (GIT@abd12f4, I92eb381bc9) (Date:01/23/18)
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI:   GL_SHADING_LANGUAGE_VERSION: OpenGL ES GLSL ES 3.20
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI: OpenGL Extensions:
+[2018.07.14-16.21.49:861]][17601][    0]LogRHI:   GL_OES_EGL_image
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_EGL_image_external
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_EGL_sync
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_vertex_half_float
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_framebuffer_object
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_rgb8_rgba8
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_compressed_ETC1_RGB8_texture
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_AMD_compressed_ATC_texture
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_KHR_texture_compression_astc_ldr
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_KHR_texture_compression_astc_hdr
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_texture_compression_astc
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_texture_npot
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_EXT_texture_filter_anisotropic
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_EXT_texture_format_BGRA8888
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_texture_3D
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_EXT_color_buffer_float
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_EXT_color_buffer_half_float
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_QCOM_alpha_test
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_depth24
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_packed_depth_stencil
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_depth_texture
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_OES_depth_texture_cube_map
+[2018.07.14-16.21.49:862]][17601][    0]LogRHI:   GL_EXT_sRGB
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_texture_float
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_texture_float_linear
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_texture_half_float
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_texture_half_float_linear
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_texture_type_2_10_10_10_REV
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_texture_sRGB_decode
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_element_index_uint
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_copy_image
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_geometry_shader
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_tessellation_shader
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_texture_stencil8
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_shader_io_blocks
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_shader_image_atomic
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_sample_variables
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_texture_border_clamp
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_multisampled_render_to_texture
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_OES_shader_multisample_interpolation
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_texture_cube_map_array
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_draw_buffers_indexed
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_gpu_shader5
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_robustness
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_texture_buffer
+[2018.07.14-16.21.49:863]][17601][    0]LogRHI:   GL_EXT_shader_framebuffer_fetch
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_ARM_shader_framebuffer_fetch_depth_stencil
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_texture_storage_multisample_2d_array
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_sample_shading
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_get_program_binary
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_debug_label
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_KHR_blend_equation_advanced
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_KHR_blend_equation_advanced_coherent
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_QCOM_tiled_rendering
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_ANDROID_extension_pack_es31a
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_primitive_bounding_box
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_standard_derivatives
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_vertex_array_object
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_disjoint_timer_query
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_KHR_debug
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_YUV_target
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_sRGB_write_control
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_texture_norm16
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_discard_framebuffer
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OES_surfaceless_context
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OVR_multiview
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_OVR_multiview2
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_EXT_texture_sRGB_R8
+[2018.07.14-16.21.49:864]][17601][    0]LogRHI:   GL_ARB_texture_barrier
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_KHR_no_error
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_debug_marker
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_OES_EGL_image_external_essl3
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_OVR_multiview_multisampled_render_to_texture
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_buffer_storage
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_blit_framebuffer_params
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_clip_cull_distance
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_protected_textures
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_EXT_shader_non_constant_global_initializers
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Stripped extension: GL_EXT_shader_framebuffer_fetch
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_VERTEX_ATTRIBS: 32
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_VARYING_VECTORS: 31
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_VERTEX_UNIFORM_VECTORS: 256
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_FRAGMENT_UNIFORM_VECTORS: 256
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Fragment shader lowp precision: 10
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Fragment shader mediump precision: 10
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Fragment shader highp precision: 23
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Support for 4x MSAA detected
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Image external enabled: ImageExternalESSL300
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI: Device supports mobile multi-view.
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_TEXTURE_SIZE: 16384
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_CUBE_MAP_TEXTURE_SIZE: 16384
+[2018.07.14-16.21.49:865]][17601][    0]LogRHI:   GL_MAX_ARRAY_TEXTURE_LAYERS: 2048
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_RENDERBUFFER_SIZE: 16384
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_TEXTURE_IMAGE_UNITS: 16
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_DRAW_BUFFERS: 8
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_COLOR_ATTACHMENTS: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_SAMPLES: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_COLOR_TEXTURE_SAMPLES: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_DEPTH_TEXTURE_SAMPLES: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_INTEGER_SAMPLES: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: 96
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_VERTEX_ATTRIBS: 32
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI:   GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: 16
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI: OpenGL MajorVersion = 2, MinorVersion = 0, ShaderPlatform = GLSL_ES2, FeatureLevel = ES2
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI: PLATFORM_ANDROID
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI: Display: Testing for shader compiler compatibility
+[2018.07.14-16.21.49:866]][17601][    0]LogRHI: Display: Shaders compile fine no need to enable hacks
+[2018.07.14-16.21.49:866]][17601][    0]LogMaterial: Verifying Global Shaders for GLSL_ES2
+[2018.07.14-16.21.49:866]][17601][    0]LogSlate: Using Freetype 2.4.12
+[2018.07.14-16.21.49:866]][17601][    0]LogSlate: SlateFontCache - WITH_FREETYPE: 1, WITH_HARFBUZZ: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogSlate: SlateFontCache - WITH_FREETYPE: 1, WITH_HARFBUZZ: 1
+[2018.07.14-16.21.49:866]][17601][    0]LogAssetRegistry: FAssetRegistry took 0.0417 seconds to start up
+[2018.07.14-16.21.49:866]][17601][    0]LogPackageLocalizationCache: Processed 8 localized package path(s) for 1 prioritized culture(s) in 0.014599 seconds
+[2018.07.14-16.21.49:866]][17601][    0]LogPakFile: New pak file CatchMe/Content/Paks/CatchMe-Android_ETC1.pak added to pak precacher.
+[2018.07.14-16.21.49:866]][17601][    0]LogAndroid: Warning: [taoxu]LightMapSize:-1 BuildingTexSize=-1
+[2018.07.14-16.21.49:867]][17601][    0]LogAndroid: Warning: [taoxu]LightMapSize:-1 BuildingTexSize=-1
+[2018.07.14-16.21.49:867]][17601][    0]LogAndroid: Warning: [taoxu]LightMapSize:-1 BuildingTexSize=-1
+[2018.07.14-16.21.49:867]][17601][    0]LogAndroid: Warning: [taoxu]LightMapSize:-1 BuildingTexSize=-1
+[2018.07.14-16.21.49:867]][17601][    0]LogNavigation: Error: Attempt to build nav collision data for /Engine/EngineMeshes/Sphere.Sphere:NavCollision_0 when we are unable to. This platform requires cooked packages.
+[2018.07.14-16.21.49:867]][17601][    0]LogNetVersion: CatchMe , NetCL: 0, EngineNetVer: 2, GameNetVer: 0 (Checksum: 2719644571)
+[2018.07.14-16.21.49:867]][17601][    0]LuaLog: Display: [lua log] try load lua main.lua
+[2018.07.14-16.21.49:867]][17601][    0]LuaLog: Display: [lua log] start init lua
+[2018.07.14-16.21.49:867]][17601][    0]LuaLog: Display: [lua log] sucess init lua
+[2018.07.14-16.21.49:867]][17601][    0]LogRHI: Error: Unsupported EPixelFormat 28
+[2018.07.14-16.21.49:867]][17601][    0]LogRHI: Error: Unsupported EPixelFormat 28
+[2018.07.14-16.21.49:867]][17601][    0]LogNavigation: Error: Attempt to build nav collision data for /OculusVR/Meshes/GearVrController.GearVRController:NavCollision_0 when we are unable to. This platform requires cooked packages.
+[2018.07.14-16.21.49:867]][17601][    0]LogNavigation: Error: Attempt to build nav collision data for /Engine/EngineMeshes/Cylinder.Cylinder:NavCollision_0 when we are unable to. This platform requires cooked packages.
+[2018.07.14-16.21.49:867]][17601][    0]LogSimpleMoviePlayer: Initializing movie player
+[2018.07.14-16.21.49:867]][17601][    0]LogRendererCore: Nicochen Rendering thread 17643
+[2018.07.14-16.21.49:894]][17601][    0]LogAndroidPermission: UAndroidPermissionCallbackProxy::GetInstance
+[2018.07.14-16.21.49:895]][17601][    0]LogOcInput: OculusInput pre-init called
+[2018.07.14-16.21.49:895]][17601][    0]LogUObjectArray: 32657 objects as part of root set at end of initial load.
+[2018.07.14-16.21.49:895]][17601][    0]LogUObjectAllocator: 4475320 out of 0 bytes used by permanent object pool.
+[2018.07.14-16.21.49:895]][17601][    0]LogUObjectArray: CloseDisregardForGC: 0/0 objects in disregard for GC pool
+[2018.07.14-16.21.49:895]][17601][    0]LogAndroid: Display: Passed PreInit()
+[2018.07.14-16.21.49:895]][17601][    0]LogEngine: Initializing Engine...
+[2018.07.14-16.21.49:931]][17601][    0]LogStats: UGameplayTagsManager::ConstructGameplayTagTree: Construct from data asset -  0.000 s
+[2018.07.14-16.21.49:932]][17601][    0]LogStats: UGameplayTagsManager::ConstructGameplayTagTree: GameplayTagTreeChangedEvent.Broadcast -  0.000 s
+[2018.07.14-16.21.49:932]][17601][    0]LogAndroidAudio: Warning: SL Entered Init HW
+[2018.07.14-16.21.49:932]][17601][    0]LogAndroidAudio: Warning: OpenSLES Initializing HW
+[2018.07.14-16.21.49:932]][17601][    0]LogAndroidAudio: Warning: OpenSLES Initialized
+[2018.07.14-16.21.49:932]][17601][    0]LogAndroidAudio: Warning: OpenSLAudioDevice: Allocated 12 sources
+[2018.07.14-16.21.49:932]][17601][    0]LogInit: FAudioDevice initialized.
+[2018.07.14-16.21.49:933]][17601][    0]LogAudio: Warning: Can't increase channels past starting number!
+[2018.07.14-16.21.49:934]][17601][    0]LogInit: Texture streaming: Enabled
+[2018.07.14-16.21.49:934]][17601][    0]LogOnline: Warning: FOnlineSubsystemGooglePlayModule was disabled
+[2018.07.14-16.21.49:937]][17601][    0]LogAudio: Warning: Can't increase channels past starting number!
+[2018.07.14-16.21.49:942]][17601][    0]LogInit: Display: Game Engine Initialized.
+[2018.07.14-16.21.49:942]][17601][    0]LogGameplayTags: Display: UGameplayTagsManager::DoneAddingNativeTags. DelegateIsBound: 0
+[2018.07.14-16.21.49:978]][17601][    0]LogInit: Display: Starting Game.
+[2018.07.14-16.21.49:979]][17601][    0]LogTemp: FCommandLine::Get  
+[2018.07.14-16.21.49:979]][17601][    0]LogTemp: PackageName /Game/TestMap
+[2018.07.14-16.21.49:979]][17601][    0]LogNet: Browse: /Game/TestMap?Name=Player
+[2018.07.14-16.21.49:979]][17601][    0]LogLoad: LoadMap: /Game/TestMap?Name=Player
+[2018.07.14-16.21.49:986]][17601][    0]LogGarbage: Collecting garbage
+[2018.07.14-16.21.49:993]][17601][    0]LogGarbage: 6.803036 ms for GC
+[2018.07.14-16.21.49:994]][17601][    0]LogGarbage: 0.344038 ms for unhashing unreachable objects. Clusters removed: 0.   Items 12 Cluster Items 0
+[2018.07.14-16.21.49:996]][17601][    0]LogGarbage: GC purged 12 objects (32723 -> 32711)
+[2018.07.14-16.21.50:020]][17601][    0]LogTemp: [NavMesh] RecastNavMeshSizeBytes=4, Ar.IsLoading()=1, Ar.IsSaving()=0, Ar.IsCooking()=0, NavMeshVersion=13, this=RecastNavMesh-Default, Outer=PersistentLevel,
+[2018.07.14-16.21.50:022]][17601][    0]LogNavigation: Error: Attempt to build nav collision data for /Engine/MapTemplates/SM_Template_Map_Floor.SM_Template_Map_Floor:NavCollision_0 when we are unable to. This platform requires cooked packages.
+[2018.07.14-16.21.50:023]][17601][    0]LogNavigation: Error: Attempt to build nav collision data for /Engine/EngineSky/SM_SkySphere.SM_SkySphere:NavCollision_0 when we are unable to. This platform requires cooked packages.
+[2018.07.14-16.21.50:030]][17601][    0]LogAIModule: Creating AISystem for world TestMap
+[2018.07.14-16.21.50:031]][17601][    0]LogLoad: Game class is 'CatchMeGameMode'
+[2018.07.14-16.21.50:034]][17601][    0]LogWorld: Bringing World /Game/TestMap.TestMap up for play (max tick rate 0) at 2018.07.14-16.21.50
+[2018.07.14-16.21.50:034]][17601][    0]LogWorld: Bringing up level for play took: 0.002323
+[2018.07.14-16.21.50:035]][17601][    0]LogTemp: [NavMesh] UNavigationSystem found 2 NavigationData, this=NavigationSystem_0, World=TestMap
+[2018.07.14-16.21.50:035]][17601][    0]LogOnline: Warning: FOnlineSubsystemGooglePlayModule was disabled
+[2018.07.14-16.21.50:038]][17601][    0]LogGameMode: Display: Match State Changed from EnteringMap to WaitingToStart
+[2018.07.14-16.21.50:038]][17601][    0]LogGameState: Match State Changed from EnteringMap to WaitingToStart
+[2018.07.14-16.21.50:038]][17601][    0]LogGameMode: Display: Match State Changed from WaitingToStart to InProgress
+[2018.07.14-16.21.50:046]][17601][    0]LogUMG: Display: Widget Class test_C - Loaded Fast Template.
+[2018.07.14-16.21.50:088]][17601][    0]LuaLog: Display: [lua log] pass  
+
+[2018.07.14-16.21.50:090]][17601][    0]LogBlueprintUserMessages: [testbpclass_2] true
+[2018.07.14-16.21.50:090]][17601][    0]LogBlueprintUserMessages: [testbpclass_2] true
+[2018.07.14-16.21.50:093]][17601][    0]LogGameState: Match State Changed from WaitingToStart to InProgress
+[2018.07.14-16.21.50:093]][17601][    0]LogTemp: UWorld::BeginPlay, WorldBeginPlayTime=1531556510.093578
+[2018.07.14-16.21.50:093]][17601][    0]LogLoad: Took 0.114028 seconds to LoadMap(/Game/TestMap)
+[2018.07.14-16.21.50:094]][17601][    0]LogSlate: Took 0.000226 seconds to synchronously load lazily loaded font '../../../Engine/Content/EngineFonts/Faces/RobotoBold.ufont' (160K)
+[2018.07.14-16.21.50:098]][17601][    0]LogRendererCore: Nicochen Rendering thread 17648
+[2018.07.14-16.21.50:102]][17601][    0]LogRenderTargetPool: [LOG AERON]: 0 MB, NewRT (2D 1x1 PF_B8G8R8A8 RT) WhiteDummy
+[2018.07.14-16.21.50:102]][17601][    0]LogSlate: Took 0.000530 seconds to synchronously load lazily loaded font '../../../Engine/Content/EngineFonts/Faces/RobotoRegular.ufont' (155K)
+[2018.07.14-16.21.50:105]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_B8G8R8A8 RT) BlackDummy
+[2018.07.14-16.21.50:105]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_B8G8R8A8 RT) BlackAlphaOneDummy
+[2018.07.14-16.21.50:105]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_B8G8R8A8 RT) GreenDummy
+[2018.07.14-16.21.50:105]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_B8G8R8A8 RT) DefaultNormal8Bit
+[2018.07.14-16.21.50:106]][17601][    0]LogAndroid: Passed GEngineLoop.Init()
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 128x128 PF_B8G8R8A8) PerlinNoiseGradient
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_FloatRGBA RT) MaxFP16Depth
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1x1 PF_DepthStencil) DepthDummy
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderer: Reallocating scene render targets to support 1440x720 Format 10 NumSamples 1 (Frame:1).
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderTargetPool: [LOG AERON]: 1 MB, NewRT (2D 1440x720 PF_FloatRGBA RT VRam) SceneColorMobile
+[2018.07.14-16.21.50:108]][17601][    0]LogRenderTargetPool: [LOG AERON]: 8 MB, NewRT (2D 1440x720 PF_DepthStencil VRam) SceneDepthZ
+[2018.07.14-16.21.50:108]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 9, 0
+[2018.07.14-16.21.50:108]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 7, 0
+[2018.07.14-16.21.50:108]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 0, 3890319368
+[2018.07.14-16.21.50:108]][17601][    0]LogAndroidEvents: Display: ExecWindowCreated
+[2018.07.14-16.21.50:112]][17601][    0]LogTemp: Android resume audio
+[2018.07.14-16.21.50:125]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 12, 0
+[2018.07.14-16.21.50:126]][17601][    0]LogAndroid: Case APP_CMD_GAINED_FOCUS
+[2018.07.14-16.21.50:126]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 6, 0
+[2018.07.14-16.21.50:126]][17601][    0]LogTemp: [NZGame] recv APP_EVENT_STATE_ON_PAUSE, so set bHaveGame=false
+[2018.07.14-16.21.50:142]][17601][    0]LogTemp: Android pause audio
+[2018.07.14-16.21.50:142]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 7, 0
+[2018.07.14-16.21.50:143]][17601][    0]LogRendererCore: Nicochen Rendering thread 17652
+[2018.07.14-16.21.50:143]][17601][    0]LogTemp: Android resume audio
+[2018.07.14-16.21.50:148]][17601][    0]LogAndroidEvents: Display: DequeueAppEvent : 11, 0
+[2018.07.14-16.21.50:148]][17601][    0]LogExternalProfiler: No external profilers were discovered.  External profiling features will not be available.
+[2018.07.14-16.21.50:174]][17601][    0]LogContentStreaming: Texture pool size now 1000 MB
+[2018.07.14-16.21.51:164]][17601][   60]LogUMG: Display: Widget Class ui_hp_C - Loaded Fast Template.
+[2018.07.14-16.21.53:521]][17601][  202]LuaLog: Display: [lua log] lalala  
+
+[2018.07.14-16.21.53:770]][17601][  217]LuaLog: Display: [lua log] lalala  
+
+[2018.07.14-16.22.13:636]][17601][ 1406]LuaLog: Display: [lua log] hahaha  
+
+[2018.07.14-16.22.14:002]][17601][ 1428]LuaLog: Display: [lua log] hahaha  
+
+[2018.07.14-16.22.42:708]][17601][ 3145]LogAndroid: Case APP_CMD_LOST_FOCUS
+[2018.07.14-16.22.42:708]][17601][ 3145]LogAndroidEvents: Display: DequeueAppEvent : 10, 0
+[2018.07.14-16.22.42:734]][17601][ 3147]LogAndroid: Case APP_CMD_SAVE_STATE
+[2018.07.14-16.22.42:734]][17601][ 3147]LogAndroid: Case APP_CMD_PAUSE
+[2018.07.14-16.22.42:742]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 12, 0
+[2018.07.14-16.22.42:742]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 6, 0
+[2018.07.14-16.22.42:742]][17601][ 3147]LogTemp: [NZGame] recv APP_EVENT_STATE_ON_PAUSE, so set bHaveGame=false
+[2018.07.14-16.22.42:760]][17601][ 3147]LogTemp: Android pause audio
+[2018.07.14-16.22.43:323]][17601][ 3147]LogAndroid: Case APP_CMD_GAINED_FOCUS
+[2018.07.14-16.22.43:323]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 11, 0
+[2018.07.14-16.22.43:441]][17601][ 3147]LogAndroid: Case APP_CMD_RESUME
+[2018.07.14-16.22.43:441]][17601][ 3147]LogAndroid: Case APP_CMD_LOST_FOCUS
+[2018.07.14-16.22.43:441]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 7, 0
+[2018.07.14-16.22.43:442]][17601][ 3147]LogRendererCore: Nicochen Rendering thread 18045
+[2018.07.14-16.22.43:443]][17601][ 3147]LogTemp: Android resume audio
+[2018.07.14-16.22.43:455]][17601][ 3147]LogAndroid: Case APP_CMD_SAVE_STATE
+[2018.07.14-16.22.43:455]][17601][ 3147]LogAndroid: Case APP_CMD_PAUSE
+[2018.07.14-16.22.43:455]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 10, 0
+[2018.07.14-16.22.43:455]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 12, 0
+[2018.07.14-16.22.43:455]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 6, 0
+[2018.07.14-16.22.43:455]][17601][ 3147]LogTemp: [NZGame] recv APP_EVENT_STATE_ON_PAUSE, so set bHaveGame=false
+[2018.07.14-16.22.43:496]][17601][ 3147]LogTemp: Android pause audio
+[2018.07.14-16.22.43:597]][17601][ 3147]LogAndroid: Case APP_CMD_GAINED_FOCUS
+[2018.07.14-16.22.43:597]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 11, 0
+[2018.07.14-16.22.43:698]][17601][ 3147]LogAndroid: Case APP_CMD_RESUME
+[2018.07.14-16.22.43:698]][17601][ 3147]LogAndroidEvents: Display: DequeueAppEvent : 7, 0
+[2018.07.14-16.22.43:699]][17601][ 3147]LogRendererCore: Nicochen Rendering thread 18067
+[2018.07.14-16.22.43:700]][17601][ 3147]LogTemp: Android resume audio
+[2018.07.14-16.22.50:168]][17601][ 3537]LogGarbage: Collecting garbage
+[2018.07.14-16.22.50:185]][17601][ 3537]LogAndroid: Mobile HDR: YES
+[2018.07.14-16.22.50:185]][17601][ 3537]LogAndroid: Device requires 32BPP mode : no
+[2018.07.14-16.22.50:185]][17601][ 3537]LogAndroid: Device requires mosaic: no
+[2018.07.14-16.22.50:185]][17601][ 3537]LogAndroid: Setting Width=1440 and Height=720 (requested scale = 1.000000)
+[2018.07.14-16.22.50:186]][17601][ 3537]LogGarbage: 16.822100 ms for GC
+[2018.07.14-16.22.50:187]][17601][ 3537]LogGarbage: 1.621008 ms for unhashing unreachable objects. Clusters removed: 0.   Items 497 Cluster Items 0
+[2018.07.14-16.22.50:196]][17601][ 3538]LogGarbage: GC purged 497 objects (33741 -> 33244)
+[2018.07.14-16.22.50:239]][17601][ 3541]LogTemp: Warning: ConfigTickInterval:0.016129, LongTickStat1:Cnt=1, AvgTickTime=0.979812, TopTickTime=0.979812, LongTickStat2:Cnt=0, AvgTickTime=0.000000, TopTickTime=0.000000
+[2018.07.14-16.22.51:022]][17601][ 3588]LuaLog: Display: [lua log] oh my god  
+
+[2018.07.14-16.22.51:264]][17601][ 3603]LuaLog: Display: [lua log] oh my god  
+
+[2018.07.14-16.22.51:477]][17601][ 3616]LuaLog: Display: [lua log] oh my god  
+

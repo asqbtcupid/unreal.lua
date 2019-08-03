@@ -1,0 +1,277 @@
+[Mon Apr  8 18:00:57 2019] pass  
+[Mon Apr  8 18:00:57 2019] now try to restart, test the reference problem during gc  
+[Mon Apr  8 18:00:59 2019] pass  
+[Mon Apr  8 18:01:04 2019] lua VM shutdown  
+[Mon Apr  8 18:01:06 2019] pass  
+[Mon Apr  8 18:01:06 2019] now try to restart, test the reference problem during gc  
+[Mon Apr  8 18:01:06 2019] pass  
+[Mon Apr  8 18:01:08 2019] lua VM shutdown  
+[Mon Apr  8 18:01:14 2019] pass  
+[Mon Apr  8 18:01:14 2019] now try to restart, test the reference problem during gc  
+[Mon Apr  8 18:01:14 2019] pass  
+[Mon Apr  8 18:01:21 2019] lua VM shutdown  
+[Sun Jun  2 19:19:17 2019] pass  
+[Sun Jun  2 19:19:17 2019] now try to restart, test the reference problem during gc  
+[Sun Jun  2 19:19:17 2019] pass  
+[Sun Jun  2 19:19:20 2019] lua VM shutdown  
+[Sun Jun  2 19:29:58 2019] pass  
+[Sun Jun  2 19:29:58 2019] now try to restart, test the reference problem during gc  
+[Sun Jun  2 19:29:58 2019] pass  
+[Sun Jun  2 19:30:03 2019] lua VM shutdown  
+[Wed Jul 10 23:43:23 2019] pass  
+[Wed Jul 10 23:43:23 2019] now try to restart, test the reference problem during gc  
+[Wed Jul 10 23:43:23 2019] pass  
+[Wed Jul 10 23:43:25 2019] lua VM shutdown  
+[Wed Jul 10 23:43:36 2019] pass  
+[Wed Jul 10 23:43:36 2019] now try to restart, test the reference problem during gc  
+[Wed Jul 10 23:43:37 2019] pass  
+[Wed Jul 10 23:43:38 2019] lua VM shutdown  
+[Wed Jul 10 23:43:53 2019] pass  
+[Thu Jul 11 00:05:31 2019] pass  
+[Thu Jul 11 00:05:31 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:05:31 2019] pass  
+[Thu Jul 11 00:05:43 2019] lua VM shutdown  
+[Thu Jul 11 00:07:17 2019] pass  
+[Thu Jul 11 00:07:17 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:07:17 2019] pass  
+[Thu Jul 11 00:07:20 2019] lua VM shutdown  
+[Thu Jul 11 00:07:30 2019] pass  
+[Thu Jul 11 00:07:30 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:07:30 2019] pass  
+[Thu Jul 11 00:07:33 2019] lua VM shutdown  
+[Thu Jul 11 00:07:34 2019] pass  
+[Thu Jul 11 00:07:34 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:07:34 2019] pass  
+[Thu Jul 11 00:07:36 2019] lua VM shutdown  
+[Thu Jul 11 00:07:40 2019] pass  
+[Thu Jul 11 00:07:40 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:07:40 2019] pass  
+[Thu Jul 11 00:07:43 2019] lua VM shutdown  
+[Thu Jul 11 00:07:47 2019] pass  
+[Thu Jul 11 00:07:47 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:07:47 2019] pass  
+[Thu Jul 11 00:07:59 2019] lua VM shutdown  
+[Thu Jul 11 00:08:02 2019] pass  
+[Thu Jul 11 00:08:02 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:08:02 2019] pass  
+[Thu Jul 11 00:08:04 2019] lua VM shutdown  
+[Thu Jul 11 00:08:34 2019] pass  
+[Thu Jul 11 00:08:34 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:08:34 2019] pass  
+[Thu Jul 11 00:08:39 2019] lua VM shutdown  
+[Thu Jul 11 00:08:40 2019] pass  
+[Thu Jul 11 00:08:40 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:08:40 2019] pass  
+[Thu Jul 11 00:08:41 2019] lua VM shutdown  
+[Thu Jul 11 00:08:51 2019] pass  
+[Thu Jul 11 00:08:51 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:08:51 2019] pass  
+[Thu Jul 11 00:08:52 2019] lua VM shutdown  
+[Thu Jul 11 00:08:56 2019] pass  
+[Thu Jul 11 00:08:56 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:08:56 2019] pass  
+[Thu Jul 11 00:09:00 2019] lua VM shutdown  
+[Thu Jul 11 00:12:26 2019] pass  
+[Thu Jul 11 00:12:26 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:12:26 2019] pass  
+[Thu Jul 11 00:12:29 2019] lua VM shutdown  
+[Thu Jul 11 00:13:56 2019] pass  
+[Thu Jul 11 00:13:56 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:13:56 2019] pass  
+[Thu Jul 11 00:13:59 2019] lua VM shutdown  
+[Thu Jul 11 00:14:48 2019] pass  
+[Thu Jul 11 00:14:48 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:14:48 2019] pass  
+[Thu Jul 11 00:14:52 2019] lua VM shutdown  
+[Thu Jul 11 00:14:53 2019] pass  
+[Thu Jul 11 00:14:53 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:14:53 2019] pass  
+[Thu Jul 11 00:14:55 2019] lua VM shutdown  
+[Thu Jul 11 00:16:44 2019] pass  
+[Thu Jul 11 00:18:10 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 00:18:20 2019] pass  
+[Thu Jul 11 00:18:31 2019] lua VM shutdown  
+[Thu Jul 11 00:19:44 2019] pass  
+[Thu Jul 11 00:22:34 2019] pass  
+[Thu Jul 11 00:24:51 2019] pass  
+[Thu Jul 11 00:44:03 2019] pass  
+[Thu Jul 11 00:48:16 2019] pass  
+[Thu Jul 11 01:02:17 2019] pass  
+[Thu Jul 11 01:02:21 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 01:02:21 2019] pass  
+[Thu Jul 11 01:02:27 2019] lua VM shutdown  
+[Thu Jul 11 01:05:47 2019] pass  
+[Thu Jul 11 01:05:50 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 01:05:50 2019] pass  
+[Thu Jul 11 01:05:59 2019] lua VM shutdown  
+[Thu Jul 11 01:06:00 2019] pass  
+[Thu Jul 11 01:07:12 2019] pass  
+[Thu Jul 11 01:07:12 2019] been fucked  
+[Thu Jul 11 01:07:12 2019] now try to restart, test the reference problem during gc  
+[Thu Jul 11 01:07:12 2019] pass  
+[Thu Jul 11 01:07:12 2019] been fucked  
+[Thu Jul 11 01:07:16 2019] lua VM shutdown  
+[Thu Jul 11 01:07:17 2019] pass  
+[Sat Aug  3 10:59:35 2019] pass  
+[Sat Aug  3 10:59:35 2019] been fucked  
+[Sat Aug  3 10:59:35 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 10:59:35 2019] pass  
+[Sat Aug  3 10:59:35 2019] been fucked  
+[Sat Aug  3 10:59:41 2019] lua VM shutdown  
+[Sat Aug  3 10:59:48 2019] pass  
+[Sat Aug  3 11:04:30 2019] pass  
+[Sat Aug  3 11:04:30 2019] 
+[Sat Aug  3 11:04:30 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:04:31 2019] pass  
+[Sat Aug  3 11:04:31 2019] 
+[Sat Aug  3 11:04:33 2019] lua VM shutdown  
+[Sat Aug  3 11:04:34 2019] pass  
+[Sat Aug  3 11:04:34 2019] 
+[Sat Aug  3 11:04:34 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:04:34 2019] pass  
+[Sat Aug  3 11:04:34 2019] 
+[Sat Aug  3 11:04:35 2019] lua VM shutdown  
+[Sat Aug  3 11:04:36 2019] pass  
+[Sat Aug  3 11:04:36 2019] 
+[Sat Aug  3 11:04:36 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:04:36 2019] pass  
+[Sat Aug  3 11:04:36 2019] 
+[Sat Aug  3 11:04:41 2019] userdata: 0000015336835808  nil  nil  lalala close  
+[Sat Aug  3 11:04:42 2019] lua VM shutdown  
+[Sat Aug  3 11:04:43 2019] pass  
+[Sat Aug  3 11:04:43 2019] 
+[Sat Aug  3 11:04:43 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:04:43 2019] pass  
+[Sat Aug  3 11:04:43 2019] 
+[Sat Aug  3 11:04:45 2019] lua VM shutdown  
+[Sat Aug  3 11:04:48 2019] pass  
+[Sat Aug  3 11:04:48 2019] 
+[Sat Aug  3 11:04:48 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:04:48 2019] pass  
+[Sat Aug  3 11:04:48 2019] 
+[Sat Aug  3 11:04:50 2019] lua VM shutdown  
+[Sat Aug  3 11:06:01 2019] pass  
+[Sat Aug  3 11:06:01 2019] 
+[Sat Aug  3 11:06:01 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:06:01 2019] pass  
+[Sat Aug  3 11:06:01 2019] 
+[Sat Aug  3 11:06:09 2019] TestCallFunc_0param  0.198  0.228  0.192  
+[Sat Aug  3 11:06:10 2019] TestCallFunc_1param_int  0.228  0.263  0.223  
+[Sat Aug  3 11:06:11 2019] TestCallFunc_1param_int_ref  0.249  0.272  0.246  
+[Sat Aug  3 11:06:11 2019] TestCallFunc_1param_FVector  0.244  0.269  0.234  
+[Sat Aug  3 11:06:12 2019] TestCallFunc_1param_FVector_ref  0.274  0.306  0.273  
+[Sat Aug  3 11:06:13 2019] TestCallFunc_3param  0.375  0.417  0.39  
+[Sat Aug  3 11:06:14 2019] TestCallFunc_Ret_int  0.249  0.27  0.238  
+[Sat Aug  3 11:06:16 2019] TestCallFunc_Ret_FVector  0.734  0.756  0.701  
+[Sat Aug  3 11:06:17 2019] ReadWriteInt  Read  0.273  0.096999999999994  0.064  
+[Sat Aug  3 11:06:17 2019] ReadWriteInt  Writ  0.185  0.111  0.073  
+[Sat Aug  3 11:06:18 2019] ReadWriteVector  Read  0.169  0.116  0.102  
+[Sat Aug  3 11:06:18 2019] ReadWriteVector  Writ  0.239  0.11799999999999  0.098000000000006  
+[Sat Aug  3 11:06:18 2019] Glue_TestCallFunc_0param  0.076999999999998  0.105  0.062999999999995  
+[Sat Aug  3 11:06:19 2019] Glue_TestCallFunc_1param_int  0.091999999999999  0.116  0.079000000000001  
+[Sat Aug  3 11:06:19 2019] Glue_TestCallFunc_1param_int_ref  0.081000000000003  0.114  0.070999999999998  
+[Sat Aug  3 11:06:19 2019] Glue_TestCallFunc_1param_FVector  0.074999999999996  0.117  0.075999999999993  
+[Sat Aug  3 11:06:19 2019] Glue_TestCallFunc_1param_FVector_ref  0.086999999999996  0.114  0.079000000000001  
+[Sat Aug  3 11:06:20 2019] Glue_TestCallFunc_3param  0.12  0.148  0.114  
+[Sat Aug  3 11:06:20 2019] Glue_TestCallFunc_Ret_int  0.07  0.099000000000004  0.056999999999995  
+[Sat Aug  3 11:06:20 2019] Glue_TestCallFunc_Ret_FVector  0.129  0.16099999999999  0.119  
+[Sat Aug  3 11:06:21 2019] Glue_ReadWriteInt  Read  0.25  0.086999999999996  0.054000000000002  
+[Sat Aug  3 11:06:21 2019] Glue_ReadWriteInt  Writ  0.166  0.085999999999999  0.057000000000002  
+[Sat Aug  3 11:06:22 2019] Glue_ReadWriteVector  Read  0.145  0.33799999999999  0.27800000000001  
+[Sat Aug  3 11:06:22 2019] Glue_ReadWriteVector  Writ  0.166  0.092000000000006  0.065999999999995  
+[Sat Aug  3 11:06:23 2019] BenchDelegate_2Param  0.42899999999999  0.074000000000005  
+[Sat Aug  3 11:06:35 2019] lua VM shutdown  
+[Sat Aug  3 11:27:03 2019] pass  
+[Sat Aug  3 11:27:03 2019] 
+[Sat Aug  3 11:27:03 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:27:04 2019] pass  
+[Sat Aug  3 11:27:04 2019] 
+[Sat Aug  3 11:27:07 2019] TestCallFunc_0param  0.228  0.246  0.19  
+[Sat Aug  3 11:27:08 2019] TestCallFunc_1param_int  0.263  0.274  0.253  
+[Sat Aug  3 11:27:09 2019] TestCallFunc_1param_int_ref  0.262  0.294  0.286  
+[Sat Aug  3 11:27:10 2019] TestCallFunc_1param_FVector  0.274  0.318  0.283  
+[Sat Aug  3 11:27:11 2019] TestCallFunc_1param_FVector_ref  0.289  0.323  0.269  
+[Sat Aug  3 11:27:12 2019] TestCallFunc_3param  0.362  0.38  0.336  
+[Sat Aug  3 11:27:13 2019] TestCallFunc_Ret_int  0.207  0.237  0.212  
+[Sat Aug  3 11:27:15 2019] TestCallFunc_Ret_FVector  0.672  0.679  0.656  
+[Sat Aug  3 11:27:15 2019] ReadWriteInt  Read  0.228  0.081999999999997  0.062000000000001  
+[Sat Aug  3 11:27:15 2019] ReadWriteInt  Writ  0.172  0.090999999999998  0.067  
+[Sat Aug  3 11:27:16 2019] ReadWriteVector  Read  0.145  0.104  0.109  
+[Sat Aug  3 11:27:16 2019] ReadWriteVector  Writ  0.182  0.096999999999998  0.083000000000002  
+[Sat Aug  3 11:27:16 2019] Glue_TestCallFunc_0param  0.064  0.088000000000001  0.055999999999997  
+[Sat Aug  3 11:27:16 2019] Glue_TestCallFunc_1param_int  0.071999999999999  0.094999999999999  0.061  
+[Sat Aug  3 11:27:17 2019] Glue_TestCallFunc_1param_int_ref  0.088999999999999  0.101  0.068999999999999  
+[Sat Aug  3 11:27:17 2019] Glue_TestCallFunc_1param_FVector  0.075999999999997  0.105  0.069000000000003  
+[Sat Aug  3 11:27:17 2019] Glue_TestCallFunc_1param_FVector_ref  0.077999999999999  0.099  0.07  
+[Sat Aug  3 11:27:18 2019] Glue_TestCallFunc_3param  0.115  0.145  0.106  
+[Sat Aug  3 11:27:18 2019] Glue_TestCallFunc_Ret_int  0.064999999999998  0.089000000000002  0.064  
+[Sat Aug  3 11:27:18 2019] Glue_TestCallFunc_Ret_FVector  0.122  0.161  0.112  
+[Sat Aug  3 11:27:19 2019] Glue_ReadWriteInt  Read  0.23  0.074999999999999  0.061  
+[Sat Aug  3 11:27:19 2019] Glue_ReadWriteInt  Writ  0.174  0.081  0.058  
+[Sat Aug  3 11:27:20 2019] Glue_ReadWriteVector  Read  0.164  0.344  0.289  
+[Sat Aug  3 11:27:20 2019] Glue_ReadWriteVector  Writ  0.185  0.101  0.064999999999998  
+[Sat Aug  3 11:27:21 2019] BenchDelegate_2Param  0.447  0.077999999999999  
+[Sat Aug  3 11:27:53 2019] TestCallFunc_0param  0.197  0.223  0.186  
+[Sat Aug  3 11:27:53 2019] TestCallFunc_1param_int  0.23999999999999  0.25700000000001  0.23  
+[Sat Aug  3 11:27:54 2019] TestCallFunc_1param_int_ref  0.249  0.271  0.239  
+[Sat Aug  3 11:27:55 2019] TestCallFunc_1param_FVector  0.24299999999999  0.27200000000001  0.238  
+[Sat Aug  3 11:27:56 2019] TestCallFunc_1param_FVector_ref  0.27199999999999  0.30500000000001  0.271  
+[Sat Aug  3 11:27:57 2019] TestCallFunc_3param  0.36000000000001  0.42699999999999  0.35599999999999  
+[Sat Aug  3 11:27:58 2019] TestCallFunc_Ret_int  0.238  0.27  0.21400000000001  
+[Sat Aug  3 11:28:00 2019] TestCallFunc_Ret_FVector  0.706  0.73099999999999  0.729  
+[Sat Aug  3 11:28:00 2019] ReadWriteInt  Read  0.285  0.091999999999999  0.078000000000003  
+[Sat Aug  3 11:28:01 2019] ReadWriteInt  Writ  0.205  0.094000000000008  0.074999999999989  
+[Sat Aug  3 11:28:01 2019] ReadWriteVector  Read  0.17100000000001  0.10599999999999  0.108  
+[Sat Aug  3 11:28:01 2019] ReadWriteVector  Writ  0.21600000000001  0.10599999999999  0.099000000000004  
+[Sat Aug  3 11:28:02 2019] Glue_TestCallFunc_0param  0.073000000000008  0.093999999999994  0.061000000000007  
+[Sat Aug  3 11:28:02 2019] Glue_TestCallFunc_1param_int  0.088000000000008  0.10299999999999  0.066000000000003  
+[Sat Aug  3 11:28:02 2019] Glue_TestCallFunc_1param_int_ref  0.075999999999993  0.104  0.076999999999998  
+[Sat Aug  3 11:28:02 2019] Glue_TestCallFunc_1param_FVector  0.087999999999994  0.12  0.072000000000003  
+[Sat Aug  3 11:28:03 2019] Glue_TestCallFunc_1param_FVector_ref  0.082000000000008  0.10599999999999  0.082999999999998  
+[Sat Aug  3 11:28:03 2019] Glue_TestCallFunc_3param  0.13  0.161  0.123  
+[Sat Aug  3 11:28:03 2019] Glue_TestCallFunc_Ret_int  0.076999999999998  0.11000000000001  0.080999999999989  
+[Sat Aug  3 11:28:04 2019] Glue_TestCallFunc_Ret_FVector  0.122  0.154  0.11799999999999  
+[Sat Aug  3 11:28:04 2019] Glue_ReadWriteInt  Read  0.232  0.078000000000003  0.057000000000002  
+[Sat Aug  3 11:28:04 2019] Glue_ReadWriteInt  Writ  0.161  0.082000000000008  0.062999999999988  
+[Sat Aug  3 11:28:05 2019] Glue_ReadWriteVector  Read  0.14100000000001  0.33199999999999  0.288  
+[Sat Aug  3 11:28:06 2019] Glue_ReadWriteVector  Writ  0.17699999999999  0.088000000000008  0.072999999999993  
+[Sat Aug  3 11:28:06 2019] BenchDelegate_2Param  0.431  0.076999999999998  
+[Sat Aug  3 11:29:08 2019] lua VM shutdown  
+[Sat Aug  3 11:29:43 2019] pass  
+[Sat Aug  3 11:29:43 2019] 
+[Sat Aug  3 11:29:43 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:29:44 2019] pass  
+[Sat Aug  3 11:29:44 2019] 
+[Sat Aug  3 11:29:47 2019] lua VM shutdown  
+[Sat Aug  3 11:29:49 2019] pass  
+[Sat Aug  3 11:29:49 2019] 
+[Sat Aug  3 11:29:49 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:29:50 2019] pass  
+[Sat Aug  3 11:29:50 2019] 
+[Sat Aug  3 11:29:52 2019] lua VM shutdown  
+[Sat Aug  3 11:31:17 2019] pass  
+[Sat Aug  3 11:31:18 2019] 
+[Sat Aug  3 11:31:18 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:31:18 2019] pass  
+[Sat Aug  3 11:31:18 2019] 
+[Sat Aug  3 11:31:21 2019] lua VM shutdown  
+[Sat Aug  3 11:31:23 2019] userdata: 0000012782C1B5D8  nil  nil  lalala close  
+[Sat Aug  3 11:31:24 2019] pass  
+[Sat Aug  3 11:31:24 2019] 
+[Sat Aug  3 11:31:24 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 11:31:24 2019] pass  
+[Sat Aug  3 11:31:24 2019] 
+[Sat Aug  3 11:31:27 2019] lua VM shutdown  
+[Sat Aug  3 11:55:38 2019] lua VM shutdown  
+[Sat Aug  3 11:55:50 2019] lua VM shutdown  
+[Sat Aug  3 11:56:02 2019] lua VM shutdown  
+[Sat Aug  3 12:00:26 2019] lua VM shutdown  
+[Sat Aug  3 12:00:28 2019] lua VM shutdown  
+[Sat Aug  3 12:01:30 2019] pass  
+[Sat Aug  3 12:01:30 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 12:01:30 2019] pass  
+[Sat Aug  3 12:01:32 2019] lua VM shutdown  
+[Sat Aug  3 12:01:38 2019] pass  
+[Sat Aug  3 12:01:38 2019] now try to restart, test the reference problem during gc  
+[Sat Aug  3 12:01:38 2019] pass  
+[Sat Aug  3 12:01:40 2019] lua VM shutdown  

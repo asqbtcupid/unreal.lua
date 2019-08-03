@@ -4,10 +4,9 @@
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 // #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
-#include "TableUtil.h"
+#include "UnrealLua.h"
 #include "luautils.h"
-#include "NetViewer.lua.h"
-#include "ReplifetimeCond.lua.h"
+// #include "NetViewer.lua.h"
 
 
 ACatchMeCharacter::ACatchMeCharacter()
@@ -22,22 +21,23 @@ void ACatchMeCharacter::Tick(float DeltaSeconds)
 
 bool ACatchMeCharacter::IsReplicationPausedForConnection(const FNetViewer& ConnectionOwnerNetViewer)
 {
-	return LuaCallr(bool, "IsReplicationPausedForConnection", this, ConnectionOwnerNetViewer);
+// 	return LuaCallr(bool, "IsReplicationPausedForConnection", this, ConnectionOwnerNetViewer);
+	return true;
 }
 
 void ACatchMeCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	auto result = LuaStaticCallr(TArray<FReplifetimeCond>, "CatchMeCharacter_GetLifetimeReplicatedProps", this);
-	for (auto &v : result)
-	{
-// 		UProperty* p = UTableUtil::GetPropertyByName(ACatchMeCharacter::StaticClass(), v.PropertyName);
-		UProperty* p = ACatchMeCharacter::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
-		for (int32 i = 0; i < p->ArrayDim; i++)
-		{
-			OutLifetimeProps.AddUnique(FLifetimeProperty(p->RepIndex + i, v.Cond));
-		}
-	}
+// 	auto result = LuaStaticCallr(TArray<FReplifetimeCond>, "CatchMeCharacter_GetLifetimeReplicatedProps", this);
+// 	for (auto &v : result)
+// 	{
+// // 		UProperty* p = UTableUtil::GetPropertyByName(ACatchMeCharacter::StaticClass(), v.PropertyName);
+// 		UProperty* p = ACatchMeCharacter::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
+// 		for (int32 i = 0; i < p->ArrayDim; i++)
+// 		{
+// 			OutLifetimeProps.AddUnique(FLifetimeProperty(p->RepIndex + i, v.Cond));
+// 		}
+// 	}
 }
 
 

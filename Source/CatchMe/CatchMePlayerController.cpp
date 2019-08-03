@@ -1,20 +1,20 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
 #include "CatchMePlayerController.h"
-#include "AI/Navigation/NavigationSystem.h"
+#include "NavigationSystem.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
-#include "TableUtil.h"
+#include "UnrealLua.h"
 #include "luautils.h"
-#include "vector.lua.h"
-#include "ReplifetimeCond.lua.h"
+#include "TestCaseActor.h"
+
 
 
 ACatchMePlayerController::ACatchMePlayerController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
-	LuaCtor("controller.cmplayercontroller", this);
+	LuaCtorAndInject("controller.cmplayercontroller", this);
 }
 
 void ACatchMePlayerController::PlayerTick(float DeltaTime)
@@ -79,7 +79,7 @@ void ACatchMePlayerController::S_TapFloor_Implementation(FVector Pos)
 {
 	TMap<FString, int32> haha;
 	haha.Add("test", 2);
-	LuaCall("S_TapFloor_Imp", this, Pos, haha);
+ 	LuaCall("S_TapFloor_Imp", this, Pos, haha);
 }
 
 bool ACatchMePlayerController::S_TapFloor_Validate(FVector Pos)
@@ -106,3 +106,13 @@ bool ACatchMePlayerController::S_MoveToLocation_Validate(FVector Location)
 {
 	return true;
 }
+
+LUA_GLUE_BEGIN(StructTwoParts)
+LUA_GLUE_FUNCTION(Test1)
+LUA_GLUE_PROPERTY(data1)
+LUA_GLUE_END()
+
+LUA_GLUE_EXPAND_BEGIN(StructTwoParts1)
+LUA_GLUE_FUNCTION(Test1)
+LUA_GLUE_PROPERTY(data1)
+LUA_GLUE_EXPAND_END(StructTwoParts1)

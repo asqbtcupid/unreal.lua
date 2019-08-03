@@ -9,7 +9,7 @@ UCLASS()
 class CATCHME_API ACatchMePlayerController : public ACMPlayerControllerBase
 {
 	GENERATED_BODY()
-
+		 
 public:
 // 	UPROPERTY()
 // 	UCMFogMgr* FogMgr;
@@ -46,6 +46,17 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category="CM")
 		TArray<int32> arr;
+
+	UFUNCTION()
+		static void CompareSpeed1() {}
+
+	UFUNCTION()
+		static void CompareSpeed2(int i) {}
+
+	UFUNCTION()
+		static void CompareSpeed3(int i, UObject* p) {}
+
+
 };
 
 
