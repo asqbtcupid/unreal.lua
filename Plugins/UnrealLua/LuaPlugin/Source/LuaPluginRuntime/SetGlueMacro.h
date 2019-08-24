@@ -133,7 +133,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTSet(inL, Index))\
 			{\
-				TSet<KEY_TYPE>* WrapPtr = (TSet<KEY_TYPE>*)tovoid(inL, Index);\
+				TSet<KEY_TYPE>* WrapPtr = (TSet<KEY_TYPE>*)tovoidtype<TSet<KEY_TYPE> >(inL, Index);\
 				Result = *WrapPtr;\
 			}\
 			else\
@@ -143,7 +143,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTSet(inL, Index))\
 			{\
-				TSet<KEY_TYPE>* WrapPtr = (TSet<KEY_TYPE>*)tovoid(inL, Index);\
+				TSet<KEY_TYPE>* WrapPtr = (TSet<KEY_TYPE>*)tovoidtype<TSet<KEY_TYPE> >(inL, Index);\
 				Value = WrapPtr;\
 			}\
 			else\
@@ -195,7 +195,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 		using SetType = TSet<KEY_TYPE>;\
 		static int32 Add(lua_State*inL)\
 		{\
-			SetType* Value = (SetType*)tovoid(inL, 1);\
+			SetType* Value = (SetType*)tovoidtype<SetType>(inL, 1);\
 			KEY_TYPE Key;\
 			UTableUtil::read(Key, inL, 2);\
 			Value->Add(Key);\
@@ -209,7 +209,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 			ue_lua_rawget(inL, -2);\
 			if (ue_lua_isnil(inL, -1))\
 			{\
-				SetType* ArrWrapPtr = (SetType*) tovoid(inL, 1);\
+				SetType* ArrWrapPtr = (SetType*) tovoidtype<SetType>(inL, 1);\
 				KEY_TYPE Key;\
 				UTableUtil::read(Key, inL, 2);\
 				if (ArrWrapPtr->Contains(Key))\
@@ -237,7 +237,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 Remove(lua_State*inL)\
 		{\
-			SetType* Value = (SetType*)tovoid(inL, 1);\
+			SetType* Value = (SetType*)tovoidtype<SetType>(inL, 1);\
 			KEY_TYPE Key;\
 			UTableUtil::read(Key, inL, 2);\
 			Value->Remove(Key);\
@@ -246,7 +246,7 @@ struct CustomTypeToLua<TSet<K>>:UnrealLua::DefaultCustomEnum
 		static int32 Table(lua_State* inL)\
 		{\
 			ue_lua_newtable(inL);\
-			SetType* Value = (SetType*)tovoid(inL, 1);\
+			SetType* Value = (SetType*)tovoidtype<SetType>(inL, 1);\
 			for (auto& Key : *Value)\
 			{\
 				UTableUtil::push(inL, Key);\

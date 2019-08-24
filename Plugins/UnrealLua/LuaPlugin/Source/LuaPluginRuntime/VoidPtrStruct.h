@@ -40,7 +40,7 @@ struct VoidPtrStruct
 			return 0;
 		}
 #endif
-		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoid(inL, 1);
+		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoidtype<VoidPtrStruct>(inL, 1);
 		FString Type_nogc = ue_lua_tostring(inL, 2);
 		Type_nogc += "_nogc";
 		pushstruct_nogc(inL, ue_lua_tostring(inL, 2), TCHAR_TO_UTF8(*Type_nogc), (void*)Ptr->ThePtr);
@@ -56,7 +56,7 @@ struct VoidPtrStruct
 			return 0;
 		}
 #endif
-		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoid(inL, 1);
+		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoidtype<VoidPtrStruct>(inL, 1);
 		pushuobject(inL, (void*)Ptr->ThePtr);
 		return 1;
 	}
@@ -100,7 +100,7 @@ struct VoidPtrStruct
 			return 0;
 		}
 #endif
-		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoid(inL, 1);
+		VoidPtrStruct* Ptr = (VoidPtrStruct*)tovoidtype<VoidPtrStruct>(inL, 1);
 		ue_lua_pushlightuserdata(inL, (void*)Ptr->ThePtr);
 		return 1;
 	}

@@ -52,7 +52,7 @@ struct DelegateGlueHelper<TBaseDelegate<void, Args...>>
 			if (ue_lua_isfunction(inL, Index))
 			{
 				TSharedPtr<UnrealLuaFunctor> LuaCallBack = MakeShared<UnrealLuaFunctor>(inL, Index);
-				Temp.BindStatic(DelegateGlueHelper<TBaseDelegate<Ret, Args...>>::Call, LuaCallBack);
+				Temp.BindStatic(DelegateGlueHelper<TBaseDelegate<Ret, Args...> >::Call, LuaCallBack);
 				Value = &Temp;
 			}
 			else 
@@ -91,7 +91,7 @@ struct DelegateGlueHelper<TBaseDelegate<void, Args...>>
 		}\
 		static int32 Bind(lua_State*inL)\
 		{\
-			DlgType* Ptr = (DlgType*)tovoid(inL, 1);\
+			DlgType* Ptr = (DlgType*)tovoidtype<DlgType>(inL, 1);\
 			TSharedPtr<UnrealLuaFunctor> LuaCallBack = MakeShared<UnrealLuaFunctor>(inL, 2);\
 			Ptr->BindStatic(DelegateGlueHelper<DlgType>::Call, LuaCallBack);\
 			return 0;\

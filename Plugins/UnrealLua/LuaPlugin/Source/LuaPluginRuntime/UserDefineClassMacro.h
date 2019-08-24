@@ -323,6 +323,7 @@ ParamType&& ConvertStructPointBack(T1& Value, typename TEnableIf<!TIsPopByPointe
 template<class ParamType, class T1>
 T1& ConvertStructPointBack(T1* Value, typename TEnableIf<TIsPopByPointer<T1>::Value, int>::Type* p = nullptr, typename TEnableIf<!TIsPointer<ParamType>::Value, int>::Type* p1 = nullptr)
 {
+#if LuaDebug
 	if (Value)
 		return *Value;
 	else
@@ -330,6 +331,9 @@ T1& ConvertStructPointBack(T1* Value, typename TEnableIf<TIsPopByPointer<T1>::Va
 		ensureAlwaysMsgf(0, TEXT("bug"));
 		return GetTempIns<T1>();
 	}
+#else
+	return *Value;
+#endif
 }
 
 template<class ParamType, class T1>
@@ -353,7 +357,7 @@ static int32 LuaPopAndCallAndReturn(lua_State*inL, int32(*func)(lua_State* inL))
 template<class T>
 int32 LuaPopAndCallAndReturn(lua_State*inL, int32(T::*func)(lua_State* inL))
 {
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	return (ptr->*func)(inL);
 }
 
@@ -369,7 +373,7 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, void(T::*func)(Args...) const)
 	const int FirstIndexExcludeSelf = 2;
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::PopAllValueFromStack(inL, tuple, FirstIndexExcludeSelf);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, func](typename TraitTupleInerType<Args>::Type&... args) { (ptr->*func)(ConvertStructPointBack<Args>(args)...);};
 	TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf);
@@ -387,7 +391,7 @@ int32 LuaPopAndCallAndReturn_ForVirtual(lua_State*inL, void (T::*func)(Args...)c
 	const int FirstIndexExcludeSelf = 2;
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::PopAllValueFromStack(inL, tuple, FirstIndexExcludeSelf);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, ActualCallFunc](typename TraitTupleInerType<Args>::Type&... args) { ActualCallFunc(ptr, ConvertStructPointBack<Args>(args)...);};
 	TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf);
@@ -405,7 +409,7 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, Ret(T::*func)(Args...) const)
 	const int FirstIndexExcludeSelf = 2;
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::PopAllValueFromStack(inL, tuple, FirstIndexExcludeSelf);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, func](typename TraitTupleInerType<Args>::Type&... args)->Ret { return (ptr->*func)(ConvertStructPointBack<Args>(args)...); };
 	Pushret_or_Push<Ret>(inL, TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda));
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf) + 1;
@@ -423,7 +427,7 @@ int32 LuaPopAndCallAndReturn_ForVirtual(lua_State*inL, Ret(T::*func)(Args...)con
 	const int FirstIndexExcludeSelf = 2;
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::PopAllValueFromStack(inL, tuple, FirstIndexExcludeSelf);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, ActualCallFunc](typename TraitTupleInerType<Args>::Type&... args)->Ret { return ActualCallFunc(ptr, ConvertStructPointBack<Args>(args)...);};
 	Pushret_or_Push<Ret>(inL, TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda));
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf) + 1;
@@ -467,7 +471,7 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, void(T::*func)(Args...) const, Defau
 	auto DefaultTuple = TMakeDefaultTuple<sizeof...(Args)-sizeof...(DefaultArgs), typename TDecay<Args>::Type...>::ConstructTuple(Forward<DefaultArgs>(Augs)...);
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::template PopAllValueFromStack_WithDefault<sizeof...(Args) - sizeof...(DefaultArgs)>(inL, tuple, FirstIndexExcludeSelf, DefaultTuple);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, func](typename TraitTupleInerType<Args>::Type&... args) { (ptr->*func)(ConvertStructPointBack<Args>(args)...); };
 	TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf);
@@ -487,7 +491,7 @@ int32 LuaPopAndCallAndReturn_ForVirtual(lua_State*inL, void (T::*func)(Args...)c
 	auto DefaultTuple = TMakeDefaultTuple<sizeof...(Args)-sizeof...(DefaultArgs), typename TDecay<Args>::Type...>::ConstructTuple(Forward<DefaultArgs>(Augs)...);
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::template PopAllValueFromStack_WithDefault<sizeof...(Args) - sizeof...(DefaultArgs)>(inL, tuple, FirstIndexExcludeSelf, DefaultTuple);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, ActualCallFunc](typename TraitTupleInerType<Args>::Type&... args) { ActualCallFunc(ptr, ConvertStructPointBack<Args>(args)...); };
 	TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf);
@@ -507,7 +511,7 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, Ret(T::*func)(Args...) const, Defaul
 	auto DefaultTuple = TMakeDefaultTuple<sizeof...(Args) - sizeof...(DefaultArgs), typename TDecay<Args>::Type...>::ConstructTuple(Forward<DefaultArgs>(Augs)...);
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::template PopAllValueFromStack_WithDefault<sizeof...(Args) - sizeof...(DefaultArgs)>(inL, tuple, FirstIndexExcludeSelf, DefaultTuple);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, func](typename TraitTupleInerType<Args>::Type&... args)->Ret { return (ptr->*func)(ConvertStructPointBack<Args>(args)...); };
 	Pushret_or_Push<Ret>(inL, TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda));
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf) + 1;
@@ -527,7 +531,7 @@ int32 LuaPopAndCallAndReturn_ForVirtual(lua_State*inL, Ret(T::*func)(Args...)con
 	auto DefaultTuple = TMakeDefaultTuple<sizeof...(Args)-sizeof...(DefaultArgs), typename TDecay<Args>::Type...>::ConstructTuple(Forward<DefaultArgs>(Augs)...);
 	TTuple<typename TraitTupleInerType<Args>::Type...> tuple;
 	TupleOperationHelper<Args...>::template PopAllValueFromStack_WithDefault<sizeof...(Args) - sizeof...(DefaultArgs)>(inL, tuple, FirstIndexExcludeSelf, DefaultTuple);
-	T* ptr = (T*)tovoid(inL, 1);
+	T* ptr = tovoidtype<T>(inL, 1);
 	auto lambda = [ptr, ActualCallFunc](typename TraitTupleInerType<Args>::Type&... args)->Ret { return ActualCallFunc(ptr, ConvertStructPointBack<Args>(args)...); };
 	Pushret_or_Push<Ret>(inL, TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda));
 	return TupleOperationHelper<Args...>::PushBackRefValue(inL, tuple, FirstIndexExcludeSelf) + 1;
@@ -567,13 +571,13 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, Ret(*func)(Args...), DefaultArgs&&..
 #define LUA_GLUE_GETTER_NAME(FIELD_NAME) LUA_GLUE_STR(LuaGet_##FIELD_NAME)
 #define LUA_GLUE_SETTER_NAME(FIELD_NAME) LUA_GLUE_STR(LuaSet_##FIELD_NAME)
 #define LUA_GLUE_PROPERTY_GET(FIELD_NAME) { LUA_GLUE_GETTER_NAME(FIELD_NAME), [](lua_State*inL)->int32{\
-												TheClassType* Obj = (TheClassType*)tovoid(inL, 1); \
+												TheClassType* Obj = (TheClassType*)tovoidtype<TheClassType>(inL, 1); \
 												UTableUtil::push(inL, Obj->FIELD_NAME);\
 												return 1;}, ELuaFuncExportFlag::RF_GetPropertyFunc| \
 												(uint32)(TIsStaticMember<TheClassType>(TGetHeapMemoryForTest<TheClassType>(),TGetHeapMemoryForTest<TheClassType>()->FIELD_NAME)?ELuaFuncExportFlag::RF_IsStaticProperty:0x00000000 ) }, 
 
 #define LUA_GLUE_PROPERTY_SET(FIELD_NAME) { LUA_GLUE_SETTER_NAME(FIELD_NAME), [](lua_State*inL)->int32{\
-																	TheClassType* Obj = (TheClassType*)tovoid(inL, 1);\
+																	TheClassType* Obj = (TheClassType*)tovoidtype<TheClassType>(inL, 1);\
  																	Obj->FIELD_NAME = UTableUtil::pop<decltype(Obj->FIELD_NAME)&>(inL, 2);\
  																	return 1;}, ELuaFuncExportFlag::RF_SetPropertyFunc| \
 												(uint32)(TIsStaticMember<TheClassType>(TGetHeapMemoryForTest<TheClassType>(),TGetHeapMemoryForTest<TheClassType>()->FIELD_NAME)?ELuaFuncExportFlag::RF_IsStaticProperty:0x00000000 ) }, 
@@ -739,7 +743,7 @@ int TSafe__unm(lua_State*inL, T* Value, typename TEnableIf<UnrealLuaCheck::THas_
 	}\
 	static int32 NAME##_Destroy(lua_State* inL)\
 	{\
-		CLASS_TYPE* Obj = (CLASS_TYPE*)tovoid(inL, 1);\
+		CLASS_TYPE* Obj = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(inL, 1);\
 		TSafeDtor<CLASS_TYPE>(Obj);\
 		return 0;\
 	}\
@@ -775,35 +779,35 @@ int TSafe__unm(lua_State*inL, T* Value, typename TEnableIf<UnrealLuaCheck::THas_
 	}\
 	static int32 NAME##__eq(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
-		CLASS_TYPE* b = (CLASS_TYPE*)tovoid(L, 2);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
+		CLASS_TYPE* b = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 2);\
 		UTableUtil::push(L, TSafe__eq(a, b));\
 		return 1;\
 	}\
 	static int32 NAME##__le(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
-		CLASS_TYPE* b = (CLASS_TYPE*)tovoid(L, 2);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
+		CLASS_TYPE* b = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 2);\
 		UTableUtil::push(L, TSafe__le(a, b));\
 		return 1;\
 	}\
 	static int32 NAME##__lt(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
-		CLASS_TYPE* b = (CLASS_TYPE*)tovoid(L, 2);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
+		CLASS_TYPE* b = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 2);\
 		UTableUtil::push(L, TSafe__lt(a, b));\
 		return 1;\
 	}\
 	static int32 NAME##__add(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
-		CLASS_TYPE* b = (CLASS_TYPE*)tovoid(L, 2);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
+		CLASS_TYPE* b = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 2);\
 		return TSafe__add(L, a, b);\
 	}\
 	static int32 NAME##__sub(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
-		CLASS_TYPE* b = (CLASS_TYPE*)tovoid(L, 2);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
+		CLASS_TYPE* b = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 2);\
 		return TSafe__sub(L, a, b);\
 	}\
 	static int32 NAME##__call(lua_State* L)\
@@ -812,12 +816,12 @@ int TSafe__unm(lua_State*inL, T* Value, typename TEnableIf<UnrealLuaCheck::THas_
 	}\
 	static int32 NAME##__unm(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
 		return TSafe__unm<CLASS_TYPE>(L, a);\
 	}\
 	static int32 NAME##__ptr(lua_State* L)\
 	{\
-		CLASS_TYPE* a = (CLASS_TYPE*)tovoid(L, 1);\
+		CLASS_TYPE* a = (CLASS_TYPE*)tovoidtype<CLASS_TYPE>(L, 1);\
 		ue_lua_pushlightuserdata(L, a);\
 		return 1;\
 	}\

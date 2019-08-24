@@ -210,7 +210,7 @@ int32 ULuaSetHelper::__index(lua_State* inL)
 	lua_rawget(inL, -2);
 	if (lua_isnil(inL, -1))
 	{
-		ULuaSetHelper* ptr = (ULuaSetHelper*)tovoid(inL, 1);
+		ULuaSetHelper* ptr = (ULuaSetHelper*)tovoidtype<ULuaSetHelper>(inL, 1);
 		return ptr->Get(inL);
 	}
 	else
@@ -222,7 +222,7 @@ int32 ULuaSetHelper::__index(lua_State* inL)
 int32 ULuaSetHelper::__newindex(lua_State* inL)
 {
 	int32 Index = lua_tointeger(inL, 2);
-	ULuaSetHelper* ptr = (ULuaSetHelper*)tovoid(inL, 1);
+	ULuaSetHelper* ptr = (ULuaSetHelper*)tovoidtype<ULuaSetHelper>(inL, 1);
 	ptr->Set(inL);
 	return 0;
 }
@@ -238,7 +238,7 @@ int32 ULuaSetHelper::__pairs(lua_State* inL)
 
 int32 ULuaSetHelper::travel(lua_State* inL)
 {
-	ULuaSetHelper* p = (ULuaSetHelper*)tovoid(inL, 1);
+	ULuaSetHelper* p = (ULuaSetHelper*)tovoidtype<ULuaSetHelper>(inL, 1);
 	int32 Index = lua_tointeger(inL, lua_upvalueindex(1));
 	FScriptSetHelper result(p->Property, p->Obj);
 	if (Index < result.Num())

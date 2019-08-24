@@ -81,13 +81,6 @@ void UTableUtil::AddGcCount(lua_State*inL, const FString& classname)
 	lua_pop(inL, 1);
 }
 
-static int32 GcCheckActorRef = 1;
-FAutoConsoleVariableRef CVarLuaStrongCheckActorRef(
-	TEXT("r.Lua.CheckActorRef"),
-	GcCheckActorRef,
-	TEXT("0: no check ")
-	TEXT("1: check \n"),
-	ECVF_Default);
 
 void UTableUtil::SubGcCount(lua_State*inL, const FString& classname)
 {
@@ -99,6 +92,15 @@ void UTableUtil::SubGcCount(lua_State*inL, const FString& classname)
 	lua_pop(inL, 1);
 }
 #endif
+
+static int32 GcCheckActorRef = 1;
+FAutoConsoleVariableRef CVarLuaStrongCheckActorRef(
+	TEXT("r.Lua.CheckActorRef"),
+	GcCheckActorRef,
+	TEXT("0: no check ")
+	TEXT("1: check \n"),
+	ECVF_Default);
+
 bool UTableUtil::HasInit = false;
 TMap<FString, UUserDefinedStruct*> UTableUtil::bpname2bpstruct;
 TMap<FString, FString> UTableUtil::GlueClassAlias;
@@ -994,9 +996,9 @@ void* touobject(lua_State* L, int i)
 	return Obj;
 }
 
+#if LuaDebug
 void* tostruct(lua_State* L, int i)
 {
-#if LuaDebug
 	if (lua_isnil(L, i))
 	{
 		ensureAlwaysMsgf(0, TEXT("struct can't be nil"));
@@ -1009,10 +1011,10 @@ void* tostruct(lua_State* L, int i)
 		UnrealLua::ReportError(L,"tostruct bug");
 		return nullptr;
 	}
-#endif // LuaDebug
 	auto u = static_cast<void**>(lua_touserdata(L, i));
 	return *u;
 }
+#endif // LuaDebug
 
 FString PrintLuaStackOfL(lua_State* inL)
 {

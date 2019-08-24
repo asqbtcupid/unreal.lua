@@ -21,7 +21,7 @@ int32 VoidPtrStruct::__index(lua_State*inL)
 {
 	if (ue_lua_isinteger(inL, 2))
 	{
-		VoidPtrStruct* Ptr = (VoidPtrStruct*) tovoid(inL, 1);
+		VoidPtrStruct* Ptr = (VoidPtrStruct*) tovoidtype<VoidPtrStruct>(inL, 1);
 		int32 Index = popiml<int>::pop(inL, 2) - 1; 
 		uint8* RawPtr = (uint8*)(Ptr->ThePtr) + Index;
 		VoidPtrStruct TempVoidPtrStruct(RawPtr);

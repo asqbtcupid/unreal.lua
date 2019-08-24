@@ -150,7 +150,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTMap(inL, Index))\
 			{\
-				Result = *((TMap<KEY_TYPE, VALUE_TYPE>*)tovoid(inL, Index));\
+				Result = *((TMap<KEY_TYPE, VALUE_TYPE>*)tovoidtype<TMap<KEY_TYPE, VALUE_TYPE> >(inL, Index));\
 			}\
 			else\
 				ReadMapFromLuaStack(Result, inL, Index);\
@@ -159,7 +159,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTMap(inL, Index))\
 			{\
-				Value = (TMap<KEY_TYPE, VALUE_TYPE>*)tovoid(inL, Index);\
+				Value = (TMap<KEY_TYPE, VALUE_TYPE>*)tovoidtype<TMap<KEY_TYPE, VALUE_TYPE> >(inL, Index);\
 			}\
 			else\
 			{\
@@ -210,7 +210,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		using MapType = TMap<KEY_TYPE,VALUE_TYPE>;\
 		static int32 Add(lua_State*inL)\
 		{\
-			MapType* MapValue = (MapType*)tovoid(inL, 1);\
+			MapType* MapValue = (MapType*)tovoidtype<MapType>(inL, 1);\
 			KEY_TYPE Key;\
 			VALUE_TYPE Value;\
 			UTableUtil::read(Key, inL, 2);\
@@ -220,7 +220,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 Remove(lua_State*inL)\
 		{\
-			MapType* MapValue = (MapType*)tovoid(inL, 1);\
+			MapType* MapValue = (MapType*)tovoidtype<MapType>(inL, 1);\
 			KEY_TYPE Key;\
 			UTableUtil::read(Key, inL, 2);\
 			MapValue->Remove(Key);\
@@ -234,7 +234,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 			ue_lua_rawget(inL, -2);\
 			if (ue_lua_isnil(inL, -1))\
 			{\
-				MapType* MapValue = (MapType*)tovoid(inL, 1); \
+				MapType* MapValue = (MapType*)tovoidtype<MapType>(inL, 1); \
 				KEY_TYPE Key;\
 				UTableUtil::read(Key, inL, 2);\
 				VALUE_TYPE* ptr = MapValue->Find(Key);\
@@ -252,7 +252,7 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		static int32 Table(lua_State* inL)\
 		{\
 			ue_lua_newtable(inL);\
-			MapType* MapValue = (MapType*)tovoid(inL, 1); \
+			MapType* MapValue = (MapType*)tovoidtype<MapType>(inL, 1); \
 			for (auto& Pairs : *MapValue)\
 			{\
 				UTableUtil::push(inL, Pairs.Key);\

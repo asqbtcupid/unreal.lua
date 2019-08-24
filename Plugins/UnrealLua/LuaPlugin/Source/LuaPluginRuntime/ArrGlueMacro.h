@@ -152,7 +152,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTArray(inL, Index))\
 			{\
-				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, Index);\
+				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, Index);\
 				Result = *Ptr;\
 			}\
 			else\
@@ -162,7 +162,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (UnrealLua::IsGlueTArray(inL, Index))\
 			{\
-				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, Index);\
+				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, Index);\
 				Value = Ptr;\
 			}\
 			else\
@@ -215,7 +215,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		{\
 			if (ue_lua_isinteger(inL, 2))\
 			{\
-				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1);\
+				TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1);\
 				int32 Index = popiml<int>::pop(inL, 2) - 1;\
 				TArray<INNER_TYPE>& Value = *Ptr;\
 				if (Value.IsValidIndex(Index))\
@@ -239,7 +239,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 __NewIndexForArr(lua_State*inL)\
 		{\
-			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1);\
+			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1);\
 			TArray<INNER_TYPE>& Value = *Ptr;\
 			int32 Index = ue_lua_tointeger(inL, 2) - 1;\
 			if (Value.IsValidIndex(Index))\
@@ -254,7 +254,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 travel(lua_State* inL)\
 		{\
-			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1);\
+			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1);\
 			TArray<INNER_TYPE>& Value = *Ptr;\
 			int32 Index = ue_lua_tointeger(inL, 2);\
 			if (Index < Value.Num())\
@@ -278,7 +278,7 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		static int32 Table(lua_State* inL)\
 		{\
 			ue_lua_newtable(inL);\
-			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1); \
+			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1); \
 			TArray<INNER_TYPE>& Value = *Ptr; \
 			for (int i = 0;i <Value.Num();i++)\
 			{\
@@ -290,13 +290,13 @@ struct CustomTypeToLua<TArray<T>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 Add(lua_State*inL)\
 		{\
-			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1); \
+			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1); \
 			Ptr->Add(UTableUtil::pop<INNER_TYPE>(inL, 2));\
 			return 0;\
 		}\
 		static int32 GetData(lua_State*inL)\
 		{\
-			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoid(inL, 1); \
+			TArray<INNER_TYPE>* Ptr = (TArray<INNER_TYPE>*) tovoidtype<TArray<INNER_TYPE> >(inL, 1); \
 			UTableUtil::push(inL, Ptr->GetData());\
 			return 1;\
 		}\

@@ -131,7 +131,7 @@ int32 ULuaArrayHelper::__index(lua_State* inL)
 {
 	if (lua_isinteger(inL, 2))
 	{
-		ULuaArrayHelper* ptr = (ULuaArrayHelper *)tovoid(inL, 1);
+		ULuaArrayHelper* ptr = (ULuaArrayHelper *)tovoidtype<ULuaArrayHelper>(inL, 1);
 		return ptr->Get(inL);
 	}
 	else
@@ -146,14 +146,14 @@ int32 ULuaArrayHelper::__index(lua_State* inL)
 
 int32 ULuaArrayHelper::__newindex(lua_State* inL)
 {
-	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoid(inL, 1);
+	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoidtype<ULuaArrayHelper>(inL, 1);
 	ptr->Set(inL);
 	return 0;
 }
 
 int32 ULuaArrayHelper::__len(lua_State* inL)
 {
-	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoid(inL, 1);
+	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoidtype<ULuaArrayHelper>(inL, 1);
 	UTableUtil::push(inL, ptr->Num());
 	return 1;
 }
@@ -168,7 +168,7 @@ int32 ULuaArrayHelper::__pairs(lua_State* inL)
 
 int32 ULuaArrayHelper::travel(lua_State* inL)
 {
-	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoid(inL, 1);
+	ULuaArrayHelper* ptr = (ULuaArrayHelper*)tovoidtype<ULuaArrayHelper>(inL, 1);
 	int32 Index;
 	UTableUtil::read(Index, inL, 2);
 	if (Index < ptr->Num())

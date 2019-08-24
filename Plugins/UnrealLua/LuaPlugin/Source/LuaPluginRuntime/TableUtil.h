@@ -157,7 +157,15 @@ LUAPLUGINRUNTIME_API void pushstruct_gc(lua_State *inL, const char* structname, 
 LUAPLUGINRUNTIME_API void pushstruct_nogc(lua_State *inL, const char* structname, const char* structname_nogc, void* p);
 LUAPLUGINRUNTIME_API void pushstruct_temp(lua_State *inL, const char* structname, const char* structname_nogc, void* p);
 LUAPLUGINRUNTIME_API void* touobject(lua_State* L, int i);
+#if LuaDebug
 LUAPLUGINRUNTIME_API void* tostruct(lua_State* L, int i);
+#else
+FORCEINLINE void* tostruct(lua_State* L, int i)
+{
+	auto u = static_cast<void**>(lua_touserdata(L, i));
+	return *u;
+}
+#endif
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
 LUAPLUGINRUNTIME_API FString PrintLuaStackOfL(lua_State* inL);
 LUAPLUGINRUNTIME_API void* tovoid(lua_State* L, int i);
@@ -177,8 +185,17 @@ T PopInternal(lua_State *L, int index, typename TEnableIf<TIsStruct<T>::Value, i
 	return *ptr;
 }
 
+template<bool IsStruct>
+void* PopPointerByType(lua_State*L, int index)
+{
+	if(IsStruct)
+		return tostruct(L, index);
+	else
+		return tovoid(L, index);
+}
+template<class T> T* tovoidtype(lua_State* inL, int index){ return (T*)(PopPointerByType<TIsStruct<T>::Value>(inL, index)); }
 template<class T>struct popiml {static T pop(lua_State *L, int index){return (T)PopInternal<T>(L, index);}};
-template<class T>struct popiml<T*> {static T* pop(lua_State *L, int index){return (T*)tovoid(L, index);}};
+template<class T>struct popiml<T*> {static T* pop(lua_State *L, int index){return (T*)(PopPointerByType<TIsStruct<T>::Value>(L, index));}};
 template<> struct popiml<void*> {static void* pop(lua_State *L, int index) { return tovoid(L, index);}};
 template<> struct popiml<uint8> {static uint8 pop(lua_State *L, int index) { return (uint8)ue_lua_tointeger(L, index); }};
 template<> struct popiml<int32> {static int pop(lua_State *L, int index) { return (int32)ue_lua_tointeger(L, index); }};
@@ -367,7 +384,7 @@ public:
 	static struct MuldelegateBpInterface* GetMultiDlgInterface(UFunction* SigFunction);
 	static bool IsStateShutdown(lua_State*inL);
 	static FLuaBugReport LuaBugReportDelegate;
-	inline static void JustPushAndRecord(lua_State*inL, void * p)
+	FORCEINLINE static void JustPushAndRecord(lua_State*inL, void * p)
 	{
 		*(void**)ue_lua_newuserdata(inL, sizeof(void *)) = p;
 		lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
@@ -498,32 +515,32 @@ public:
 
 // knowtype push start
 	static int push(lua_State *inL) { return 0; }
-	inline static int push(lua_State *inL, int8 value)
+	FORCEINLINE static int push(lua_State *inL, int8 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, uint8 value)
+	FORCEINLINE static int push(lua_State *inL, uint8 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, int16 value)
+	FORCEINLINE static int push(lua_State *inL, int16 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, uint16 value)
+	FORCEINLINE static int push(lua_State *inL, uint16 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, int32 value)
+	FORCEINLINE static int push(lua_State *inL, int32 value)
 	{
 		ue_lua_pushinteger(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, uint32 value)
+	FORCEINLINE static int push(lua_State *inL, uint32 value)
 	{
 #ifdef USE_LUA53 
 		ue_lua_pushinteger(inL, value);
@@ -532,7 +549,7 @@ public:
 #endif
 		return 1;
 	}
-	inline static int push(lua_State *inL, int64 value)
+	FORCEINLINE static int push(lua_State *inL, int64 value)
 	{
 #ifdef USE_LUA53 
 		ue_lua_pushinteger(inL, value);
@@ -541,7 +558,7 @@ public:
 #endif
 		return 1;
 	}
-	inline static int push(lua_State *inL, uint64 value)
+	FORCEINLINE static int push(lua_State *inL, uint64 value)
 	{
 #ifdef USE_LUA53 
 		ue_lua_pushinteger(inL, value);
@@ -550,63 +567,63 @@ public:
 #endif
 		return 1;
 	}
-	inline static int push(lua_State *inL, float value)
+	FORCEINLINE static int push(lua_State *inL, float value)
 	{
 		ue_lua_pushnumber(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, double value)
+	FORCEINLINE static int push(lua_State *inL, double value)
 	{
 		ue_lua_pushnumber(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, bool value)
+	FORCEINLINE static int push(lua_State *inL, bool value)
 	{
 		ue_lua_pushboolean(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, const FString& value)
+	FORCEINLINE static int push(lua_State *inL, const FString& value)
 	{
 		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value));
 		return 1;
 	}
-	inline static int push(lua_State *inL, const std::string& value)
+	FORCEINLINE static int push(lua_State *inL, const std::string& value)
 	{
 		ue_lua_pushstring(inL, value.c_str());
 		return 1;
 	}
-	inline static int push(lua_State *inL, const LuaStringBuffer& value)
+	FORCEINLINE static int push(lua_State *inL, const LuaStringBuffer& value)
 	{
 		ue_lua_pushlstring(inL, value.Buffer, value.Len);
 		return 1;
 	}
-	inline static int push(lua_State *inL, lua_CFunction Func)
+	FORCEINLINE static int push(lua_State *inL, lua_CFunction Func)
 	{
 		ue_lua_pushlightuserdata(inL, (void*)Func);
 		return 1;
 	}
 
-	inline static int push(lua_State *inL, const FName& value)
+	FORCEINLINE static int push(lua_State *inL, const FName& value)
 	{
 		ue_lua_pushstring(inL, TCHAR_TO_UTF8(*value.ToString()));
 		return 1;
 	}
-	inline static int push(lua_State *inL, const char* value)
+	FORCEINLINE static int push(lua_State *inL, const char* value)
 	{
 		ue_lua_pushstring(inL, value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, const TCHAR* value)
+	FORCEINLINE static int push(lua_State *inL, const TCHAR* value)
 	{
 		ue_lua_pushstring(inL, TCHAR_TO_UTF8(value));
 		return 1;
 	}
-	inline static int push(lua_State *inL, const UClass* value)
+	FORCEINLINE static int push(lua_State *inL, const UClass* value)
 	{
 		pushuobject(inL, (void*)value);
 		return 1;
 	}
-	inline static int push(lua_State *inL, const LuaSpace::StackValue& StackIndexValue)
+	FORCEINLINE static int push(lua_State *inL, const LuaSpace::StackValue& StackIndexValue)
 	{
 		ue_lua_pushvalue(inL, StackIndexValue.StatckIndex);
 		return 1;
@@ -691,11 +708,11 @@ public:
 	static void popproperty(lua_State* inL, int index, UProperty* property, void* ptr);
 
 
-	inline static void pushall(lua_State *inL)
+	FORCEINLINE static void pushall(lua_State *inL)
 	{}
 
 	template<class T1, class... T2>
-	inline static void pushall(lua_State *inL, const T1& value, const T2&... args)
+	FORCEINLINE static void pushall(lua_State *inL, const T1& value, const T2&... args)
 	{
 		push(inL, value);
 		pushall(inL, args...);

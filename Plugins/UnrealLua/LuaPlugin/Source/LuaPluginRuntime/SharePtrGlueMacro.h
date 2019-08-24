@@ -30,7 +30,7 @@
 		using SharedRefType = TSharedRef<INNER_TYPE, ##__VA_ARGS__>;\
 		static int32 Table(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			ue_lua_newtable(inL);\
 			UTableUtil::push(inL, "ObjectPtr");\
 			UTableUtil::push(inL, *(Ptr->Get()));\
@@ -43,7 +43,7 @@
 			ensureAlwaysMsgf(ue_lua_gettop(inL) <= 1, TEXT(""));\
 			if (ue_lua_gettop(inL) == 1)\
 			{\
-				INNER_TYPE* Data = (INNER_TYPE*)tovoid(inL, 1);\
+				INNER_TYPE* Data = (INNER_TYPE*)tovoidtype<INNER_TYPE>(inL, 1);\
 				ue_lua_getmetatable(inL, 1);\
 				ue_lua_getfield(inL, -1, "_IsTSharedPtr");\
 				if(ue_lua_isnil(inL,-1))\
@@ -63,15 +63,15 @@
 		}\
 		static int32 Set(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			ensureAlwaysMsgf(ue_lua_gettop(inL) == 2, TEXT(""));\
 			if (ue_lua_gettop(inL) == 2)\
 			{\
-				INNER_TYPE* Data = (INNER_TYPE*)tovoid(inL, 2);\
-				if (Data == nullptr){\
+				if (ue_lua_isnil(inL, 2)){\
 					*Ptr = nullptr; \
 					return 0;\
 				}\
+				INNER_TYPE* Data = (INNER_TYPE*)tovoidtype<INNER_TYPE>(inL, 2);\
 				ue_lua_getmetatable(inL, 2);\
 				ue_lua_getfield(inL, -1, "_IsTSharedPtr");\
 				if(ue_lua_isnil(inL,-1))\
@@ -109,7 +109,7 @@
 		}\
 		static int32 IndexExtend(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			UTableUtil::push(inL, Ptr->Get());\
 			ue_lua_pushvalue(inL, 2);\
 			ue_lua_gettable(inL, -2);\
@@ -122,7 +122,7 @@
 		}\
 		static int32 NewIndexExtend(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			UTableUtil::push(inL, Ptr->Get());\
 			ue_lua_pushvalue(inL, 2);\
 			ue_lua_pushvalue(inL, 3);\

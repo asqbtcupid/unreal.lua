@@ -31,7 +31,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 		using SharedType = TSharedRef<INNER_TYPE, ##__VA_ARGS__>;\
 		static int32 Table(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			ue_lua_newtable(inL);\
 			UTableUtil::push(inL, "ObjectPtr");\
 			UTableUtil::push(inL, Ptr->Get());\
@@ -43,7 +43,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 			ensureAlwaysMsgf(ue_lua_gettop(inL) == 1, TEXT(""));\
 			if (ue_lua_gettop(inL) == 1)\
 			{\
-				INNER_TYPE* Data = (INNER_TYPE*)tovoid(inL, 1);\
+				INNER_TYPE* Data = (INNER_TYPE*)tovoidtype<INNER_TYPE>(inL, 1);\
 				ue_lua_getmetatable(inL, 1);\
 				ue_lua_getfield(inL, -1, "_IsTSharedRef");\
 				if(ue_lua_isnil(inL,-1))\
@@ -68,7 +68,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 		}\
 		static int32 Set(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			ensureAlwaysMsgf(ue_lua_gettop(inL) == 2, TEXT(""));\
 			if (ue_lua_gettop(inL) == 2)\
 			{\
@@ -76,12 +76,13 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 				ue_lua_getfield(inL, -1, "_IsTSharedRef");\
 				if(ue_lua_isnil(inL,-1))\
 				{\
-					INNER_TYPE* Data = (INNER_TYPE*)tovoid(inL, 2);\
-					if (Data == nullptr){\
+					if (ue_lua_isnil(inL, 2)){\
 						ensureAlwaysMsgf(0, TEXT("shouldn't come here")); \
+						return 0;\
 					}\
 					else\
 					{\
+						INNER_TYPE* Data = (INNER_TYPE*)tovoidtype<INNER_TYPE>(inL, 2);\
 						Data = TSafeCopy<INNER_TYPE>(Data); \
 						if (Data)\
 							*Ptr = SharedType(Data); \
@@ -89,7 +90,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 				}\
 				else\
 				{\
-					SharedType* Right = (SharedType*)tovoid(inL, 1);\
+					SharedType* Right = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 					*Ptr = *Right;\
 				}\
 			}\
@@ -106,7 +107,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 		}\
 		static int32 IndexExtend(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			UTableUtil::push(inL, Ptr->Get());\
 			ue_lua_pushvalue(inL, 2);\
 			ue_lua_gettable(inL, -2);\
@@ -119,7 +120,7 @@ struct CustomTypeToLua<TSharedRef< T, Mode>>
 		}\
 		static int32 NewIndexExtend(lua_State* inL)\
 		{\
-			SharedType* Ptr = (SharedType*)tovoid(inL, 1);\
+			SharedType* Ptr = (SharedType*)tovoidtype<SharedType>(inL, 1);\
 			UTableUtil::push(inL, Ptr->Get());\
 			ue_lua_pushvalue(inL, 2);\
 			ue_lua_pushvalue(inL, 3);\

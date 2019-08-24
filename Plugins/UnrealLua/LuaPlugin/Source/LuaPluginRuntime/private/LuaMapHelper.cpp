@@ -31,7 +31,7 @@ int32 ULuaMapHelper::__index(lua_State* inL)
 	lua_rawget(inL, -2);
 	if (lua_isnil(inL, -1))
 	{
-		ULuaMapHelper* p = (ULuaMapHelper*)tovoid(inL, 1);
+		ULuaMapHelper* p = (ULuaMapHelper*)tovoidtype<ULuaMapHelper>(inL, 1);
 		return p->Get(inL);
 	}
 	else
@@ -42,7 +42,7 @@ int32 ULuaMapHelper::__index(lua_State* inL)
 
 int32 ULuaMapHelper::__newindex(lua_State* inL)
 {
-	ULuaMapHelper* p = (ULuaMapHelper*)tovoid(inL, 1);
+	ULuaMapHelper* p = (ULuaMapHelper*)tovoidtype<ULuaMapHelper>(inL, 1);
 	p->Set(inL);
 	return 0;
 }
@@ -256,7 +256,7 @@ int32 ULuaMapHelper::__pairs(lua_State* inL)
 
 int32 ULuaMapHelper::travel(lua_State* inL)
 {
-	ULuaMapHelper* p = (ULuaMapHelper*)tovoid(inL, 1);
+	ULuaMapHelper* p = (ULuaMapHelper*)tovoidtype<ULuaMapHelper>(inL, 1);
 	int32 Index = lua_tointeger(inL, lua_upvalueindex(1));
 	FScriptMapHelper result(p->Property, p->Obj);
 	if (Index < result.Num())
