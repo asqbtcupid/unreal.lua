@@ -180,22 +180,27 @@ template<class T>
 T PopInternal(lua_State *L, int index, typename TEnableIf<TIsStruct<T>::Value, int>::Type* p = nullptr)
 {
 	T* ptr = (T*)tostruct(L, index);
-	if (ptr == nullptr)
-		return T();
+#if LuaDebug
+	check(ptr);
+#endif
 	return *ptr;
 }
 
-template<bool IsStruct>
-void* PopPointerByType(lua_State*L, int index)
+template<class T>
+void* PopPointerByType(lua_State*L, int index, typename TEnableIf<TIsStruct<T>::Value, int>::Type* p = nullptr)
 {
-	if(IsStruct)
-		return tostruct(L, index);
-	else
-		return tovoid(L, index);
+	return tostruct(L, index);
 }
-template<class T> T* tovoidtype(lua_State* inL, int index){ return (T*)(PopPointerByType<TIsStruct<T>::Value>(inL, index)); }
+
+template<class T>
+void* PopPointerByType(lua_State*L, int index, typename TEnableIf<!TIsStruct<T>::Value, int>::Type* p = nullptr)
+{
+	return tovoid(L, index);
+}
+
+template<class T> T* tovoidtype(lua_State* inL, int index){ return (T*)(PopPointerByType<T>(inL, index)); }
 template<class T>struct popiml {static T pop(lua_State *L, int index){return (T)PopInternal<T>(L, index);}};
-template<class T>struct popiml<T*> {static T* pop(lua_State *L, int index){return (T*)(PopPointerByType<TIsStruct<T>::Value>(L, index));}};
+template<class T>struct popiml<T*> {static T* pop(lua_State *L, int index){return (T*)(PopPointerByType<T>(L, index));}};
 template<> struct popiml<void*> {static void* pop(lua_State *L, int index) { return tovoid(L, index);}};
 template<> struct popiml<uint8> {static uint8 pop(lua_State *L, int index) { return (uint8)ue_lua_tointeger(L, index); }};
 template<> struct popiml<int32> {static int pop(lua_State *L, int index) { return (int32)ue_lua_tointeger(L, index); }};

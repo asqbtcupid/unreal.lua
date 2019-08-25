@@ -275,3 +275,7 @@
 [Sat Aug  3 12:01:38 2019] now try to restart, test the reference problem during gc  
 [Sat Aug  3 12:01:38 2019] pass  
 [Sat Aug  3 12:01:40 2019] lua VM shutdown  
+[Sat Aug 24 23:49:45 2019] pass  
+[Sat Aug 24 23:49:45 2019] now try to restart, test the reference problem during gc  
+[Sat Aug 24 23:49:45 2019] pass  
+[Sat Aug 24 23:49:50 2019] lua VM shutdown  
