@@ -71,7 +71,7 @@ function Object:Ins()
 	if rawget(self, "_meta_") == nil then
 		error("not class")
 	end
-	local newIns = setmetatable({}, self)
+	local newIns = setmetatable({nil,{},{}}, self)
 	return newIns
 end
 -- 创建类的一个实例，...参数会传到构造函数Ctor里
@@ -138,7 +138,7 @@ end
 
 
 local _parentclass = "_parentclass"
-local _cppinstance_str = "_cppinstance_"
+local _cppinstance_str = 1
 local funcstr = "function"
 local strstr = "string"
 local GetStr = "LuaGet_"
@@ -146,14 +146,14 @@ local Userdatastr = "userdata"
 local TableStr = "table"
 -- index函数，先找lua类里，再找c++类里的
 local function __indexcpp(t, k)
-	local PropertyGetFunc = rawget(t, "_PG")
+	local PropertyGetFunc = rawget(t, 2)
 	local CppGetFunc = PropertyGetFunc and PropertyGetFunc[k]
 	if CppGetFunc then
-		if type(CppGetFunc) == funcstr then
-			local _cppinstance_ = rawget(t, _cppinstance_str)
-			return CppGetFunc(_cppinstance_)
+		local GetFunc = CppGetFunc[1]
+		if GetFunc then
+			return GetFunc(t)
 		else
-			return CppGetFunc
+			return CppGetFunc[2]
 		end
 	end
 	local class = getmetatable(t)
@@ -176,11 +176,11 @@ local function __indexcpp(t, k)
 			rawset(t, k, v)
 		else
 			if typeof == Userdatastr and not v.IsObject then
-				PropertyGetFunc[k] = v
+				PropertyGetFunc[k] = {nil, v, 1}
 			else
 				local GetFunc = _cppinstance_[GetStr..tostring(k)]
 				if GetFunc then
-					PropertyGetFunc[k] = GetFunc
+					PropertyGetFunc[k] = {GetFunc,nil,1}
 				end
 			end
 		end
@@ -192,10 +192,10 @@ local trynewindex = __trynewindex
 local trynewindexstr = "__trynewindex"
 local SetStr = "LuaSet_"
 local function __newindexcpp(t, k, v)
-	local PropertySetFunc = rawget(t, "_PS")
+	local PropertySetFunc = rawget(t, 3)
 	local CppSetFunc = PropertySetFunc and PropertySetFunc[k]
 	if CppSetFunc then
-		CppSetFunc(t, v)
+		CppSetFunc(t, nil, v)
 		return
 	end 
 	if type(k) == strstr then

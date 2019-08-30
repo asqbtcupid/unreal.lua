@@ -25,11 +25,9 @@ void ULuaMapHelper::Init_ValuePtr(void* _Obj, UMapProperty* _Property)
 
 int32 ULuaMapHelper::__index(lua_State* inL)
 {
-	const char* key = lua_tostring(inL, 2);
-	lua_getmetatable(inL, 1);
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TNIL)
 	{
 		ULuaMapHelper* p = (ULuaMapHelper*)tovoidtype<ULuaMapHelper>(inL, 1);
 		return p->Get(inL);

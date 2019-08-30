@@ -6,14 +6,14 @@ function IsValid(p)
 end
 
 function DiscardOldExistTable()
-  	local registry = debug.getregistry()["_existuserdata"]
+  	local registry = debug.getregistry()[3]
     local newmeta = {__mode = "kv"}
     local newexist = {}
     for k, v in pairs(registry) do
         newexist[k] = v
     end
     setmetatable(newexist, newmeta)
-    debug.getregistry()["_existuserdata"] = newexist
+    debug.getregistry()[3] = newexist
 end
 
 function GetCppSingleton(Ins, DataClassName)

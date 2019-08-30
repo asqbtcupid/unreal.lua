@@ -571,15 +571,16 @@ int32 LuaPopAndCallAndReturn(lua_State*inL, Ret(*func)(Args...), DefaultArgs&&..
 #define LUA_GLUE_GETTER_NAME(FIELD_NAME) LUA_GLUE_STR(LuaGet_##FIELD_NAME)
 #define LUA_GLUE_SETTER_NAME(FIELD_NAME) LUA_GLUE_STR(LuaSet_##FIELD_NAME)
 #define LUA_GLUE_PROPERTY_GET(FIELD_NAME) { LUA_GLUE_GETTER_NAME(FIELD_NAME), [](lua_State*inL)->int32{\
-												TheClassType* Obj = (TheClassType*)tovoidtype<TheClassType>(inL, 1); \
+												TheClassType* Obj = (TheClassType*)tovoidtypeornil<TheClassType>(inL, 1); \
 												UTableUtil::push(inL, Obj->FIELD_NAME);\
 												return 1;}, ELuaFuncExportFlag::RF_GetPropertyFunc| \
-												(uint32)(TIsStaticMember<TheClassType>(TGetHeapMemoryForTest<TheClassType>(),TGetHeapMemoryForTest<TheClassType>()->FIELD_NAME)?ELuaFuncExportFlag::RF_IsStaticProperty:0x00000000 ) }, 
+												(uint32)(TIsStaticMember<TheClassType>(TGetHeapMemoryForTest<TheClassType>(),TGetHeapMemoryForTest<TheClassType>()->FIELD_NAME)?ELuaFuncExportFlag::RF_IsStaticProperty:0x00000000)|\
+												(uint32)(TIsStruct<decltype(TheClassType::FIELD_NAME)>::Value?RF_IsStructProperty:0x0) }, 
 
 #define LUA_GLUE_PROPERTY_SET(FIELD_NAME) { LUA_GLUE_SETTER_NAME(FIELD_NAME), [](lua_State*inL)->int32{\
-																	TheClassType* Obj = (TheClassType*)tovoidtype<TheClassType>(inL, 1);\
- 																	Obj->FIELD_NAME = UTableUtil::pop<decltype(Obj->FIELD_NAME)&>(inL, 2);\
- 																	return 1;}, ELuaFuncExportFlag::RF_SetPropertyFunc| \
+												TheClassType* Obj = (TheClassType*)tovoidtypeornil<TheClassType>(inL, 1);\
+ 												Obj->FIELD_NAME = UTableUtil::pop<decltype(Obj->FIELD_NAME)&>(inL, 3);\
+ 												return 1;}, ELuaFuncExportFlag::RF_SetPropertyFunc| \
 												(uint32)(TIsStaticMember<TheClassType>(TGetHeapMemoryForTest<TheClassType>(),TGetHeapMemoryForTest<TheClassType>()->FIELD_NAME)?ELuaFuncExportFlag::RF_IsStaticProperty:0x00000000 ) }, 
 
 #define LUA_GLUE_PROPERTY(FIELD_NAME) LUA_GLUE_PROPERTY_GET(FIELD_NAME)\
@@ -752,7 +753,7 @@ int TSafe__unm(lua_State*inL, T* Value, typename TEnableIf<UnrealLuaCheck::THas_
 	{\
 		CLASS_TYPE* Ins = TSafeGetTempIns<CLASS_TYPE>();\
 		if(Ins != nullptr)\
-			pushstruct_nogc(L, #NAME, LUA_GLUE_STR(NAME##_nogc), (void*)(Ins));\
+			pushstruct_temp(L, #NAME, LUA_GLUE_STR(NAME##_nogc), (void*)(Ins));\
 		else\
 			ue_lua_pushnil(L);\
 		return 1;\
@@ -929,7 +930,7 @@ struct TCtorType<T(Args...)>
 			return &TempIns;
 		};
 		T* Result = TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
-		pushstruct_nogc(inL, TTraitStructTypeName<T>(), TTraitStructTypeName_Nogc<T>(), Result);
+		pushstruct_temp(inL, TTraitStructTypeName<T>(), TTraitStructTypeName_Nogc<T>(), Result);
 		return 1;
 	}
 	template<class... DefaultArgs>
@@ -945,7 +946,7 @@ struct TCtorType<T(Args...)>
 			return &TempIns;
 		};
 		T* Result = TupleOperationHelper<Args...>::CallCppFunc(tuple, lambda);
-		pushstruct_nogc(inL, TTraitStructTypeName<T>(), TTraitStructTypeName_Nogc<T>(), Result);
+		pushstruct_temp(inL, TTraitStructTypeName<T>(), TTraitStructTypeName_Nogc<T>(), Result);
 		return 1;
 	}
 };

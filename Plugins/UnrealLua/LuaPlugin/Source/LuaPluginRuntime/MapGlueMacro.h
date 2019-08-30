@@ -228,11 +228,9 @@ struct CustomTypeToLua<TMap<K, V>>:UnrealLua::DefaultCustomEnum
 		}\
 		static int32 __index(lua_State*inL)\
 		{\
-			const char* key = ue_lua_tostring(inL, 2);\
-			ue_lua_getmetatable(inL, 1);\
 			ue_lua_pushvalue(inL, 2);\
-			ue_lua_rawget(inL, -2);\
-			if (ue_lua_isnil(inL, -1))\
+			int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));\
+			if (Type == LUA_TNIL)\
 			{\
 				MapType* MapValue = (MapType*)tovoidtype<MapType>(inL, 1); \
 				KEY_TYPE Key;\

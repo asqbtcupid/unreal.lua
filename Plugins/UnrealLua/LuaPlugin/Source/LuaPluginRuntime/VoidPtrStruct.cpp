@@ -30,10 +30,7 @@ int32 VoidPtrStruct::__index(lua_State*inL)
 	}
 	else
 	{
-		const char* key = ue_lua_tostring(inL, 2); 
-		ue_lua_getmetatable(inL, 1); 
-		ue_lua_pushvalue(inL, 2); 
-		ue_lua_rawget(inL, -2); 
-		return 1; 
-	}\
+		lua_rawget(inL, lua_upvalueindex(1)); 
+		return 1;
+	}
 }

@@ -136,10 +136,7 @@ int32 ULuaArrayHelper::__index(lua_State* inL)
 	}
 	else
 	{
-		const char* key = lua_tostring(inL, 2);
-		lua_getmetatable(inL, 1);
-		lua_pushvalue(inL, 2);
-		lua_rawget(inL, -2);
+		lua_rawget(inL, lua_upvalueindex(1)); 
 		return 1;
 	}
 }

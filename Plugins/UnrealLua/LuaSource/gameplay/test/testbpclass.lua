@@ -22,7 +22,7 @@ end
 
 function TestBpClass:BeginPlay( )
 	CppObjectBase.BeginPlay(self)
-	
+	-- do return end	
 	self:TestNativePublicPropertyReadWrite()
 	self:TestNativePrivatePropertyReadWrite()
 	self:TestCppFunction()
@@ -80,7 +80,121 @@ function TestBpClass:BeginPlay( )
 	self:TestNewStaticProperty()
 	self:TestCallOverload()
 	self:TestGlueCtor()
+	self:TestGlueBpStruct()
+	self:TestTemp()
+	self:BenchMark()
+
 	a_("pass")
+
+end
+
+function TestBpClass:CallOverload(functionmame)
+	a_(functionmame .. " pass")
+end
+
+
+
+function TestBpClass:TestOverrideUFunction()
+
+	self.__TestOverrideUFunction=1
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction",function(Obj)
+		Obj.__TestOverrideUFunction = 2
+	end)
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction1",function(Obj,InVec)
+		Obj.__TestOverrideUFunction = 3
+		InVec.X = 100
+		InVec.Y = 100
+		InVec.Z = 100
+	end)
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction2",function(Obj,InVec)
+		Obj.__TestOverrideUFunction = 4
+		InVec.X = 401
+		InVec.Y = 402
+		InVec.Z = 403
+	end)
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction3",function(Obj,InA,InB)
+		--a_("void TestOverrideFunction3(FVector & InA, FVector & InB)")
+		Obj.__TestOverrideUFunction = 5
+		InA.X = 500
+		InB.Y = -500
+	end)
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction4",function(Obj,InA,InB)
+		--a_("void TestOverrideFunction3(FVector & InA, FVector & InB)")
+		Obj.__TestOverrideUFunction = 6
+		InA.X = 600
+		InB.Y = -600
+	end)
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction5",function(Obj,InA,InB)
+		--a_("void TestOverrideFunction3(FVector & InA, FVector & InB)")
+		Obj.__TestOverrideUFunction = 7
+		InA.X = 700
+		InB.Y = -700
+	end)
+
+	ATestCaseActor.OverrideUFunction("TestOverrideFunction6",function(Obj,InA,InB)
+		--a_("void TestOverrideFunction3(FVector & InA, FVector & InB)")
+		Obj.__TestOverrideUFunction = 8
+		InA.X = 800
+		InB.Y = -800
+	end)
+
+	
+	
+	assert(self.__TestOverrideUFunction == 1)
+	
+	self:TestOverrideFunction()
+	assert(self.__TestOverrideUFunction == 2,"TestOverrideFunction")
+
+	local a = FVector.New(1,2,3)
+	self:TestOverrideFunction1(a)
+	assert(self.__TestOverrideUFunction == 3,"TestOverrideFunction")
+	assert(a.X == 100)
+	assert(a.Y == 100)
+	assert(a.Z == 100)
+
+	self:TestOverrideFunction2(a)
+	assert(self.__TestOverrideUFunction == 4,"TestOverrideFunction")
+	assert(a.X == 401)
+	assert(a.Y == 402)
+	assert(a.Z == 403)
+
+	local b = FVector.New(3,2,1)
+
+	self:TestOverrideFunction3(a,b)
+	assert(self.__TestOverrideUFunction == 5,"TestOverrideFunction")
+	assert(a.X == 500)
+	assert(b.Y == -500)
+
+
+	self:TestOverrideFunction4(a,b)
+	assert(self.__TestOverrideUFunction == 6,"TestOverrideFunction")
+	assert(a.X == 600)
+	assert(b.Y == -600)
+
+	self:TestOverrideFunction5(a,b)
+	assert(self.__TestOverrideUFunction == 7,"TestOverrideFunction")
+	assert(a.X == 700)
+	assert(b.Y == -700)
+
+	self:TestOverrideFunction6(a,b)
+	assert(self.__TestOverrideUFunction == 8,"TestOverrideFunction")
+	assert(a.X == 800)
+	assert(b.Y == -800)
+end
+
+function TestBpClass:TestTemp()
+	local v = FVector.Temp(1,2,3)
+	v.X = v.X + 1
+	v.Y = v.Y + 1
+	v.Z = v.Z + 1
+	assert(v.X == 2)
+	assert(v.Y == 3)
+	assert(v.Z == 4)
 end
 
 function TestBpClass:TestInterface( )
@@ -810,6 +924,7 @@ function TestBpClass:TestBpPropertyArr()
 	assert(t[2] ==7777)
 	assert(#t1==11)
 	assert(t1[11]==888)
+	local bb = self.test_arr_int
 	assert(self.test_arr_int:Num() == num)
 	for i = 1, num do
 		assert(self.test_arr_int[i] == self.test_arr_int_copy[i])
@@ -1224,6 +1339,10 @@ function TestBpClass:TestUserDefineStruct( )
 	local v1 = ins:TestReturnRef()
 	assert(v == v1)
 	assert(v == ins.Field3)
+	ins.Field16 = 0
+	assert(ins.Field16 == 0)
+	ins.Field16 = 1
+	assert(ins.Field16 == 1)
 end
 
 function TestBpClass:LuaTestContainerReturnFromLua()
@@ -1524,12 +1643,7 @@ function TestBpClass:TestNativeEvent( )
 	return 2000
 end
 
-function TestBpClass:fuckg6( )
-	a_()
-end
-
 function TestBpClass:testluainjectbpfunction()
-	a_("been fucked")
 	return 2003
 end
 
@@ -1558,6 +1672,9 @@ function TestBpClass:TestStaticProperty()
 	ATestCaseActor.StaticDelegateTest:Bind(function () end)
 	assert(ATestCaseActor.StaticDelegateTest:IsBound() == true)
 	ATestCaseActor.StaticDelegateTest:Execute(100, FVector.New(1,2,3))
+	ATestCaseActor.StaticInt = 100
+	assert(ATestCaseActor.staticseestatic() == 100)
+	assert(ATestCaseActor.StaticInt == 100)
 end
 
 function TestBpClass:TestPassRef()
@@ -2025,6 +2142,27 @@ end
 function TestBpClass:Error(ErrString)
 	assert(false)
 	a_(ErrString)
+end
+
+function TestBpClass:TestGlueBpStruct()
+	local function f(TheClass)
+		local BpStructTypeIns = TheClass.New() 
+		BpStructTypeIns.Glue_ReadWriteInt = 100
+		assert(BpStructTypeIns.Glue_ReadWriteInt == 100)
+		BpStructTypeIns.Glue_ReadWriteVector = FVector.New(1,2,3)
+		assert(BpStructTypeIns.Glue_ReadWriteVector.X == 1)
+		assert(BpStructTypeIns.Glue_ReadWriteVector.Y == 2)
+		assert(BpStructTypeIns.Glue_ReadWriteVector.Z == 3)
+
+		TheClass.Glue_StaticReadWriteInt = 100
+		assert(TheClass.Glue_StaticReadWriteInt == 100)
+		TheClass.Glue_StaticReadWriteVector = FVector.New(1,2,3)
+		assert(TheClass.Glue_StaticReadWriteVector.X == 1)
+		assert(TheClass.Glue_StaticReadWriteVector.Y == 2)
+		assert(TheClass.Glue_StaticReadWriteVector.Z == 3)
+	end
+	f(FTestGlueExBp)
+	f(TestGlueEx)
 end
 
 return TestBpClass

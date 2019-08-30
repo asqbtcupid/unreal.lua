@@ -69,6 +69,7 @@ enum ELuaFuncExportFlag
 	RF_IndexFuncExtend = 0x00000010,
 	RF_NewIndexFuncExtend = 0x00000020,
 	RF_OverLoad = 0x00000040,
+	RF_IsStructProperty = 0x00000080,
 };
 
 struct UnrealLuaBlueFunc
@@ -168,7 +169,42 @@ FORCEINLINE void* tostruct(lua_State* L, int i)
 #endif
 LUAPLUGINRUNTIME_API int ErrHandleFunc(lua_State*L);
 LUAPLUGINRUNTIME_API FString PrintLuaStackOfL(lua_State* inL);
+#if LuaDebug
 LUAPLUGINRUNTIME_API void* tovoid(lua_State* L, int i);
+#else
+FORCEINLINE void* tovoid(lua_State* L, int i)
+{
+	int LuaType = ue_lua_type(L, i);
+	void **u = nullptr;
+	switch (LuaType)
+	{
+	case LUA_TUSERDATA:
+		u = static_cast<void**>(lua_touserdata(L, i));
+		return *u;
+	case LUA_TTABLE:
+		if (i < 0)
+			i = lua_gettop(L) + i + 1;
+		lua_rawgeti(L, i, CppInstanceIndex);
+		u = static_cast<void**>(lua_touserdata(L, -1));
+		lua_pop(L, 1);
+		return *u;
+	case LUA_TNIL:
+		return nullptr;
+	case LUA_TNONE:
+		return nullptr;
+	default:
+		return nullptr;
+	};
+}
+#endif
+FORCEINLINE void* tostructornull(lua_State* L, int i)
+{
+	auto u = static_cast<void**>(lua_touserdata(L, i));
+	if (u)
+		return *u;
+	else
+		return nullptr;
+}
 
 template<class T>
 T PopInternal(lua_State *L, int index, typename TEnableIf<!TIsStruct<T>::Value, int>::Type* p = nullptr)
@@ -198,7 +234,20 @@ void* PopPointerByType(lua_State*L, int index, typename TEnableIf<!TIsStruct<T>:
 	return tovoid(L, index);
 }
 
-template<class T> T* tovoidtype(lua_State* inL, int index){ return (T*)(PopPointerByType<T>(inL, index)); }
+template<class T>
+void* PopPointerByTypeOrNull(lua_State*L, int index, typename TEnableIf<TIsStruct<T>::Value, int>::Type* p = nullptr)
+{
+	return tostructornull(L, index);
+}
+
+template<class T>
+void* PopPointerByTypeOrNull(lua_State*L, int index, typename TEnableIf<!TIsStruct<T>::Value, int>::Type* p = nullptr)
+{
+	return tovoid(L, index);
+}
+
+template<class T> T* tovoidtype(lua_State* inL, int index) { return (T*)(PopPointerByType<T>(inL, index)); }
+template<class T> T* tovoidtypeornil(lua_State* inL, int index) { return (T*)(PopPointerByTypeOrNull<T>(inL, index)); }
 template<class T>struct popiml {static T pop(lua_State *L, int index){return (T)PopInternal<T>(L, index);}};
 template<class T>struct popiml<T*> {static T* pop(lua_State *L, int index){return (T*)(PopPointerByType<T>(L, index));}};
 template<> struct popiml<void*> {static void* pop(lua_State *L, int index) { return tovoid(L, index);}};
@@ -392,12 +441,13 @@ public:
 	FORCEINLINE static void JustPushAndRecord(lua_State*inL, void * p)
 	{
 		*(void**)ue_lua_newuserdata(inL, sizeof(void *)) = p;
-		lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+		lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 		lua_pushlightuserdata(inL, p);
 		lua_pushvalue(inL, -3);
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
 	}
+
 
 	static bool check_exist_and_add(lua_State*inL, void * p)
 	{
@@ -409,13 +459,14 @@ public:
 		else
 			return true;
 	};
+
 	static bool HasInit;
 	static void MapPropertyToPushPopFunction();
 	static FLuaInitDelegates& GetInitDelegates();
 	static void Init();
 	static FLuaOnPowerStateDelegate& GetOnPowerStateDelegate();
 	static TMap<lua_State*, TMap<UObject*, TMap<FString, UClass*>>> NeedGcBpClassName;
-	static TMap<lua_State*, TMap<UClass*, FString>> HasAddUClass;
+	static TMap<lua_State*, TMap<UClass*, TSharedPtr<FTCHARToUTF8>>> HasAddUClass;
 	static TMap<lua_State*, TSet<FString>> HasRequire;
 #if LuaDebug
 	static TMap<lua_State*, TMap<FString, int>> countforgc;
@@ -460,6 +511,8 @@ public:
 	static TMap<UClass*, TFunction<void(lua_State*, UProperty*, const void*)> > PropertyClassToPushFuncMap;
 	static TMap<UClass*, TFunction<void(lua_State*, int, UProperty*, void*)> > PropertyClassToPopFuncMap;
 	static bool requirecpp(lua_State* inL, const FString& classname);
+	static bool requirecpp(lua_State* inL, const char* classname);
+	
 	static int require_lua(lua_State* inL);
 
 	static lua_State* GetMainThread(lua_State *inL)

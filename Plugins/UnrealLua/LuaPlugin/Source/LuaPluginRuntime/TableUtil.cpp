@@ -44,6 +44,18 @@ FORCEINLINE uint64 GetPropertyFlag(UProperty* Property)
 	return CastFlag;
 }
 
+FORCEINLINE void CopyTableForLua(lua_State*inL)
+{
+	lua_pushnil(inL);
+	while (lua_next(inL, -3))
+	{
+		lua_pushvalue(inL, -2);
+		lua_pushvalue(inL, -2);
+		lua_rawset(inL, -5);
+		lua_pop(inL, 1);
+	}
+}
+
 template<class KeyType, class ValueType>
 void LuaRawSet(lua_State* inL, int TableIndex, const KeyType& Key, const ValueType& Value)
 {
@@ -52,7 +64,7 @@ void LuaRawSet(lua_State* inL, int TableIndex, const KeyType& Key, const ValueTy
 }
 const int ChildMaxCount = 100000;
 TMap<lua_State*, TMap<UObject*, TMap<FString, UClass*>>> UTableUtil::NeedGcBpClassName;
-TMap<lua_State*, TMap<UClass*, FString>> UTableUtil::HasAddUClass;
+TMap<lua_State*, TMap<UClass*, TSharedPtr<FTCHARToUTF8>>> UTableUtil::HasAddUClass;
 TMap<lua_State*, TSet<FString>> UTableUtil::HasRequire;
 FLuaBugReport UTableUtil::LuaBugReportDelegate;
 TMap<UObject*, TSet<lua_State*>> UTableUtil::ObjectReferencedLuaState;
@@ -225,7 +237,13 @@ void UTableUtil::PowerTheState(lua_State* inL)
 	lua_pushstring(inL, "v");
 	lua_setfield(inL, -2, "__mode");
 	lua_setmetatable(inL, -2);
-	lua_setfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+	lua_pushinteger(inL, 0);
+	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+1);
+	lua_pushinteger(inL, 0);
+	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+2);
+	lua_pushinteger(inL, 0);
+	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+3);
 
 	lua_newtable(inL);
 	lua_setfield(inL, LUA_REGISTRYINDEX, "_existfirststruct");
@@ -352,15 +370,15 @@ void UTableUtil::initmeta(lua_State *inL, const char* classname, bool bIsStruct,
 		UScriptStruct* StructClass = FindObject<UScriptStruct>(ANY_PACKAGE, *(FString(classname).RightChop(1)));
 		lua_newtable(inL);
 		if (StructClass)
-			AddFuncToTable(inL, -2, "__index", index_struct_func_with_class, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), StructClass);
+			AddFuncToTable(inL, -2, "__index", index_struct_func_with_class_with_glue<false>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), StructClass);
 		else
 			AddFuncToTable(inL, -2, "__index", index_struct_func, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2));
 		lua_pop(inL, 1);
 		lua_newtable(inL);
 		if (StructClass)
-			AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_class, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), StructClass);
+			AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_class_with_glue<false>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), StructClass);
 		else
-			AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2));
+			AddFuncToTable(inL, -2, "__newindex", newindex_struct_func, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2));
 		lua_pop(inL, 1);
 		if (bNeedGc)
 		{
@@ -379,7 +397,68 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
  	lua_newtable(inL);
 	UClass* Class = TheClass;
 
+	AddFuncToTable(inL, -1, "Cast", GeneralCast, Class);
+	AddFuncToTable(inL, -1, "LoadClass", GeneralLoadClass, Class);
+	AddFuncToTable(inL, -1, "LoadObject", GeneralLoadObject, Class);
+	AddFuncToTable(inL, -1, "Class", GeneralGetClass, Class);
+	AddFuncToTable(inL, -1, "StaticClass", GeneralGetClass, Class);
+	AddFuncToTable(inL, -1, "FClassFinder", GeneralFClassFinder, Class);
+	AddFuncToTable(inL, -1, "__gc", uobjcet_gcfunc);
+
+	AddFuncToTable(inL, -1, "New", GeneralNewObject, Class);
+	AddFuncToTable(inL, -1, "NewObject", GeneralNewObject, Class);
+	AddFuncToTable(inL, -1, "GetDefaultObject", GeneralGetDefaultObject, Class);
+	AddFuncToTable(inL, -1, "Destroy", EnsureDestroy);
+	AddFuncToTable(inL, -1, "GetClass", UObject_GetClass);
+	AddFuncToTable(inL, -1, "GetName", UObject_GetName);
+	AddFuncToTable(inL, -1, "GetOuter", UObject_GetOuter);
+	AddFuncToTable(inL, -1, "LuaGet_ClassPrivate", UObject_GetClass);
+	AddFuncToTable(inL, -1, "LuaGet_NamePrivate", UObject_GetName);
+	AddFuncToTable(inL, -1, "LuaGet_OuterPrivate", UObject_GetOuter);
+	AddFuncToTable(inL, -1, "IsPendingKill", UObject_IsPendingKill);
+	AddFuncToTable(inL, -1, "MarkPendingKill", UObject_MarkPendingKill);
+	AddFuncToTable(inL, -1, "AddToRoot", UObject_AddToRoot);
+	AddFuncToTable(inL, -1, "RemoveFromRoot", UObject_RemoveFromRoot);
+	// 	AddFuncToTable(inL, -1, "GetAllProperty", GetUObjectAllProperty);
+	AddFuncToTable(inL, -1, "ReloadConfig", GeneralReloadConfig);
+	AddFuncToTable(inL, -1, "LoadConfig", GeneralLoadConfig);
+	AddFuncToTable(inL, -1, "SaveConfig", GeneralSaveConfig);
+	LuaRawSet(inL, -1, "classname", classname);
+	LuaRawSet(inL, -1, "IsObject", true);
+	UClass* MeOrParentClass = TheClass;
+	TSet<FString> HasAddFunc;
+	bool HasGlueFunctionForIndex = false;
+	bool HasGlueFunctionForNewIndex = false;
+
+	TMap<FString, UnrealLuaBlueFunc> StaticPropertyFuncMap;
+	while (MeOrParentClass)
+	{
+		if (MeOrParentClass->HasAnyClassFlags(CLASS_Native))
+		{
+			FString NameOfExpandClassToCheck = FString::Printf(TEXT("%s%s"), MeOrParentClass->GetPrefixCPP(), *MeOrParentClass->GetName());
+			if (auto* ExpandFunc = ExpandClassGlue.Find(NameOfExpandClassToCheck))
+			{
+				for (auto& Pairs : *ExpandFunc)
+				{
+					if (!HasAddFunc.Contains(Pairs.Key))
+					{
+						if (Pairs.Value.ExportFlag & RF_IsStaticProperty)
+							StaticPropertyFuncMap.Add(Pairs.Key, Pairs.Value);
+						AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*Pairs.Key), Pairs.Value.func);
+						HasAddFunc.Add(Pairs.Key);
+						HasGlueFunctionForIndex = true;
+					}
+				}
+			}
+			TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(NameOfExpandClassToCheck);
+			BuildOverLoadFuncTree(inL, OverloadFuncs);
+		}
+		MeOrParentClass = MeOrParentClass->GetSuperClass();
+	}
+	AddStaticMetaToTable(inL, StaticPropertyFuncMap, Class, true);
+
 	lua_newtable(inL);
+	CopyTableForLua(inL);
 	auto AddGetBpProperty = [&]() {
 		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
@@ -388,6 +467,7 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
 			{
+				bool bPushFunction = false;
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
 				if (Property->IsA(UBoolProperty::StaticClass()))
@@ -432,6 +512,7 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
 					lua_pushcclosure(inL, BpPropertyGetterName(UStructProperty), 2);
+					bPushFunction = true;
 				}
 				else if (Property->IsA(UMulticastDelegateProperty::StaticClass())) 
 				{
@@ -441,6 +522,7 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
 					lua_pushcclosure(inL, BpPropertyGetterName(UMulticastDelegateProperty), 2);
+					bPushFunction = true;
 				}
 				else if (Property->IsA(UDelegateProperty::StaticClass()))
 				{
@@ -450,6 +532,7 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
 					lua_pushcclosure(inL, BpPropertyGetterName(UDelegateProperty), 2);
+					bPushFunction = true;
 				}
 				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
 					lua_pushcclosure(inL, BpPropertyGetterName(UWeakObjectProperty), 1);
@@ -466,10 +549,31 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 					ensureAlwaysMsgf(0, TEXT("Bug"));
 					lua_pushcclosure(inL, BpStructGetProp, 1);
 				}
-				push(inL, "LuaGet_"+Name);
+				push(inL, "LuaGet_" + Name);
 				lua_pushvalue(inL, -2);
 				lua_rawset(inL, TableIndex - 3);
-				lua_rawset(inL, TableIndex);
+				if (bPushFunction)
+				{
+					lua_createtable(inL, 2, 0);
+
+					lua_createtable(inL, 0, 10);
+					lua_createtable(inL, 0, 1);
+					lua_pushstring(inL, "k");
+					lua_setfield(inL, -2, "__mode");
+					lua_setmetatable(inL, -2);
+					lua_rawseti(inL, -2, 2);
+
+					lua_pushvalue(inL, -2);
+					lua_rawseti(inL, -2, 1);
+					lua_remove(inL, -2);
+					lua_rawset(inL, TableIndex);
+				}
+				else
+				{
+					lua_pop(inL, 1);
+					*(void**)lua_newuserdata(inL, sizeof(void *)) = LuaProperty;
+					lua_rawset(inL, TableIndex);
+				}
 			};
 			SetFunc(PropertyName, -3);
 		}
@@ -487,11 +591,35 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 						FString FuncName = Pairs.Key;
 						if (!HasAddFunc.Contains(FuncName))
 						{
+							HasGlueFunctionForIndex = true;
+							HasAddFunc.Add(FuncName);
 							if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc)!=0)
 							{
-								FString AfterChopFuncName = Pairs.Key.RightChop(7);
-								AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*AfterChopFuncName), Pairs.Value.func);
-								HasAddFunc.Add(FuncName);
+								if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStructProperty) != 0)
+								{
+									FString FuncName = Pairs.Key.RightChop(7);
+									lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+
+									lua_createtable(inL, 2, 0);
+
+									lua_createtable(inL, 0, 10);
+									lua_createtable(inL, 0, 1);
+									lua_pushstring(inL, "k");
+									lua_setfield(inL, -2, "__mode");
+									lua_setmetatable(inL, -2);
+									lua_rawseti(inL, -2, 2);
+
+									lua_pushcfunction(inL, Pairs.Value.func);
+									lua_rawseti(inL, -2, 1);
+									lua_rawset(inL, -3);
+								}
+								else
+								{
+									FString FuncName = Pairs.Key.RightChop(7);
+									lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+									lua_pushlightuserdata(inL, (void*)Pairs.Value.func);
+									lua_rawset(inL, -3);
+								}
 							}
 						}
 					}
@@ -501,9 +629,13 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 		}
 	};
 	AddGetBpProperty();
+	if (HasGlueFunctionForIndex)
+		AddFuncToTable(inL, -2, "__index", index_reflection_uobject_func_withexpand<true>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+	else
+		AddFuncToTable(inL, -2, "__index", index_reflection_uobject_func_withexpand<false>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
 
-	AddFuncToTable(inL, -2, "__index", index_reflection_uobject_func_withexpand, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
 	lua_pop(inL, 1);
+
 	lua_newtable(inL);
 	auto AddSetBpProperty = [&]() {
 		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
@@ -513,6 +645,7 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
 			{
+				bool bPushFunction = false;
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
 				if (Property->IsA(UBoolProperty::StaticClass()))
@@ -573,7 +706,14 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 				push(inL, "LuaSet_" + Name);
 				lua_pushvalue(inL, -2);
 				lua_rawset(inL, TableIndex - 3);
-				lua_rawset(inL, TableIndex);
+				if (bPushFunction)
+					lua_rawset(inL, TableIndex);
+				else
+				{
+					lua_pop(inL, 1);
+					*(void**)lua_newuserdata(inL, sizeof(void *)) = LuaProperty;
+					lua_rawset(inL, TableIndex);
+				}
 			};
 			SetFunc(PropertyName, -3);
 		}
@@ -591,11 +731,14 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 						FString FuncName = Pairs.Key;
 						if (!HasAddFunc.Contains(FuncName))
 						{
+							HasGlueFunctionForNewIndex = true;
+							HasAddFunc.Add(FuncName);
 							if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_SetPropertyFunc)!=0)
 							{
-								FString AfterChopFuncName = Pairs.Key.RightChop(7);
-								AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*AfterChopFuncName), Pairs.Value.func);
-								HasAddFunc.Add(FuncName);
+								FString FuncName = Pairs.Key.RightChop(7);
+								lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+								lua_pushlightuserdata(inL, (void*)Pairs.Value.func);
+								lua_rawset(inL, -3);
 							}
 						}
 					}
@@ -605,65 +748,18 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 		}
 	};
 	AddSetBpProperty();
-	AddFuncToTable(inL, -2, "__newindex", newindex_reflection_uobject_func_withexpand, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
-	AddFuncToTable(inL, -2, "__trynewindex", try_newindex_reflection_uobject_func_withexpand, LuaSpace::StackValue(-1), Class);
-	lua_pop(inL, 1);
-	AddFuncToTable(inL, -1, "Cast", GeneralCast, Class);
-	AddFuncToTable(inL, -1, "LoadClass", GeneralLoadClass, Class);
-	AddFuncToTable(inL, -1, "LoadObject", GeneralLoadObject, Class);
-	AddFuncToTable(inL, -1, "Class", GeneralGetClass, Class);
-	AddFuncToTable(inL, -1, "StaticClass", GeneralGetClass, Class);
-	AddFuncToTable(inL, -1, "FClassFinder", GeneralFClassFinder, Class);
-	AddFuncToTable(inL, -1, "__gc", uobjcet_gcfunc);
-
-	AddFuncToTable(inL, -1, "New", GeneralNewObject, Class);
-	AddFuncToTable(inL, -1, "NewObject", GeneralNewObject, Class);
-	AddFuncToTable(inL, -1, "GetDefaultObject", GeneralGetDefaultObject, Class);
-	AddFuncToTable(inL, -1, "Destroy", EnsureDestroy);
-	AddFuncToTable(inL, -1, "GetClass", UObject_GetClass);
-	AddFuncToTable(inL, -1, "GetName", UObject_GetName);
-	AddFuncToTable(inL, -1, "GetOuter", UObject_GetOuter);
-	AddFuncToTable(inL, -1, "LuaGet_ClassPrivate", UObject_GetClass);
-	AddFuncToTable(inL, -1, "LuaGet_NamePrivate", UObject_GetName);
-	AddFuncToTable(inL, -1, "LuaGet_OuterPrivate", UObject_GetOuter);
-	AddFuncToTable(inL, -1, "IsPendingKill", UObject_IsPendingKill);
-	AddFuncToTable(inL, -1, "MarkPendingKill", UObject_MarkPendingKill);
-	AddFuncToTable(inL, -1, "AddToRoot", UObject_AddToRoot);
-	AddFuncToTable(inL, -1, "RemoveFromRoot", UObject_RemoveFromRoot);
-// 	AddFuncToTable(inL, -1, "GetAllProperty", GetUObjectAllProperty);
-	AddFuncToTable(inL, -1, "ReloadConfig", GeneralReloadConfig);
-	AddFuncToTable(inL, -1, "LoadConfig", GeneralLoadConfig);
-	AddFuncToTable(inL, -1, "SaveConfig", GeneralSaveConfig);
-	LuaRawSet(inL, -1, "classname", classname);
-	LuaRawSet(inL, -1, "IsObject", true);
-	UClass* MeOrParentClass = TheClass;
-	TSet<FString> HasAddFunc;
-
-	TMap<FString, UnrealLuaBlueFunc> StaticPropertyFuncMap;
-	while (MeOrParentClass)
+	if (HasGlueFunctionForNewIndex)
 	{
-		if (MeOrParentClass->HasAnyClassFlags(CLASS_Native))
-		{
-			FString NameOfExpandClassToCheck = FString::Printf(TEXT("%s%s"), MeOrParentClass->GetPrefixCPP(), *MeOrParentClass->GetName());
-			if (auto* ExpandFunc = ExpandClassGlue.Find(NameOfExpandClassToCheck))
-			{
-				for (auto& Pairs : *ExpandFunc)
-				{
-					if (!HasAddFunc.Contains(Pairs.Key))
-					{
-						if (Pairs.Value.ExportFlag & RF_IsStaticProperty)
-							StaticPropertyFuncMap.Add(Pairs.Key, Pairs.Value);
-						AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*Pairs.Key), Pairs.Value.func);
-						HasAddFunc.Add(Pairs.Key);
-					}
-				}
-			}
-			TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(NameOfExpandClassToCheck);
-			BuildOverLoadFuncTree(inL, OverloadFuncs);
-		}
-		MeOrParentClass = MeOrParentClass->GetSuperClass();
+		AddFuncToTable(inL, -2, "__newindex", newindex_reflection_uobject_func_withexpand<true>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+		AddFuncToTable(inL, -2, "__trynewindex", try_newindex_reflection_uobject_func_withexpand<true>, LuaSpace::StackValue(-1), Class);
 	}
-	AddStaticMetaToTable(inL, StaticPropertyFuncMap, Class, true);
+	else
+	{
+		AddFuncToTable(inL, -2, "__newindex", newindex_reflection_uobject_func_withexpand<false>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+		AddFuncToTable(inL, -2, "__trynewindex", try_newindex_reflection_uobject_func_withexpand<false>, LuaSpace::StackValue(-1), Class);
+	}
+	lua_pop(inL, 1);
+
 	lua_setglobal(inL, classname);
 }
 
@@ -671,11 +767,29 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 {	
 	UScriptStruct* Class = StructClass;
 	bool IsBpStruct = StructClass->IsA(UUserDefinedStruct::StaticClass());
+	auto* ExpandFunc = ExpandClassGlue.Find(structname);
+	bool bHasGlue = ExpandFunc != nullptr;
+	if(bHasGlue)
+		AddBaseClassFuncList(ExpandFunc, structname);
 
 	lua_newtable(inL);
 	LuaRawSet(inL, -1, "classname", structname);
 
-	lua_newtable(inL);
+	FString NameNoGc = structname;
+	NameNoGc += "_nogc";
+	auto temp1 = FTCHARToUTF8((const TCHAR*)*NameNoGc);
+	const char* structname_nogc = (ANSICHAR*)temp1.Get();
+	AddFuncToTable(inL, -1, "Copy", BpStructCopy, Class, Class->GetStructureSize(), structname);
+	AddFuncToTable(inL, -1, "New", BpStructNew, Class, Class->GetStructureSize(), structname);
+	AddFuncToTable(inL, -1, "Temp", BpStructTemp, Class, Class->GetStructureSize(), structname, structname_nogc);
+	AddFuncToTable(inL, -1, "Destroy", BpStructDestroy, Class);
+	AddFuncToTable(inL, -1, "__eq", BpStruct__eq, Class);
+
+	if (bIsNeedGc)
+	{
+		AddFuncToTable(inL, -1, "__gc", struct_gcfunc);
+	}
+
 	auto GetPropertyName = [=](UProperty* Property)
 	{
 		FString PropertyName = Property->GetName();
@@ -688,118 +802,13 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 		}
 		return PropertyName;
 	};
-	auto AddGetBpProperty = [&]() {
-		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
-		{
-			UProperty* Property = *PropertyIt;
-			FString PropertyName = GetPropertyName(Property);
-			void* LuaProperty = GetBpPropertyInterface(inL, Property);
-			auto SetFunc = [=](const FString& Name, int TableIndex)
-			{
-				push(inL, Name);
-				lua_pushlightuserdata(inL, LuaProperty);
-				if (Property->IsA(UBoolProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UBoolProperty), 1);
-				else if (Property->IsA(UIntProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UIntProperty), 1);
-				else if (Property->IsA(UUInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt16Property), 1);
-				else if (Property->IsA(UInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt16Property), 1);
-				else if (Property->IsA(UUInt32Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt32Property), 1);
-				else if (Property->IsA(UInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt64Property), 1);
-				else if (Property->IsA(UUInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt64Property), 1);
-				else if (Property->IsA(UFloatProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UFloatProperty), 1);
-				else if (Property->IsA(UDoubleProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UDoubleProperty), 1);
-				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectPropertyBase), 1);
-				else if (Property->IsA(UObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectProperty), 1);
-				else if (Property->IsA(UClassProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UClassProperty), 1);
-				else if (Property->IsA(UStrProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UStrProperty), 1);
-				else if (Property->IsA(UNameProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UNameProperty), 1);
-				else if (Property->IsA(UTextProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UTextProperty), 1);
-				else if (Property->IsA(UByteProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UByteProperty), 1);
-				else if (Property->IsA(UEnumProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UEnumProperty), 1);
-				else if (Property->IsA(UStructProperty::StaticClass()))
-				{
-					lua_newtable(inL);
-					lua_newtable(inL);
-					lua_pushstring(inL, "k");
-					lua_setfield(inL, -2, "__mode");
-					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UStructProperty), 2);
-				}
-				else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
-				{
-					lua_newtable(inL);
-					lua_newtable(inL);
-					lua_pushstring(inL, "k");
-					lua_setfield(inL, -2, "__mode");
-					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UMulticastDelegateProperty), 2);
-				}
-				else if (Property->IsA(UDelegateProperty::StaticClass()))
-				{
-					lua_newtable(inL);
-					lua_newtable(inL);
-					lua_pushstring(inL, "k");
-					lua_setfield(inL, -2, "__mode");
-					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UDelegateProperty), 2);
-				}
-				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UWeakObjectProperty), 1);
-				else if (Property->IsA(UArrayProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UArrayProperty), 1);
-				else if (Property->IsA(UMapProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UMapProperty), 1);
-				else if (Property->IsA(USetProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(USetProperty), 1);
-				else if (Property->IsA(UInterfaceProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInterfaceProperty), 1);
-				else
-				{
-					ensureAlwaysMsgf(0, TEXT("Bug"));
-					lua_pushcclosure(inL, BpStructGetProp, 1);
-				}
-				push(inL, "LuaGet_" + Name);
-				lua_pushvalue(inL, -2);
-				lua_rawset(inL, TableIndex - 3);
-				lua_rawset(inL, TableIndex);
-			};
-			SetFunc(PropertyName, -3);
-		}
-		if (auto* ExpandFunc = ExpandClassGlue.Find(structname))
-		{
-			for (auto& Pairs : *ExpandFunc)
-			{
-				if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc)!=0)
-				{
-					FString FuncName = Pairs.Key.RightChop(7);
-					AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*FuncName), Pairs.Value.func);
-				}
-			}
-		}
-	};
-	AddGetBpProperty();
-	AddFuncToTable(inL, -2, "__index", index_struct_func_with_class, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
-	lua_pop(inL, 1);
+	bool HasGlueFunctionForIndex = false;
+	bool HasGlueFunctionForNewIndex = false;
 	lua_newtable(inL);
 	auto AddSetBpProperty = [&]() {
 		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
+			bool bPushFunction = false;
 			UProperty* Property = *PropertyIt;
 			FString PropertyName = GetPropertyName(Property);
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
@@ -865,56 +874,56 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 				push(inL, "LuaSet_" + Name);
 				lua_pushvalue(inL, -2);
 				lua_rawset(inL, TableIndex - 3);
-				lua_rawset(inL, TableIndex);
+				if (bPushFunction)
+					lua_rawset(inL, TableIndex);
+				else
+				{
+					lua_pop(inL, 1);
+					*(void**)lua_newuserdata(inL, sizeof(void *)) = LuaProperty;
+					lua_rawset(inL, TableIndex);
+				}
 			};
 			SetFunc(PropertyName, -3);
 		}
-		if (auto* ExpandFunc = ExpandClassGlue.Find(structname))
+		if (ExpandFunc)
 		{
 			for (auto& Pairs : *ExpandFunc)
 			{
 				if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_SetPropertyFunc)!=0)
 				{
+					HasGlueFunctionForNewIndex = true;
 					FString FuncName = Pairs.Key.RightChop(7);
-					AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*FuncName), Pairs.Value.func);
+					lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+					lua_pushlightuserdata(inL, (void*)Pairs.Value.func);
+					lua_rawset(inL, -3);
 				}
 			}
 		}
 	};
 	AddSetBpProperty();
-	AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_class, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+	if(HasGlueFunctionForNewIndex)
+		AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_class_with_glue<true>, LuaSpace::StackValue(-1), Class);
+	else
+		AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_class_with_glue<false>, LuaSpace::StackValue(-1), Class);
 	lua_pop(inL, 1);
 
-	FString NameNoGc = structname;
-	NameNoGc += "_nogc";
-	auto temp1 = FTCHARToUTF8((const TCHAR*)*NameNoGc);
-	const char* structname_nogc = (ANSICHAR*)temp1.Get();
-	AddFuncToTable(inL, -1, "Copy", BpStructCopy, Class, Class->GetStructureSize(), structname);
-	AddFuncToTable(inL, -1, "New", BpStructNew, Class, Class->GetStructureSize(), structname);
-	AddFuncToTable(inL, -1, "Temp", BpStructTemp, Class, Class->GetStructureSize(), structname, structname_nogc);
-	AddFuncToTable(inL, -1, "Destroy", BpStructDestroy, Class);
-	AddFuncToTable(inL, -1, "__eq", BpStruct__eq, Class);
-	
-	if (bIsNeedGc)
+	if (ExpandFunc)
 	{
-		AddFuncToTable(inL, -1, "__gc", struct_gcfunc);
-	}
-	
-	if (auto* ExpandFunc = ExpandClassGlue.Find(structname))
-	{
-		AddBaseClassFuncList(ExpandFunc, structname);
 		bool HasStaticProperty = false;
 		for (auto& Pairs : *ExpandFunc)
 		{
-			bool isStaticProperty = (Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty)!=0;
+			bool isStaticProperty = (Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty) != 0;
 			HasStaticProperty = HasStaticProperty || isStaticProperty;
 			if (!bIsNeedGc && Pairs.Key == "__gc")
 				continue;
+			HasGlueFunctionForIndex = true;
 			AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*Pairs.Key), Pairs.Value.func);
 		}
 		if (HasStaticProperty)
+		{
+			HasGlueFunctionForIndex = true;
 			AddStaticMetaToTable(inL, *ExpandFunc);
-
+		}
 		TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(structname);
 		BuildOverLoadFuncTree(inL, OverloadFuncs);
 	}
@@ -928,6 +937,176 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 		ClassDefineTypeInLua.Add(structname, NewType);
 		LuaRawSet(inL, -1, "_type_", NewType);
 	}
+
+	lua_newtable(inL);
+	CopyTableForLua(inL);
+	auto AddGetBpProperty = [&]() {
+		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+		{
+			UProperty* Property = *PropertyIt;
+			FString PropertyName = GetPropertyName(Property);
+			void* LuaProperty = GetBpPropertyInterface(inL, Property);
+			auto SetFunc = [=](const FString& Name, int TableIndex)
+			{
+				bool bPushFunction = false;
+				push(inL, Name);
+				lua_pushlightuserdata(inL, LuaProperty);
+				if (Property->IsA(UBoolProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UBoolProperty), 1);
+				else if (Property->IsA(UIntProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UIntProperty), 1);
+				else if (Property->IsA(UUInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt16Property), 1);
+				else if (Property->IsA(UInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt16Property), 1);
+				else if (Property->IsA(UUInt32Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt32Property), 1);
+				else if (Property->IsA(UInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt64Property), 1);
+				else if (Property->IsA(UUInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt64Property), 1);
+				else if (Property->IsA(UFloatProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UFloatProperty), 1);
+				else if (Property->IsA(UDoubleProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UDoubleProperty), 1);
+				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectPropertyBase), 1);
+				else if (Property->IsA(UObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectProperty), 1);
+				else if (Property->IsA(UClassProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UClassProperty), 1);
+				else if (Property->IsA(UStrProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UStrProperty), 1);
+				else if (Property->IsA(UNameProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UNameProperty), 1);
+				else if (Property->IsA(UTextProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UTextProperty), 1);
+				else if (Property->IsA(UByteProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UByteProperty), 1);
+				else if (Property->IsA(UEnumProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UEnumProperty), 1);
+				else if (Property->IsA(UStructProperty::StaticClass()))
+				{
+					lua_newtable(inL);
+					lua_newtable(inL);
+					lua_pushstring(inL, "k");
+					lua_setfield(inL, -2, "__mode");
+					lua_setmetatable(inL, -2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UStructProperty), 2);
+					bPushFunction = true;
+				}
+				else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
+				{
+					lua_newtable(inL);
+					lua_newtable(inL);
+					lua_pushstring(inL, "k");
+					lua_setfield(inL, -2, "__mode");
+					lua_setmetatable(inL, -2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UMulticastDelegateProperty), 2);
+					bPushFunction = true;
+				}
+				else if (Property->IsA(UDelegateProperty::StaticClass()))
+				{
+					lua_newtable(inL);
+					lua_newtable(inL);
+					lua_pushstring(inL, "k");
+					lua_setfield(inL, -2, "__mode");
+					lua_setmetatable(inL, -2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UDelegateProperty), 2);
+					bPushFunction = true;
+				}
+				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UWeakObjectProperty), 1);
+				else if (Property->IsA(UArrayProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UArrayProperty), 1);
+				else if (Property->IsA(UMapProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UMapProperty), 1);
+				else if (Property->IsA(USetProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(USetProperty), 1);
+				else if (Property->IsA(UInterfaceProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(UInterfaceProperty), 1);
+				else
+				{
+					ensureAlwaysMsgf(0, TEXT("Bug"));
+					lua_pushcclosure(inL, BpStructGetProp, 1);
+				}
+				push(inL, "LuaGet_" + Name);
+				lua_pushvalue(inL, -2);
+				lua_rawset(inL, TableIndex - 3);
+				if (bPushFunction)
+				{
+					lua_createtable(inL, 2, 0);
+
+					lua_createtable(inL, 0, 10);
+					lua_createtable(inL, 0, 1);
+					lua_pushstring(inL, "k");
+					lua_setfield(inL, -2, "__mode");
+					lua_setmetatable(inL, -2);
+					lua_rawseti(inL, -2, 2);
+
+					lua_pushvalue(inL, -2);
+					lua_rawseti(inL, -2, 1);
+					lua_remove(inL, -2);
+					lua_rawset(inL, TableIndex);
+				}
+				else
+				{
+					lua_pop(inL, 1);
+					*(void**)lua_newuserdata(inL, sizeof(void *)) = LuaProperty;
+					lua_rawset(inL, TableIndex);
+				}
+			};
+			SetFunc(PropertyName, -3);
+		}
+		if (ExpandFunc)
+		{
+			for (auto& Pairs : *ExpandFunc)
+			{
+				if ( ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc) != 0) )					
+				{
+					HasGlueFunctionForIndex = true;
+					FString FuncName = Pairs.Key.RightChop(7);
+					if ((Pairs.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStructProperty) != 0)
+					{
+						lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+
+						lua_createtable(inL, 2, 0);
+
+						lua_createtable(inL, 0, 10);
+						lua_createtable(inL, 0, 1);
+						lua_pushstring(inL, "k");
+						lua_setfield(inL, -2, "__mode");
+						lua_setmetatable(inL, -2);
+						lua_rawseti(inL, -2, 2);
+
+						lua_pushcfunction(inL, Pairs.Value.func);
+						lua_rawseti(inL, -2, 1);
+						lua_rawset(inL, -3);
+					}
+					else
+					{
+						lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+						lua_pushlightuserdata(inL, (void*)Pairs.Value.func);
+						lua_rawset(inL, -3);
+					}
+				}
+				else if (Pairs.Key != "__gc" && Pairs.Key != "__index" && Pairs.Key != "__newindex")
+				{
+					HasGlueFunctionForIndex = true;
+					AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*Pairs.Key), Pairs.Value.func);
+				}
+			}
+		}
+	};
+	AddGetBpProperty();
+	if(HasGlueFunctionForIndex)
+		AddFuncToTable(inL, -2, "__index", index_struct_func_with_class_with_glue<true>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+	else
+		AddFuncToTable(inL, -2, "__index", index_struct_func_with_class_with_glue<false>, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), Class);
+
+	lua_pop(inL, 1);
+
+	
 	FString GlobalKey = structname;
 	if (!bIsNeedGc)
 		GlobalKey += "_nogc";
@@ -1031,8 +1210,8 @@ FString PrintLuaStackOfL(lua_State* inL)
 
 void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct, bool bNeedGc)
 {
-	lua_getglobal(inL, classname);
-	if (lua_istable(inL, -1))
+	int32 Type = lua_getglobal(inL, classname);
+	if (Type == LUA_TTABLE)
 	{
 		lua_setmetatable(inL, index - 1);
 	}
@@ -1059,12 +1238,12 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 // 	while (!Class->HasAnyClassFlags(CLASS_Native))
 // 		Class = Class->GetSuperClass();
 	lua_State* MainThread = GetMainThread(inL);
-	TMap<UClass*, FString>&HasAddClasses = HasAddUClass.FindOrAdd(MainThread);
-	FString* ClassNamePtr = HasAddClasses.Find(Class);
-	FString ClassName;
+	auto& HasAddClasses = HasAddUClass.FindOrAdd(MainThread);
+	auto ClassNamePtr = HasAddClasses.Find(Class);
+	const char* ClassName = nullptr;
 	if (ClassNamePtr)
 	{
-		ClassName = *ClassNamePtr;
+		ClassName = (*(ClassNamePtr))->Get();
 	}
 	else
 	{
@@ -1072,39 +1251,35 @@ void UTableUtil::set_uobject_meta(lua_State *inL, UObject* Obj, int index)
 		if (NativeClass->HasAnyClassFlags(CLASS_Native))
 		{
 			FString NativeClassStr = FString::Printf(TEXT("%s%s"), NativeClass->GetPrefixCPP(), *NativeClass->GetName());
-			HasAddClasses.Add(Class, NativeClassStr);
-			ClassName = NativeClassStr;
-			auto temp4 = FTCHARToUTF8((const TCHAR*)*ClassName);
-			const char* nativeclassname = (ANSICHAR*)temp4.Get();
-			requirecpp(inL, nativeclassname);
+			TSharedPtr<FTCHARToUTF8> NewClassNameUTF8 = MakeShareable(new FTCHARToUTF8((const TCHAR*)*NativeClassStr));
+			HasAddClasses.Add(Class, NewClassNameUTF8);
+			ClassName = NewClassNameUTF8->Get();
+			requirecpp(inL, ClassName);
 		}
 		else
 		{
 			FString BpClassStr = Class->GetName();
-			ClassName = BpClassStr;
-			HasAddClasses.Add(Class, ClassName);
-			auto temp4 = FTCHARToUTF8((const TCHAR*)*ClassName);
-			const char* classnameptr = (ANSICHAR*)temp4.Get();
-			if (ExistClassInGlobal(inL, classnameptr))
+			TSharedPtr<FTCHARToUTF8> NewClassNameUTF8 = MakeShareable(new FTCHARToUTF8((const TCHAR*)*BpClassStr));
+			HasAddClasses.Add(Class, NewClassNameUTF8);
+			ClassName = NewClassNameUTF8->Get();
+			if (ExistClassInGlobal(inL, ClassName))
 				ensureAlwaysMsgf(0, TEXT("Shouldn't be this"));
-			init_refelction_native_uclass_meta(MainThread, classnameptr, Class);
+			init_refelction_native_uclass_meta(MainThread, ClassName, Class);
 
 			UPackage* Package = Class->GetTypedOuter<UPackage>();
 			auto& WorldBpSet = NeedGcBpClassName.FindOrAdd(MainThread);
 			if (Package)
 			{
 				auto& BpSet = WorldBpSet.FindOrAdd(Package);
-				BpSet.Add(ClassName, Class);
+				BpSet.Add(FString(ClassName), Class);
 			}
 		}
 	}
 
-	auto temp4 = FTCHARToUTF8((const TCHAR*)*ClassName);
-	const char* nativeclassname = (ANSICHAR*)temp4.Get();
-	setmeta(inL, nativeclassname, index);
+	setmeta(inL, ClassName, index);
 
 #if LuaDebug
-	AddGcCount(inL, ClassName);
+	AddGcCount(inL, FString(ClassName));
 #endif
 }
 
@@ -1116,7 +1291,7 @@ void UTableUtil::OnWorldCleanUp(lua_State*inL, UWorld* World)
 		auto& WorldBpSet = NeedGcBpClassName.FindOrAdd(MainThread);
 		auto CleanFunc = [MainThread](TMap<FString, UClass*>& BpSet) 
 		{
-			TMap<UClass*, FString>& HasAddClassForState = HasAddUClass.FindOrAdd(MainThread);
+			auto& HasAddClassForState = HasAddUClass.FindOrAdd(MainThread);
 			for (auto&Pairs: BpSet)
 			{
 				auto temp = FTCHARToUTF8((const TCHAR*)*Pairs.Key);
@@ -2159,6 +2334,23 @@ bool UTableUtil::requirecpp(lua_State* inL, const FString& classname)
 	}
 }
 
+bool UTableUtil::requirecpp(lua_State* inL, const char* classname)
+{
+	lua_geti(inL, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+	lua_pushstring(inL, classname);
+	int32 Type = lua_rawget(inL, -2);
+	if (Type == LUA_TNIL)
+	{
+		lua_pop(inL, 2);
+		return requirecpp(inL, FString(classname));
+	}
+	else
+	{
+		lua_pop(inL, 2);
+		return false;
+	}
+}
+
 int UTableUtil::require_lua(lua_State* inL)
 {
 	FString classname = lua_tostring(inL, 1);
@@ -2490,7 +2682,7 @@ void pushuobject(lua_State *inL, void* p, bool bgcrecord)
 		{
 			*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
 
-			lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+			lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 			lua_pushlightuserdata(inL, p);
 			lua_pushvalue(inL, -3);
 			lua_rawset(inL, -3);
@@ -2528,29 +2720,37 @@ void pushstruct_nogc(lua_State *inL, const char* structname, const char* structn
 		return;
 	}
 	*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
+
 	UTableUtil::requirecpp(inL, structname);
 	UTableUtil::setmeta(inL, structname_nogc, -1, true);
 }
 
 void pushstruct_temp(lua_State *inL, const char* structname, const char* structname_nogc,void* p)
 {
+#if LuaDebug
 	if (p == nullptr)
 	{
 		lua_pushnil(inL);
 		return;
 	}
+#endif
 
-	if (!existdata(inL, p))
+	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+	int32 Type = lua_rawgetp(inL, -1, p);
+	if (Type == LUA_TNIL)
 	{
-		*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
-
-		lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
-		lua_pushlightuserdata(inL, p);
-		lua_pushvalue(inL, -3);
-		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
 		UTableUtil::requirecpp(inL, structname);
 		UTableUtil::setmeta(inL, structname_nogc, -1, true, false);
+		lua_pushvalue(inL, -1);
+		lua_rawsetp(inL, -3, p);
+		lua_remove(inL, -2);
+	}
+	else
+	{
+		lua_remove(inL, -2);
+		lua_remove(inL, -2);
 	}
 }
 
@@ -2559,63 +2759,148 @@ void UTableUtil::loadlib(lua_State *inL, TMap<FString, UnrealLuaBlueFunc>& funcl
 	int i = 0;
 	UTableUtil::addmodule(inL, classname, bIsStruct, bNeedGc, luaclassname);
 	UTableUtil::openmodule(inL, luaclassname ? luaclassname : classname);
+	bool HasStaticProperty = false;
 	if (bIsStruct)
 	{
 		lua_CFunction IndexExtendFunc = nullptr;
-		lua_newtable(inL);
-		for (auto& paris : funclist)
-		{
-			if (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IndexFuncExtend)
-			{
-				IndexExtendFunc = paris.Value.func;
-				continue;
-			}
-			if ((paris.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc)!=0) {
-				FString FuncName = paris.Key.RightChop(7);
-				UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*FuncName), paris.Value.func);
-			}
-		}
-		if (IndexExtendFunc)
-			AddFuncToTable(inL, -2, "__index", index_struct_func_with_extend, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), IndexExtendFunc);
-		else
-			AddFuncToTable(inL, -2, "__index", index_struct_func, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2));
-		lua_pop(inL, 1);
-		lua_newtable(inL);
+		lua_CFunction OverrideIndex = nullptr;
+		lua_CFunction OverrideNewIndex = nullptr;
 		lua_CFunction NewIndexExtendFunc = nullptr;
+
 		for (auto& paris : funclist)
 		{
-			if (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_NewIndexFuncExtend)
+			bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty) != 0;
+			HasStaticProperty = HasStaticProperty || isStaticProperty;
+			if (!bNeedGc && paris.Key == "__gc")
+				continue;
+			else if (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_NewIndexFuncExtend)
 			{
 				NewIndexExtendFunc = paris.Value.func;
 				continue;
 			}
+			else if (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IndexFuncExtend)
+			{
+				IndexExtendFunc = paris.Value.func;
+				continue;
+			}
+			else if (paris.Key == "__index")
+			{
+				OverrideIndex = paris.Value.func;
+				continue;
+			}
+			else if (paris.Key == "__newindex")
+			{
+				OverrideNewIndex = paris.Value.func;
+				continue;
+			}
+			else if ((paris.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc) != 0)
+			{
+				if (!isStaticProperty)
+				{
+					FString FuncName = paris.Key.RightChop(7);
+					if ((paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStructProperty) != 0)
+					{
+						lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+
+						lua_createtable(inL, 2, 0);
+
+						lua_createtable(inL, 0, 10);
+						lua_createtable(inL, 0, 1);
+						lua_pushstring(inL, "k");
+						lua_setfield(inL, -2, "__mode");
+						lua_setmetatable(inL, -2);
+						lua_rawseti(inL, -2, 2);
+
+						lua_pushlightuserdata(inL, (void*)paris.Value.func);
+						lua_rawseti(inL, -2, 1);
+
+						lua_rawset(inL, -3);
+					}
+					else
+					{
+						lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+						lua_pushlightuserdata(inL, (void*)paris.Value.func);
+						lua_rawset(inL, -3);
+					}
+				}
+				AddFuncToTable(inL, -1, TCHAR_TO_UTF8(*paris.Key), paris.Value.func);
+			}
+			else
+			{
+				UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*paris.Key), paris.Value.func);
+			}
+		}
+
+		TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(classname);
+		BuildOverLoadFuncTree(inL, OverloadFuncs);
+
+		lua_newtable(inL);
+		CopyTableForLua(inL);
+		for (auto& paris : funclist)
+		{
+			bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty) != 0;
+			if (isStaticProperty && (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc) != 0)
+			{
+				FString FuncName = paris.Key.RightChop(7);
+				if ((paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStructProperty) != 0)
+				{
+					lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+					lua_pushcfunction(inL, paris.Value.func);
+					lua_pushnil(inL);
+					lua_call(inL, 1, 1);
+					lua_rawset(inL, -3);
+				}
+				else
+				{
+					lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+					lua_pushlightuserdata(inL, (void*)paris.Value.func);
+					lua_rawset(inL, -3);
+				}
+			}
+		}
+
+		if(OverrideIndex)
+			AddFuncToTable(inL, -2, "__index", OverrideIndex, LuaSpace::StackValue(-2));
+		else if (IndexExtendFunc)
+			AddFuncToTable(inL, -2, "__index", index_struct_func_with_extend, LuaSpace::StackValue(-1), IndexExtendFunc);
+		else
+			AddFuncToTable(inL, -2, "__index", index_struct_func, LuaSpace::StackValue(-1));
+		lua_pop(inL, 1);
+
+		lua_newtable(inL);
+		for (auto& paris : funclist)
+		{
 			if ((paris.Value.ExportFlag & ELuaFuncExportFlag::RF_SetPropertyFunc)!=0) {
 				FString FuncName = paris.Key.RightChop(7);
 				UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*FuncName), paris.Value.func);
 			}
 		}
-		if (NewIndexExtendFunc)
-			AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func_with_extend, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2), NewIndexExtendFunc);
+
+		if(OverrideNewIndex)
+			AddFuncToTable(inL, -2, "__newindex", OverrideNewIndex, LuaSpace::StackValue(-2));
+		else if (NewIndexExtendFunc)
+			AddFuncToTable(inL, -2, "__newindex", newindex_struct_func_with_extend, LuaSpace::StackValue(-1), NewIndexExtendFunc);
 		else
-			AddFuncToTable(inL, -2, "__newindex", newindex_struct_Func, LuaSpace::StackValue(-2), LuaSpace::StackValue(-2));
+			AddFuncToTable(inL, -2, "__newindex", newindex_struct_func, LuaSpace::StackValue(-1));
 		lua_pop(inL, 1);
 	}
-	bool HasStaticProperty = false;
-	for (auto& paris : funclist)
+	else
 	{
-		bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty)!=0;
-		HasStaticProperty = HasStaticProperty || isStaticProperty;
-		if(!bNeedGc && paris.Key == "__gc")
-			continue;
-		if( paris.Value.ExportFlag & ELuaFuncExportFlag::RF_NewIndexFuncExtend || paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IndexFuncExtend)
-			continue;
-		
-		UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*paris.Key), paris.Value.func);
+		for (auto& paris : funclist)
+		{
+			bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty) != 0;
+			HasStaticProperty = HasStaticProperty || isStaticProperty;
+			if (!bNeedGc && paris.Key == "__gc")
+				continue;
+			if (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_NewIndexFuncExtend || paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IndexFuncExtend)
+				continue;
+
+			UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*paris.Key), paris.Value.func);
+		}
+		TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(classname);
+		BuildOverLoadFuncTree(inL, OverloadFuncs);
 	}
 
-
-	TMap<FString, TArray<UnrealLuaBlueFunc>>& OverloadFuncs = ClassOverloadFuncs.FindOrAdd(classname);
-	BuildOverLoadFuncTree(inL, OverloadFuncs);
 
 // not exactly right,because bit field
 	if (HasStaticProperty)
@@ -2634,10 +2919,20 @@ void UTableUtil::AddStaticMetaToTable(lua_State*inL, TMap<FString, UnrealLuaBlue
 	{
 		bool isGetProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_GetPropertyFunc)!=0;
 		bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty)!=0;
+		bool IsStructProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStructProperty) != 0;
 		if (isGetProperty && isStaticProperty)
 		{
 			FString FuncName = paris.Key.RightChop(7);
-			UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*FuncName), paris.Value.func);
+			if (IsStructProperty)
+			{
+				lua_pushstring(inL, TCHAR_TO_UTF8(*FuncName));
+				lua_pushcfunction(inL, paris.Value.func);
+				lua_pushnil(inL);
+				lua_call(inL, 1, 1);
+				lua_rawset(inL, -3);
+			}
+			else
+				UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*FuncName), paris.Value.func);
 		}
 	}
 	if (IsObject)
@@ -2653,15 +2948,22 @@ void UTableUtil::AddStaticMetaToTable(lua_State*inL, TMap<FString, UnrealLuaBlue
 	lua_newtable(inL);
 	for (auto& paris : funclist)
 	{
-		bool isGetProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_SetPropertyFunc)!=0;
+		bool isSetProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_SetPropertyFunc)!=0;
 		bool isStaticProperty = (paris.Value.ExportFlag & ELuaFuncExportFlag::RF_IsStaticProperty)!=0;
-		if (isGetProperty && isStaticProperty)
+		if (isSetProperty && isStaticProperty)
 		{
 			FString FuncName = paris.Key.RightChop(7);
 			UTableUtil::addfunc(inL, TCHAR_TO_UTF8(*FuncName), paris.Value.func);
 		}
 	}
-	AddFuncToTable(inL, -2, "__newindex", NewindexStaticProperty, LuaSpace::StackValue(-1));
+	if (IsObject)
+	{
+		AddFuncToTable(inL, -2, "__newindex", ObjectNewindexStaticProperty, LuaSpace::StackValue(-1));
+	}
+	else
+	{
+		AddFuncToTable(inL, -2, "__newindex", NewindexStaticProperty, LuaSpace::StackValue(-1));
+	}
 	lua_pop(inL, 1);
 	lua_setmetatable(inL, -2);
 }
@@ -2676,7 +2978,7 @@ void UTableUtil::loadstruct(lua_State *inL, TMap<FString, UnrealLuaBlueFunc>& fu
 
 bool existdata(lua_State*inL, void * p)
 {
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 	lua_pushlightuserdata(inL, p);
 	lua_rawget(inL, -2);
 	if (lua_isnil(inL, -1))
@@ -2694,7 +2996,7 @@ bool existdata(lua_State*inL, void * p)
 
 bool UTableUtil::existluains(lua_State*inL, void * p)
 {
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 	lua_pushlightuserdata(inL, p);
 	lua_rawget(inL, -2);
 	bool bDoesExist = false;
@@ -2715,28 +3017,9 @@ namespace UnrealLua {
 		void **u = nullptr;
 		switch (LuaType)
 		{
-			case LUA_TNIL:
-				return nullptr;
 			case LUA_TUSERDATA:
 				u = static_cast<void**>(lua_touserdata(L, i));
 				return *u;
-			case LUA_TTABLE:
-				if (i < 0)
-					i = lua_gettop(L) + i + 1;
-				lua_pushstring(L, "_cppinstance_");
-				lua_rawget(L, i);
-
-				if (lua_isnil(L, -1))
-				{
-					lua_pop(L, 1);
-					return nullptr;
-				}
-				else
-				{
-					u = static_cast<void**>(lua_touserdata(L, -1));
-					lua_pop(L, 1);
-					return *u;
-				}
 			default:
 				return nullptr;
 		}

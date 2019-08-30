@@ -105,7 +105,8 @@ namespace UnrealLua
 			case LUA_TTHREAD:
 				return (int32)UnrealLua::Type::TYPE_TTHREAD;
 			case LUA_TTABLE:
-				ue_lua_pushstring(inL, "_cppinstance_");
+// 				ue_lua_pushstring(inL, "_cppinstance_");
+				ue_lua_pushinteger(inL, CppInstanceIndex);
 				ue_lua_rawget(inL, Index);
 				if (ue_lua_isnil(inL, -1))
 					TypeResult = (int32)UnrealLua::Type::TYPE_TTABLE;

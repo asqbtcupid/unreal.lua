@@ -40,7 +40,7 @@ for your project:
 
    6.write slate by lua(expertimental),[example](https://github.com/asqbtcupid/unreal.lua/wiki/slate_lua)
 
-   7.extremely high performance.
+   7.extremely high performance, look benchmarkclass.lua.
 ## Documentation
 
 [wiki](https://github.com/asqbtcupid/unreal.lua/wiki)

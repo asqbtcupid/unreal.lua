@@ -39,6 +39,7 @@ function Init(IsMannual)
         -- a_("lua memory: ", collectgarbage("count"))
     end
     -- TimerMgr:Get():On(ShowMem):Time(2)
+    -- collectgarbage("stop")
 
     InitLuahotupdate()
 end

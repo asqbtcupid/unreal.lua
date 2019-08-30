@@ -1101,9 +1101,14 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 	FString TypeName_nogc;
 	const char* PtrTypeName;
 	const char* PtrTypeName_nogc;
+	TSharedPtr<FTCHARToUTF8> PtrTypeName_Utf8;
+	TSharedPtr<FTCHARToUTF8> PtrTypeName_nogc_Utf8;
+// 	auto temp1 = FTCHARToUTF8((const TCHAR*)*TypeName);
+// 	const char* name = (ANSICHAR*)temp1.Get();
 	//Some hook
 	virtual UProperty* GetProperty(){return Property;}
-	virtual ~LuaUStructProperty(){}
+	virtual ~LuaUStructProperty(){
+	}
 	LuaUStructProperty(lua_State*inL, UStructProperty* InProperty):Property(InProperty)
 	{
 		FString TempName;
@@ -1116,6 +1121,10 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 			TempName = Property->Struct->GetStructCPPName();
 		TypeName = TempName;
 		TypeName_nogc = TempName+"_nogc";
+		PtrTypeName_Utf8 = MakeShareable(new FTCHARToUTF8((const TCHAR*)*TypeName));
+		PtrTypeName_nogc_Utf8 = MakeShareable(new FTCHARToUTF8((const TCHAR*)*TypeName_nogc));
+		PtrTypeName = PtrTypeName_Utf8->Get();
+		PtrTypeName_nogc = PtrTypeName_nogc_Utf8->Get();
 	}
 	virtual void push(lua_State* inL, const void* ValuePtr) override
 	{
@@ -1123,18 +1132,18 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 	}
 	void push_novirtual(lua_State* inL, const void* ValuePtr) 
 	{
-		pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc), (void*)ValuePtr);
+		pushstruct_nogc(inL, PtrTypeName, PtrTypeName_nogc, (void*)ValuePtr);
 	}
 	virtual void push_ret(lua_State* inL, const void* ValuePtr) override
 	{
 		uint8* result = GetBpStructTempIns(TypeName, Property->GetSize());
 		Property->InitializeValue(result);
 		Property->CopyCompleteValueFromScriptVM(result, ValuePtr);
-		pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc), result);
+		pushstruct_nogc(inL, PtrTypeName, PtrTypeName_nogc, result);
 	}
 	virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
 	{
-		void* DestPtr = tovoid(inL, LuaStackIndex);
+		void* DestPtr = tostruct(inL, LuaStackIndex);
 		if(DestPtr)
 			Property->CopyCompleteValueFromScriptVM(DestPtr, ValuePtr);
 		else
@@ -1177,7 +1186,7 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 	}
 	virtual void push_container(lua_State* inL, const void* ContainerPtr) override
 	{
-		pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc), (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
+		pushstruct_nogc(inL, PtrTypeName, PtrTypeName_nogc, (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
 	}
 	virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
 	{
@@ -1185,12 +1194,12 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 		uint8* result = GetBpStructTempIns(TypeName, Property->GetSize());
 		Property->InitializeValue(result);
 		Property->CopyCompleteValueFromScriptVM(result, ValuePtr);
-		pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc), result);
+		pushstruct_temp(inL, PtrTypeName, PtrTypeName_nogc, result);
 	}
 	virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
 	{
 		void* ValuePtr = (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr);
-		void* DestPtr = tovoid(inL, LuaStackIndex);
+		void* DestPtr = tostruct(inL, LuaStackIndex);
 		if (DestPtr)
 			Property->CopyCompleteValueFromScriptVM(DestPtr, ValuePtr);
 		else
@@ -2045,11 +2054,30 @@ TSharedPtr<LuaBasePropertyInterface> CreatePropertyInterface(lua_State*inL, UPro
 	return MakeShareable(CreatePropertyInterfaceRaw(inL, Property));
 }
 
+#define BufferReserveCount 3
 struct LuaUFunctionInterface : public LuaBaseBpInterface
 {
-	~LuaUFunctionInterface(){}
+	struct IncGaurd
+	{
+		IncGaurd(int32& InCount) :Count(InCount) {}
+		~IncGaurd() { ++Count; }
+		int32& Count;
+	};
+	struct DecGaurd
+	{
+		DecGaurd(int32& InCount) :Count(InCount) {}
+		~DecGaurd() { --Count; }
+		int32& Count;
+	};
+	~LuaUFunctionInterface(){
+		for (auto p : Buffers)
+		{
+			FMemory::Free(p);
+		}
+	}
 	LuaUFunctionInterface(lua_State*inL, UFunction* Function)
 	{
+		ReEnterCount = 0;
 		IsStatic = (Function->FunctionFlags & FUNC_Static)!=0;
 		TheFunc = Function;
 		int32 ArgIndex;
@@ -2101,11 +2129,20 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 		ReturnCount = ReturnValues.Num() + RefParams.Num();
 	}
 
-	int32 GetBufferSize()
+	int32 GetBufferSize() const
 	{
 		return TheFunc->ParmsSize;
 	}
-
+	uint8* GetBuffer()
+	{
+		auto Gaurd = IncGaurd(ReEnterCount);
+		if ((Buffers.Num() - 1) < ReEnterCount)
+		{
+			Buffers.AddUninitialized();
+			Buffers[ReEnterCount] = (uint8*)(FMemory::Malloc(GetBufferSize()));
+		}
+		return Buffers[ReEnterCount];
+	}
 	void InitBuffer(uint8* Buffer)
 	{
 		for (auto& Itf : InitAndDestroyParams)
@@ -2141,6 +2178,7 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 
 	bool Call(lua_State*inL, uint8* Buffer, UObject* Ptr = nullptr)
 	{
+// 		auto Gaurd = DecGaurd(ReEnterCount);
 		if (Ptr == nullptr)
 		{
 			if (IsStatic)
@@ -2181,17 +2219,33 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 		}
 		return ReturnCount;
 	}
+
+	int32 JustCall(lua_State* inL)
+	{
+		uint8* Buffer = (uint8*)FMemory_Alloca(GetBufferSize());
+		// 	uint8* Buffer = FuncInterface->GetBuffer();
+		InitBuffer(Buffer);
+		int32 Count;
+		if (BuildTheBuffer(inL, Buffer) && Call(inL, Buffer))
+			Count = PushRet(inL, Buffer);
+		else
+			Count = 0;
+		DestroyBuffer(Buffer);
+		return Count;
+	}
 	
 	bool IsStatic;
 	UObject* DefaultObj;
 	UFunction* TheFunc;
 	TArray<int32> StackIndexs;
 	int32 StartIndex;
-	TArray<TSharedPtr<LuaBasePropertyInterface>> Params;
-	TArray<TSharedPtr<LuaBasePropertyInterface>> InitAndDestroyParams;
-	TArray<TSharedPtr<LuaBasePropertyInterface>> ReturnValues;
-	TArray<TSharedPtr<LuaBasePropertyInterface>> RefParams;
+	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<6>> Params;
+	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<6>> InitAndDestroyParams;
+	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<2>> ReturnValues;
+	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<6>> RefParams;
 	int32 ReturnCount;
+	int32 ReEnterCount;
+	TArray<uint8*, TInlineAllocator<BufferReserveCount>> Buffers;
 };
 
 struct MuldelegateBpInterface

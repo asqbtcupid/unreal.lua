@@ -86,10 +86,75 @@ function testUmg:InitClient( )
 	self.m_ClientSocket = UnrealLuaSocketMgr:Get():ClientToHost(self.m_ServerPort)
 end
 
-function testUmg:PlayAnim()
-	OpenDebugger()
+local function test1()
+	-- OpenDebugger()
 	-- UGameplayStatics.OpenLevel(self, "TestMap", true, "")
 	-- a_( self:Wnd("Button_81").OnClicked )
+	local StructTypeIns = TestGlueEx.New() 
+	local f = StructTypeIns["LuaGet_Glue_ReadWriteVector"]
+	local t = os.clock()
+	for i = 1, 1000000 do
+		-- local x = StructTypeIns.ReadWriteVector
+		local x = f(StructTypeIns)
+	end
+	a_(os.clock() - t)
+	local Ins = UBenchmarkActor.NewObject()
+	f = Ins["LuaGet_ReadWriteVector"]
+	local t = os.clock()
+	for i = 1, 1000000 do
+		-- local x = StructTypeIns.ReadWriteVector
+		local x = f(Ins)
+	end
+	a_(os.clock() - t)
+end
+
+local function test2()
+	local t = os.clock()
+	for i = 1, 1000000 do
+		local x = {}
+		x.x = 2
+		local y = x.x		
+	end
+	a_(os.clock() - t)
+end
+
+local function test3()
+	local StructTypeIns = TestGlueEx.New() 
+	local t = os.clock()
+	for i = 1, 1000000 do
+		-- local x = StructTypeIns.ReadWriteVector
+		local x = StructTypeIns["Glue_ReadWriteInt"]
+	end
+	a_(os.clock() - t)
+end
+
+function testUmg:PlayAnim()
+	-- test2()
+	-- test1()
+	-- test3()
+	-- local t = TestStaticProperty
+	-- a_(rawset(t, "i", nil))
+	-- -- a_()
+	-- t.i = 100
+	-- a_(t.staticsee())
+	-- a_(t.i)
+
+	-- local b = FVector.New(1,2,3)
+	-- local c = FVector.Temp(1,2,3)
+	-- assert(b.x == 1)
+	-- a_(b.x)
+	-- local u = UBenchmarkActor.NewObject()
+	-- u:TestCallFunc_0param()
+	-- local u = require "gameplay.test.benchmarkclass":NewOn(UBenchmarkActor.NewObject())
+	-- a_(u.ReadWriteInt)
+	-- a_(u.ReadWriteInt)
+	local StructTypeIns = TestGlueEx.New() 
+	-- local x = StructTypeIns.Glue_ReadWriteVector
+	-- local x = StructTypeIns.Glue_ReadWriteVector
+	local x = TestGlueEx.Glue_StaticReadWriteVector
+	a_(x)
+	local y = TestGlueEx.Glue_StaticReadWriteVector
+	a_(y)
 end
 
 local function f()

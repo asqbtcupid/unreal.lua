@@ -19,7 +19,7 @@ public class LuaPluginRuntime : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {  "Core", "CoreUObject", "Engine"});
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "UMG", "AssetRegistry" });
 
-        // PublicDefinitions.Add("LuaDebug");
+//         PublicDefinitions.Add("LuaDebug");
         PublicDefinitions.Add("STRONG_CHECK_GC_REF");
         
         if (Target.Type == TargetType.Editor)

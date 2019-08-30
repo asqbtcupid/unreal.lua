@@ -38,18 +38,20 @@ static int32 LuaPanic(lua_State *L)
 	return 0;
 }
 
+#if LuaDebug
 void* tovoid(lua_State* L, int i)
 {
 	int LuaType = ue_lua_type(L, i);
 	void **u = nullptr;
 	switch (LuaType)
 	{
+		case LUA_TUSERDATA:
+			u = static_cast<void**>(lua_touserdata(L, i));
+			return *u;
 		case LUA_TTABLE:
 			if (i < 0)
 				i = lua_gettop(L) + i + 1;
-			lua_pushstring(L, "_cppinstance_");
-			lua_rawget(L, i);
-#if LuaDebug
+			lua_rawgeti(L, i, CppInstanceIndex);
 			if (lua_isnil(L, -1))
 			{
 				lua_pop(L, 1);
@@ -70,34 +72,17 @@ void* tovoid(lua_State* L, int i)
 				lua_pop(L, 1);
 				return *u;
 			}
-#else
-			if (lua_isnil(L, -1))
-			{
-				lua_pop(L, 1);
-				return nullptr;
-			}
-			else
-			{
-				auto u = static_cast<void**>(lua_touserdata(L, -1));
-				lua_pop(L, 1);
-				return *u;
-			}
-#endif
-		case LUA_TUSERDATA:
-			u = static_cast<void**>(lua_touserdata(L, i));
-			return *u;
 		case LUA_TNIL:
 			return nullptr;
 		case LUA_TNONE:
 			return nullptr;
 		default:
-#if LuaDebug
 			ensureAlwaysMsgf(0, TEXT("Can't Be Another Type, Bug!!!"));
 			UnrealLua::ReportError(L, "Can't Be Another Type, Bug!!!");
-#endif
 			return nullptr;
 	};
 }
+#endif
 
 FString GetLuaCodeFromPath(FString FilePath)
 {
@@ -171,7 +156,7 @@ int CustomLuaLoader_SearchSaved(lua_State* L)
 
 int SetExistTable(lua_State* inL)
 {
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 	auto u = static_cast<void**>(lua_touserdata(inL, 1));
 	if (u == nullptr)
 	{
@@ -188,41 +173,67 @@ int SetExistTable(lua_State* inL)
 static int32 LuaCallCpp(lua_State* inL)
 {
 	LuaUFunctionInterface* FuncInterface = (LuaUFunctionInterface*)lua_touserdata(inL, lua_upvalueindex(1));
-	uint8* Buffer = (uint8*)FMemory_Alloca(FuncInterface->GetBufferSize());
-	FuncInterface->InitBuffer(Buffer);
-	int32 Count;
-	if (FuncInterface->BuildTheBuffer(inL, Buffer) && FuncInterface->Call(inL, Buffer))
-		Count = FuncInterface->PushRet(inL, Buffer);
-	else
-		Count = 0;
-	FuncInterface->DestroyBuffer(Buffer);
-	return Count;
+	return FuncInterface->JustCall(inL);
 }
 
+template<bool HasGlueFunc>
 int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(2));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		return f(inL);
+	}
+	else if (Type == LUA_TTABLE)
+	{
+		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		lua_call(inL, 1, 1);
+		int32 Type1 = lua_rawget(inL, -2);
+		if (Type1 == LUA_TNIL)
+		{
+			lua_rawgeti(inL, -3, 1);//func
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, 2);
+			lua_call(inL, 2, 1);
+
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, -2);
+			lua_rawset(inL, -5);
+		}
+
+		return 1;
+	}
+	else if (Type == LUA_TUSERDATA)
+	{
+		auto f = (LuaBasePropertyInterface**)lua_touserdata(inL, -1);
+		auto ptr = tovoid(inL, 1);
+		(*f)->push_container(inL, ptr);
+		return 1;
+	}
+	else if (Type == LUA_TFUNCTION)
+	{
+		return 1;
+	}
+	else if (Type != LUA_TNIL)
+	{
 		return 1;
 	}
 
-	lua_pushvalue(inL, lua_upvalueindex(1));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type != LUA_TNIL)
+	{
 		return 1;
+	}
 
 	UObject* p = (UObject*)tovoid(inL, 1);
 #if LuaDebug
 	if (p == nullptr)
 	{
 		ensureAlwaysMsgf(0, TEXT("Bug"));
-		UnrealLua::ReportError(inL,"index_reflection_uobject_func_withexpand Bug");
+		UnrealLua::ReportError(inL, "index_reflection_uobject_func_withexpand Bug");
 		lua_pushstring(inL, "Bug");
 		lua_error(inL);
 		return 0;
@@ -237,7 +248,7 @@ int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 		lua_pushlightuserdata(inL, LuaFunction);
 		lua_pushcclosure(inL, LuaCallCpp, 1);
 // cached
-		lua_pushvalue(inL, lua_upvalueindex(1));
+		lua_pushvalue(inL, lua_upvalueindex(2));
 		lua_pushvalue(inL, 2);
 		lua_pushvalue(inL, -3);
 		lua_rawset(inL, -3);
@@ -250,31 +261,50 @@ int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
-		lua_pushlightuserdata(inL, PropertyInterface);
-		lua_pushcclosure(inL, GeneralGetProperty, 1);
 		lua_pushvalue(inL, lua_upvalueindex(2));
 		lua_pushvalue(inL, 2);
-		lua_pushvalue(inL, -3);
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = PropertyInterface;
 		lua_rawset(inL, -3);
-		LuaBasePropertyInterface* InterfaceBase = (LuaBasePropertyInterface*)PropertyInterface;
-		InterfaceBase->push_container(inL, p);
+		LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
+		p->push_container(inL, p);
 		return 1;
 	}
 	return 0;
 }
 
+template<bool HasGlueFunc>
 int32 newindex_reflection_uobject_func_withexpand(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(2));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+
+	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
-		lua_pushvalue(inL, 1);
-		lua_pushvalue(inL, 3);
-		lua_call(inL, 2, 0);
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		f(inL);
 		return 0;
 	}
+	else if (Type == LUA_TUSERDATA)
+	{
+		auto f = (LuaBasePropertyInterface**)lua_touserdata(inL, -1);
+		auto ptr = tovoid(inL, 1);
+		(*f)->pop_container(inL, 3, ptr);
+		return 0;
+	}
+	else if (Type == LUA_TFUNCTION)
+	{
+		lua_pushvalue(inL, 1);
+		lua_pushvalue(inL, 2);
+		lua_pushvalue(inL, 3);
+		lua_call(inL, 3, 0);
+		return 0;
+	}
+#if LuaDebug
+	else if (Type != LUA_TNIL)
+	{
+		checkf(0, TEXT("shouldn't come here"));
+	}
+#endif
 
 	UObject* p = (UObject*)tovoid(inL, 1);
 #if LuaDebug
@@ -292,15 +322,12 @@ int32 newindex_reflection_uobject_func_withexpand(lua_State* inL)
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
-		lua_pushlightuserdata(inL, PropertyInterface);
-		lua_pushcclosure(inL, GeneralSetProperty, 1);
-		lua_pushvalue(inL, lua_upvalueindex(2));
+		lua_pushvalue(inL, lua_upvalueindex(1));
 		lua_pushvalue(inL, 2);
-		lua_pushvalue(inL, -3);
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = PropertyInterface;
 		lua_rawset(inL, -3);
-		LuaBasePropertyInterface* InterfaceBase = (LuaBasePropertyInterface*)PropertyInterface;
-		InterfaceBase->pop_container(inL, 3, p);
-		return 1;
+		LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
+		p->pop_container(inL, 3, p);
 	}
 	ensureAlwaysMsgf(0, TEXT("Set value to not exist key: %s"), lua_tostring(inL, 2));
 	UnrealLua::ReportError(inL,FString::Printf(TEXT("Set value to not exist key: %s"), lua_tostring(inL, 2)));
@@ -308,19 +335,38 @@ int32 newindex_reflection_uobject_func_withexpand(lua_State* inL)
 }
 
 
+template<bool HasGlueFunc>
 int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(1));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+
+	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
-		if (!lua_isfunction(inL, -1))
-			return 0;
-		lua_pushvalue(inL, 1);
-		lua_pushvalue(inL, 3);
-		lua_call(inL, 2, 0);
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		f(inL);
 		lua_pushboolean(inL, true);
+		return 1;
+	}
+	else if (Type == LUA_TUSERDATA)
+	{
+		auto f = (LuaBasePropertyInterface**)lua_touserdata(inL, -1);
+		auto ptr = tovoid(inL, 1);
+		(*f)->pop_container(inL, 3, ptr);
+		lua_pushboolean(inL, true);
+		return 1;
+	}
+	else if (Type == LUA_TFUNCTION)
+	{
+		lua_pushvalue(inL, 1);
+		lua_pushvalue(inL, 2);
+		lua_pushvalue(inL, 3);
+		lua_call(inL, 3, 0);
+		lua_pushboolean(inL, true);
+		return 1;
+	}
+	else if (Type == LUA_TBOOLEAN)
+	{
 		return 1;
 	}
 
@@ -330,14 +376,12 @@ int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
-		lua_pushlightuserdata(inL, PropertyInterface);
-		lua_pushcclosure(inL, GeneralSetProperty, 1);
 		lua_pushvalue(inL, lua_upvalueindex(1));
 		lua_pushvalue(inL, 2);
-		lua_pushvalue(inL, -3);
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = PropertyInterface;
 		lua_rawset(inL, -3);
-		LuaBasePropertyInterface* InterfaceBase = (LuaBasePropertyInterface*)PropertyInterface;
-		InterfaceBase->pop_container(inL, 3, p);
+		LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
+		p->pop_container(inL, 3, p);
 		lua_pushboolean(inL, true);
 		return 1;
 	}
@@ -347,18 +391,22 @@ int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 		lua_pushvalue(inL, 2);
 		lua_pushboolean(inL, false);
 		lua_rawset(inL, -3);
+		lua_pushboolean(inL, false);
+		return 0;
 	}
-	return 0;
 }
 
 int32 IndexStaticProperty(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(1));
-	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TFUNCTION)
 	{
-		lua_call(inL, 0, 1);
+		auto f = lua_tocfunction(inL, -1);
+		f(inL);
+		return 1;
+	}
+	else if (Type == LUA_TUSERDATA) //the struct
+	{
 		return 1;
 	}
 	else
@@ -367,20 +415,18 @@ int32 IndexStaticProperty(lua_State* inL)
 
 int32 ObjectIndexStaticProperty(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(1));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+
+	if (Type == LUA_TFUNCTION)
 	{
+		auto f = lua_tocfunction(inL, -1);
+		lua_pop(inL, 3);
+		f(inL);
 		return 1;
 	}
-
-	lua_pushvalue(inL, lua_upvalueindex(2));
-	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	else if (Type == LUA_TUSERDATA) //the struct
 	{
-		lua_call(inL, 0, 1);
 		return 1;
 	}
 	
@@ -407,56 +453,37 @@ int32 ObjectIndexStaticProperty(lua_State* inL)
 
 int32 NewindexStaticProperty(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(1));
 	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TFUNCTION)
 	{
-		lua_pushnil(inL);
-		lua_pushvalue(inL, 3);
-		lua_call(inL, 2, 0);
+		auto f = lua_tocfunction(inL, -1);
+		f(inL);
 		return 0;
 	}
 	else
 	{
-		lua_pop(inL, 2);
+		lua_pop(inL, 1);
 		lua_rawset(inL, -3);
 		return 0;
 	}
 }
 
-int32 index_static_property(lua_State* inL)
+int32 ObjectNewindexStaticProperty(lua_State* inL)
 {
-	FString key = "LuaGet_";
-	key += lua_tostring(inL, 2);
-	lua_pushvalue(inL, 1);
-	UTableUtil::push(inL, key);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	lua_pushvalue(inL, 2);
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TFUNCTION)
 	{
-		lua_call(inL, 0, 1);
-		return 1;
-	}
-	else
+		auto f = lua_tocfunction(inL, -1);
+		lua_pushnil(inL);
+		lua_replace(inL, 1);
+		f(inL);
 		return 0;
-}
-
-int32 newindex_static_property(lua_State* inL)
-{
-	FString key = "LuaSet_";
-	key += lua_tostring(inL, 2);
-	lua_pushvalue(inL, 1);
-	UTableUtil::push(inL, key);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
-	{
-		lua_pushvalue(inL, 3);
-		lua_call(inL, 1, 0);
-		return 1;
 	}
 	else
 	{
-		lua_pop(inL, 2);
+		lua_pop(inL, 1);
 		lua_rawset(inL, -3);
 		return 0;
 	}
@@ -464,144 +491,203 @@ int32 newindex_static_property(lua_State* inL)
 
 int32 index_struct_func(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(2));
-	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TLIGHTUSERDATA)
 	{
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		f(inL);
+	}
+	else if (Type == LUA_TTABLE)
+	{
+		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		lua_call(inL, 1, 1);
-		return 1;
+		int32 Type1 = lua_rawget(inL, -2);
+		if (Type1 == LUA_TNIL)
+		{
+			lua_rawgeti(inL, -3, 1);//func
+			auto f = (lua_CFunction)lua_touserdata(inL, -1);
+			f(inL);
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, -2);
+			lua_rawset(inL, -6);
+		}
 	}
-
-	lua_pushvalue(inL, lua_upvalueindex(1));
-	lua_pushvalue(inL, 2);
-	lua_rawget(inL, -2);
-	if (!lua_isnil(inL, -1))
-	{
-		return 1;
-	}
-
-	return 0;
+	return 1;
 }
 
-int32 index_struct_func_with_class(lua_State* inL)
+template<bool HasGlueFunc>
+int32 index_struct_func_with_class_with_glue(lua_State* inL)
 {
-	if (index_struct_func(inL))
-		return 1;
-	lua_pushvalue(inL, lua_upvalueindex(3));
-	if (!lua_isnil(inL, -1))
+	lua_pushvalue(inL, 2);
+	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		return f(inL);
+	}
+	else if (Type == LUA_TTABLE)
+	{
+		lua_rawgeti(inL, -1, 2);//cached
+		lua_pushvalue(inL, 1);
+		int32 Type1 = lua_rawget(inL, -2);
+		if (Type1 == LUA_TNIL)
+		{
+			lua_rawgeti(inL, -3, 1);//func
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, 2);
+			lua_call(inL, 2, 1);
+
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, -2);
+			lua_rawset(inL, -5);
+		}
+
+		return 1;
+	}
+	else if (Type == LUA_TUSERDATA)
+	{
+		auto f = (LuaBasePropertyInterface**)lua_touserdata(inL, -1);
+		auto ptr = tostruct(inL, 1);
+		(*f)->push_container(inL, ptr);
+		return 1;
+	}
+	else if (HasGlueFunc && Type == LUA_TFUNCTION)
+	{
+		return 1;
+	}
+	else if (Type != LUA_TNIL)
+	{
+		return 1;
+	}
+	
+	lua_pushvalue(inL, 2);
+	Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TNIL)
+	{
+		lua_pushvalue(inL, lua_upvalueindex(3));
 		void** p = (void**)lua_touserdata(inL, -1);
 		UScriptStruct* Class = (UScriptStruct*)(*p);
 		UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
 		if (Property)
 		{
 			void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
-			lua_pushlightuserdata(inL, PropertyInterface);
-			lua_pushcclosure(inL, GeneralGetProperty, 1);
 			lua_pushvalue(inL, lua_upvalueindex(2));
 			lua_pushvalue(inL, 2);
-			lua_pushvalue(inL, -3);
+			*(void**)lua_newuserdata(inL, sizeof(void *)) = PropertyInterface;
 			lua_rawset(inL, -3);
 			LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
 			p->push_container(inL, tostruct(inL, 1));
 			return 1;
 		}
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int32 index_struct_func_with_extend(lua_State*inL)
 {
-	if (index_struct_func(inL))
-		return 1;
-
-	lua_pushvalue(inL, lua_upvalueindex(3));
-	lua_CFunction Func = (lua_CFunction)lua_touserdata(inL, -1);
-	return Func(inL);
-}
-
-int32 newindex_struct_Func(lua_State* inL)
-{
-	lua_pushvalue(inL, lua_upvalueindex(2));
-	if (!lua_isnil(inL, -1))
+	lua_pushvalue(inL, 2);
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TLIGHTUSERDATA)
 	{
-		lua_pushvalue(inL, 2);
-		lua_rawget(inL, -2);
-		if (!lua_isnil(inL, -1))
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		f(inL);
+	}
+	else if (Type == LUA_TTABLE)
+	{
+		lua_rawgeti(inL, -1, 2);//cached
+		lua_pushvalue(inL, 1);
+		int32 Type1 = lua_rawget(inL, -2);
+		if (Type1 == LUA_TNIL)
 		{
+			lua_rawgeti(inL, -3, 1);//func
+			auto f = (lua_CFunction)lua_touserdata(inL, -1);
+			f(inL);
 			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, 3);
-			lua_call(inL, 2, 0);
-			return 0;
+			lua_pushvalue(inL, -2);
+			lua_rawset(inL, -6);
 		}
 	}
+	else if (Type == LUA_TNIL)
+	{
+		lua_pushvalue(inL, lua_upvalueindex(2));
+		lua_CFunction Func = (lua_CFunction)lua_touserdata(inL, -1);
+		return Func(inL);
+	}
+	return 1;
 
-	FString Stack = PrintLuaStackOfL(inL);
-	ensureAlwaysMsgf(0, TEXT("Index Invalid Key %s"), lua_tostring(inL, 2), *Stack);
+}
+
+int32 newindex_struct_func(lua_State* inL)
+{
+	lua_pushvalue(inL, 2);
+	lua_rawget(inL, lua_upvalueindex(1));
+	auto f = lua_tocfunction(inL, -1);
+	f(inL);
 	return 0;
 }
 
-int32 newindex_struct_Func_with_class(lua_State* inL)
+template<bool HasGlueFunc>
+int32 newindex_struct_Func_with_class_with_glue(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(2));
-	if (!lua_isnil(inL, -1))
+	lua_pushvalue(inL, 2);
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	
+	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
+		auto f = (lua_CFunction)lua_touserdata(inL, -1);
+		f(inL);
+		return 0;
+	}
+	else if (Type == LUA_TUSERDATA)
+	{
+		auto f = (LuaBasePropertyInterface**)lua_touserdata(inL, -1);
+		auto ptr = tostruct(inL, 1);
+		(*f)->pop_container(inL, 3, ptr);
+		return 0;
+	}
+#if LuaDebug
+	else if (Type != LUA_TNIL)
+	{
+		checkf(0, TEXT("shouldn't come here"));
+	}
+#endif
+
+	lua_pushvalue(inL, lua_upvalueindex(2));
+	
+	void** p = (void**)lua_touserdata(inL, -1);
+	UScriptStruct* Class = (UScriptStruct*)(*p);
+	UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
+	if (Property)
+	{
+		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
+		lua_pushvalue(inL, lua_upvalueindex(1));
 		lua_pushvalue(inL, 2);
-		lua_rawget(inL, -2);
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, 3);
-			lua_call(inL, 2, 0);
-			return 0;
-		}
+		*(void**)lua_newuserdata(inL, sizeof(void *)) = PropertyInterface;
+		lua_rawset(inL, -3);
+		LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
+		p->pop_container(inL, 3, tostruct(inL, 1));
 	}
 
-	lua_pushvalue(inL, lua_upvalueindex(3));
-	if (!lua_isnil(inL, -1))
-	{
-		void** p = (void**)lua_touserdata(inL, -1);
-		UScriptStruct* Class = (UScriptStruct*)(*p);
-		UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
-		if (Property)
-		{
-			void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
-			lua_pushlightuserdata(inL, PropertyInterface);
-			lua_pushcclosure(inL, GeneralSetProperty, 1);
-			lua_pushvalue(inL, lua_upvalueindex(2));
-			lua_pushvalue(inL, 2);
-			lua_pushvalue(inL, -3);
-			lua_rawset(inL, -3);
-			LuaBasePropertyInterface* p = (LuaBasePropertyInterface*)PropertyInterface;
-			p->pop_container(inL, 3, tostruct(inL, 1));
-		}
-	}
 	return 0;
 }
 
-int32 newindex_struct_Func_with_extend(lua_State* inL)
+int32 newindex_struct_func_with_extend(lua_State* inL)
 {
-	lua_pushvalue(inL, lua_upvalueindex(2));
-	if (!lua_isnil(inL, -1))
+	lua_pushvalue(inL, 2);
+	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	if (Type == LUA_TFUNCTION)
 	{
-		lua_pushvalue(inL, 2);
-		lua_rawget(inL, -2);
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, 3);
-			lua_call(inL, 2, 0);
-			return 0;
-		}
+		auto f = lua_tocfunction(inL, -1);
+		f(inL);
+		return 0;
 	}
-
-	lua_pushvalue(inL, lua_upvalueindex(3));
-	lua_CFunction Func = (lua_CFunction)lua_touserdata(inL, -1);
-	return Func(inL);
+	else
+	{
+		lua_CFunction Func = (lua_CFunction)lua_touserdata(inL, lua_upvalueindex(2));
+		return Func(inL);
+	}
 }
-
 int32 uobjcet_gcfunc(lua_State *inL)
 {
 	auto u = (void**)lua_touserdata(inL, -1);
@@ -674,8 +760,9 @@ int32 serialize_table(lua_State *inL)
 			FString Key = "LuaSet_" + FString(lua_tostring(inL, -2));
 			lua_getfield(inL, 3, TCHAR_TO_UTF8(*Key));
 			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, 2);
 			lua_pushvalue(inL, -3);
-			lua_call(inL, 2, 0);
+			lua_call(inL, 3, 0);
 			lua_pop(inL, 1);
 		}
 		return 0;
@@ -850,7 +937,7 @@ int ErrHandleFunc(lua_State*L)
 					{\
 						void* p = (void*)lua_touserdata(inL, lua_upvalueindex(1));\
 						Lua##PropertyType* LuaProperty = (Lua##PropertyType*)(p);\
-						LuaProperty->pop_container_novirtual(inL, 2, tovoid(inL, 1));\
+						LuaProperty->pop_container_novirtual(inL, 3, tovoid(inL, 1));\
 						return 0;\
 					}
 
@@ -868,7 +955,7 @@ int ErrHandleFunc(lua_State*L)
 					{\
 						void* p = (void*)lua_touserdata(inL, lua_upvalueindex(1));\
 						Lua##PropertyType* LuaProperty = (Lua##PropertyType*)(p);\
-						LuaProperty->pop_container_novirtual(inL, 2, tostruct(inL, 1));\
+						LuaProperty->pop_container_novirtual(inL, 3, tostruct(inL, 1));\
 						return 0;\
 					}
 

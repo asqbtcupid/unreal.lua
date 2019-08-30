@@ -526,7 +526,7 @@ void UUnrealLuaInterface::DoFile(UObject* Obj, FString Str)
 bool UUnrealLuaInterface::IsExistFunc(const UObject* Ptr, const char* FuncName)
 {
 	lua_State* inL = GetLuaStateByIns(Ptr);
-	lua_getfield(inL, LUA_REGISTRYINDEX, "_existuserdata");
+	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
 	lua_pushlightuserdata(inL, (void*)Ptr);
 	lua_rawget(inL, -2);
 	if (!lua_istable(inL, -1))

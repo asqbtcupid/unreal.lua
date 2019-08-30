@@ -114,6 +114,9 @@ end
 function CppObjectBase:NewOn(inscpp, ...)
 	local ins = self:Ins()
 	rawset(ins, "_cppinstance_", inscpp)
+	rawset(ins, 1, inscpp)
+	rawset(ins, 2, {})
+	rawset(ins, 3, {})
 	rawset(ins, "_cppinstance_meta_", getmetatable(inscpp))
 
 	setexisttable(inscpp, ins)
