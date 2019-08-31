@@ -83,7 +83,7 @@ function TestBpClass:BeginPlay( )
 	self:TestGlueBpStruct()
 	self:TestTemp()
 	self:BenchMark()
-
+	self:TestReenterUFunc()
 	a_("pass")
 
 end
@@ -2163,6 +2163,22 @@ function TestBpClass:TestGlueBpStruct()
 	end
 	f(FTestGlueExBp)
 	f(TestGlueEx)
+end
+
+function TestBpClass:TestReenterUFunc()
+	local ResultToTest = FVector.Temp()
+	self:TestReEnterUFunction(true, ResultToTest)
+	assert(ResultToTest.X == 1)
+	assert(ResultToTest.Y == 2)
+	assert(ResultToTest.Z == 3)
+end
+
+function TestBpClass:ReenterAgain( )
+	local ResultToTest = FVector.Temp()
+	self:TestReEnterUFunction(false, ResultToTest)
+	assert(ResultToTest.X == 2)
+	assert(ResultToTest.Y == 3)
+	assert(ResultToTest.Z == 4)
 end
 
 return TestBpClass

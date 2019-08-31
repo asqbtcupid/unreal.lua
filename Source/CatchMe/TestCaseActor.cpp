@@ -517,6 +517,19 @@ int32 ATestCaseActor::TestReturnValue(int32 Param)
 	return Param;
 }
 
+void ATestCaseActor::TestReEnterUFunction(bool Reinter, FVector& TestResult)
+{
+	if (Reinter)
+	{
+		TestResult = FVector(1, 2, 3);
+		LuaCall("ReenterAgain", this);
+	}
+	else
+	{
+		TestResult = FVector(2, 3, 4);
+	}
+}
+
 FDelegateTest4 ATestCaseActor::StaticDelegateTest;
 
 int ATestCaseActor::StaticInt = 0;

@@ -611,6 +611,9 @@ private:
 
 	UPROPERTY()
 		TSet<FSomeStruct4> test_pass_to_glue_set;
+
+	UFUNCTION()
+		void TestReEnterUFunction(bool Reinter, FVector& TestResult);
 };
 
 

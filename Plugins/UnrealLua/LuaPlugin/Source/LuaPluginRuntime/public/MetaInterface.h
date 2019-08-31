@@ -2070,9 +2070,14 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 		int32& Count;
 	};
 	~LuaUFunctionInterface(){
-		for (auto p : Buffers)
+		if(PersistBuffer)
+			FMemory::Free(PersistBuffer);
+
+		while (OutParms)
 		{
-			FMemory::Free(p);
+			FOutParmRec *NextOut = OutParms->NextOutParm;
+			FMemory::Free(OutParms);
+			OutParms = NextOut;
 		}
 	}
 	LuaUFunctionInterface(lua_State*inL, UFunction* Function)
@@ -2091,6 +2096,12 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 			ArgIndex = 2;
 		}
 		StartIndex = ArgIndex;
+		FOutParmRec *NowOutParmRec = nullptr;
+
+		if(GetBufferSize() > 0)
+			PersistBuffer = (uint8*)FMemory::Malloc(GetBufferSize());
+
+		IsNativeFunc = Function->HasAnyFunctionFlags(FUNC_Native);
 		for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 		{
 			auto Prop = *It;
@@ -2109,17 +2120,38 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 				StackIndexs.Add(ArgIndex);
 			}
 
-			if (!HasAdd && Prop->GetPropertyFlags() & CPF_OutParm)
+			if (Prop->GetPropertyFlags() & CPF_OutParm)
 			{
-				if (Function->HasAnyFunctionFlags(FUNC_Native))
+				if (IsNativeFunc)
 				{
-					RefParams.Add(PropInterface);
-					StackIndexs.Add(ArgIndex);
+					FOutParmRec *Out = (FOutParmRec*)FMemory::Malloc(sizeof(FOutParmRec), alignof(FOutParmRec));
+					Out->PropAddr = Prop->ContainerPtrToValuePtr<uint8>(PersistBuffer);
+					Out->Property = Prop;
+					Out->NextOutParm = nullptr;
+					if (NowOutParmRec)
+					{
+						NowOutParmRec->NextOutParm = Out;
+						NowOutParmRec = Out;
+					}
+					else
+					{
+						OutParms = Out;
+						NowOutParmRec = Out;
+					}
 				}
-				else
+
+				if (!HasAdd)
 				{
-					ReturnValues.Insert(CreatePropertyInterface(inL, Prop), 0);
-					continue;
+					if (IsNativeFunc)
+					{
+						RefParams.Add(PropInterface);
+						StackIndexs.Add(ArgIndex);
+					}
+					else
+					{
+						ReturnValues.Insert(CreatePropertyInterface(inL, Prop), 0);
+						continue;
+					}
 				}
 			}
 			Params.Add(PropInterface);
@@ -2127,6 +2159,12 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 
 		}
 		ReturnCount = ReturnValues.Num() + RefParams.Num();
+
+		ReturnValueAddressOffset = TheFunc->ReturnValueOffset != MAX_uint16 ? TheFunc->ReturnValueOffset : 0;
+		ReturnValueAddress = (uint8*)PersistBuffer + ReturnValueAddressOffset;
+		UClass *OClass = Function->GetOuterUClass();
+		if (OClass != UInterface::StaticClass() && OClass->HasAnyClassFlags(CLASS_Interface))
+		{}
 	}
 
 	int32 GetBufferSize() const
@@ -2135,13 +2173,7 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 	}
 	uint8* GetBuffer()
 	{
-		auto Gaurd = IncGaurd(ReEnterCount);
-		if ((Buffers.Num() - 1) < ReEnterCount)
-		{
-			Buffers.AddUninitialized();
-			Buffers[ReEnterCount] = (uint8*)(FMemory::Malloc(GetBufferSize()));
-		}
-		return Buffers[ReEnterCount];
+		return PersistBuffer;
 	}
 	void InitBuffer(uint8* Buffer)
 	{
@@ -2176,6 +2208,7 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 		return true;
 	}
 
+	template<bool bFastCallNative>
 	bool Call(lua_State*inL, uint8* Buffer, UObject* Ptr = nullptr)
 	{
 // 		auto Gaurd = DecGaurd(ReEnterCount);
@@ -2198,7 +2231,18 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 			}
 		}
 		if (Ptr)
-			Ptr->ProcessEvent(TheFunc, Buffer);
+		{
+			if (bFastCallNative)
+			{
+				FFrame NewStack(Ptr, TheFunc, Buffer, nullptr, TheFunc->Children);
+				NewStack.OutParms = OutParms;
+				TheFunc->Invoke(Ptr, NewStack, ReturnValueAddress);
+			}
+			else
+			{
+				Ptr->ProcessEvent(TheFunc, Buffer);
+			}
+		}
 		else 
 		{
 			ensureAlwaysMsgf(0, TEXT("Ptr Can't be null"));
@@ -2222,14 +2266,31 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 
 	int32 JustCall(lua_State* inL)
 	{
-		uint8* Buffer = (uint8*)FMemory_Alloca(GetBufferSize());
-		// 	uint8* Buffer = FuncInterface->GetBuffer();
+// 		uint8* Buffer = (uint8*)FMemory_Alloca(GetBufferSize());
+		++ReEnterCount;
+		DecGaurd g(ReEnterCount);
+		bool IsReinto = ReEnterCount>1;
+		uint8* Buffer = PersistBuffer;
+
+		if(IsReinto)
+			Buffer = (uint8*)FMemory_Alloca(GetBufferSize());
+
 		InitBuffer(Buffer);
 		int32 Count;
-		if (BuildTheBuffer(inL, Buffer) && Call(inL, Buffer))
+		bool SusscessCall = false;
+		if (BuildTheBuffer(inL, Buffer))
+		{
+			if (IsNativeFunc && ! IsReinto)
+				SusscessCall = Call<true>(inL, Buffer);
+			else
+				SusscessCall = Call<false>(inL, Buffer);
+		}
+
+		if(SusscessCall)
 			Count = PushRet(inL, Buffer);
 		else
 			Count = 0;
+
 		DestroyBuffer(Buffer);
 		return Count;
 	}
@@ -2237,6 +2298,7 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 	bool IsStatic;
 	UObject* DefaultObj;
 	UFunction* TheFunc;
+	UFunction* ActualFunc = nullptr;
 	TArray<int32> StackIndexs;
 	int32 StartIndex;
 	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<6>> Params;
@@ -2245,7 +2307,11 @@ struct LuaUFunctionInterface : public LuaBaseBpInterface
 	TArray<TSharedPtr<LuaBasePropertyInterface>, TInlineAllocator<6>> RefParams;
 	int32 ReturnCount;
 	int32 ReEnterCount;
-	TArray<uint8*, TInlineAllocator<BufferReserveCount>> Buffers;
+	uint8* PersistBuffer = nullptr;
+	uint8* ReturnValueAddress = nullptr;
+	FOutParmRec* OutParms = nullptr;
+	int32 ReturnValueAddressOffset = 0;
+	bool IsNativeFunc;
 };
 
 struct MuldelegateBpInterface

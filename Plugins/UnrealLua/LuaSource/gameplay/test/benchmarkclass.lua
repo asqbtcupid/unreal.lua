@@ -19,7 +19,7 @@ function BenchmarkBpClass:Start()
 	self.TestGlueFunction(BpStructTypeIns)
 	a_("************Start common struct Bench****************")
 	self:CommonStructBench(TestGlueEx)
-	-- self:TestDynamicMultiCast()
+	self:TestDynamicMultiCast()
 	collectgarbage("restart")
 end
 
@@ -70,7 +70,7 @@ function BenchmarkBpClass:TestGlueFunction( )
 end
 
 function BenchmarkBpClass:TestDynamicMultiCast()
-	local CallCount = 10000
+	local CallCount = CallCountForBench
 	local function f()
 	end
 	self.BenchDelegate_2Param:Add(InsCallBack(f, self))
