@@ -345,9 +345,7 @@ template<class StructType, class MemberType>
 bool TIsStaticMember(StructType* var, const MemberType& memaddr)
 {
 	int64 offset = reinterpret_cast<size_t>(&memaddr) - reinterpret_cast<size_t>(var);
-	if (offset < 0)
-		offset = -offset;
-	return offset > sizeof(StructType);
+	return (offset > sizeof(StructType)) || offset < 0;
 }
 
 template<class Type>

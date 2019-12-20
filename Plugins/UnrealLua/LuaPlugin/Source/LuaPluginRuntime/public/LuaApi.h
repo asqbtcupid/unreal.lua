@@ -9,8 +9,8 @@
 #include "lua_tinker.h"
 #endif
 
-const int32 CppInstanceIndex = 1;
-const int32 ExistTableIndex = LUA_RIDX_LAST + 1;
+const int CppInstanceIndex = 1;
+const int ExistTableIndex = LUA_RIDX_LAST + 1;
 
 #ifdef USE_LUA53 
 #define ue_lua_gettop lua_gettop

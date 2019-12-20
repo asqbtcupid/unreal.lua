@@ -16,6 +16,9 @@
 #include "SSearchBox.h"
 #include "CoreDelegates.h"
 #include "SEditableTextBox.h"
+#include "SButton.h"
+#include "SCheckBox.h"
+#include "SImage.h"
 
 static const FName LuaDebuggerTabName("LuaDebugger");
 static const FName DefaultForegroundName("DefaultForeground");

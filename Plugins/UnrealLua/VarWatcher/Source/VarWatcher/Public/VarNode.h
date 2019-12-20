@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "TextProperty.h"
 #include "VarNode.generated.h"
 
 class UVarNode;
