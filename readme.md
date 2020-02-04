@@ -10,7 +10,7 @@ Lua make UE4 perfect, hahaha~~
 
 Windows, Mac, Android, IOS
 
-UE4 : 4.20 4.21
+UE4 : 4.20 ~ 4.24
 Lua : 5.3
 
 ## How to build

@@ -11,13 +11,25 @@ void ULuaDelegateMulti::Init(TMulticastScriptDelegate<FWeakObjectPtr>& Delegate,
 	Handle.BindUFunction(this, FireFunctionName);
 	Delegate.Add(Handle);
 	FunSig = _FunSig;
-	TheDelegatePtr = &Delegate;
+	TheDelegatePtr = MakeShareable(new FInlineDelegateWrapper(nullptr, &Delegate));
 }
 
 void ULuaDelegateMulti::Init(void* Delegate, UFunction* _FunSig)
 {
 	Init(*(TMulticastScriptDelegate<FWeakObjectPtr>*)Delegate, _FunSig);
 }
+
+#if ENGINE_MINOR_VERSION >= 23
+void ULuaDelegateMulti::Init(UMulticastSparseDelegateProperty* Property, UObject* Parent)
+{
+	FunSig = Property->SignatureFunction;
+	TheDelegatePtr = MakeShareable(new FSparseDelegateWrapper(Parent, Property));
+	TScriptDelegate<FWeakObjectPtr> Handle;
+	const FName FireFunctionName("NoUseAtAll");
+	Handle.BindUFunction(this, FireFunctionName);
+	TheDelegatePtr->Add(Handle);
+}
+#endif
 
 void ULuaDelegateMulti::NoUseAtAll(){}
 
@@ -74,7 +86,7 @@ void ULuaDelegateMulti::Destroy()
 
 void ULuaDelegateMulti::Fire(lua_State* inL)
 {
-	if (TheDelegatePtr && FunSig)
+	if (TheDelegatePtr.IsValid() && FunSig)
 	{
 		UFunction* Function = FunSig;
 		uint8* Buffer = (uint8*)FMemory_Alloca(Function->ParmsSize);
@@ -93,7 +105,7 @@ void ULuaDelegateMulti::Fire(lua_State* inL)
 				++ArgIndex;
 			}
 		}
-		TheDelegatePtr->ProcessMulticastDelegate<UObject>(Buffer);
+		TheDelegatePtr->ProcessMulticastDelegate(Buffer);
 	}
 }
 
@@ -110,13 +122,13 @@ void ULuaDelegateMulti::Clear()
 
 void ULuaDelegateMulti::RemoveUObject(UObject* Ptr)
 {
-	TheDelegatePtr->RemoveAll(Ptr);
+	TheDelegatePtr->RemoveUObject(Ptr);
 }
 
 
 void ULuaDelegateMulti::RemoveUFunction(UObject* Ptr, FName InFunctionName)
 {
-	TheDelegatePtr->Remove(Ptr, InFunctionName);
+	TheDelegatePtr->RemoveUFunction(Ptr, InFunctionName);
 }
 
 LUA_GLUE_BEGIN(ULuaDelegateMulti)

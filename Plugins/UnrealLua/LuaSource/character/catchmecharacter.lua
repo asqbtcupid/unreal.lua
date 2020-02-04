@@ -53,7 +53,12 @@ end
 function CatchMeCharacter:InitBPComponents()
 	if not self.m_IsInitBPComponents then
 		self.m_IsInitBPComponents = true
-		local WidgetComponents = self:GetComponentsByClass(UWidgetComponent.Class())
+		local WidgetComponents
+		if ENGINE_MINOR_VERSION >= 24 then
+			WidgetComponents = self:K2_GetComponentsByClass(UWidgetComponent.Class())
+		else
+			WidgetComponents = self:GetComponentsByClass(UWidgetComponent.Class())
+		end
 		for k, v  in pairs(WidgetComponents) do
 			if ULuautils.GetName(v) == "Widget_HP" then
 				self.m_widget = UWidgetComponent.Cast(v)

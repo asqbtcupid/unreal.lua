@@ -22,7 +22,7 @@ function CMPlayerController:BeginPlay( )
 		-- self:InitFogMgr()
 		self.TestUI = require "ui.test":NewCpp(self, self)
 	end
-	self:GetFoliageActor()
+	-- self:GetFoliageActor()
 end
 
 function CMPlayerController:InitFogMgr()

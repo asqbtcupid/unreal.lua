@@ -3,6 +3,7 @@
 #include "JustForLinkGlue.h"
 #include "UnrealLua.h"
 #include "CoreMinimal.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 void UJustForLinkGlue::LinkFixFunctin1()
 {
@@ -34,6 +35,10 @@ struct RegisterDefineToLua_Struct
 #if UE_BUILD_SHIPPING
 		PushDefineToLua(UE_BUILD_SHIPPING);
 #endif
+
+	UTableUtil::push(inL, ENGINE_MINOR_VERSION);
+	lua_setglobal(inL, "ENGINE_MINOR_VERSION");
+
 	}
 
 	RegisterDefineToLua_Struct()

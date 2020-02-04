@@ -10,10 +10,19 @@
 #include "UnrealLua.h"
 #include "BaseEngineLuaGlue.h"
 #include "WidgetBlueprintLibrary.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "TestCaseActor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FDelegateTest1,  bool,    test_bool,   int32,    test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
+class ATestCaseActor;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FDelegateTest1, bool, test_bool, int32, test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FDelegateTest2, FVector, test_struct, UObject*, test_obj, TSubclassOf<AActor>, test_class, TArray<int32>, test_arr, TArray<FVector>, test_arrstruct, TSet<int32>, test_set);
+
+// #if ENGINE_MINOR_VERSION < 23
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE_NineParams(FDelegateTestSparse1, bool, test_bool, int32, test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
+// #else
+// DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE_NineParams(FDelegateTestSparse1, ATestCaseActor, Delegate3, bool, test_bool, int32, test_int, int64, test_int64, uint8, test_byte, float, test_float, double, test_double, FString, test_string, FText, test_text, FName, test_name);
+// #endif
 
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FDelegateTest3, int, p1, FVector, p2);
 DECLARE_DELEGATE_TwoParams(FDelegateTest4, int, FVector)
@@ -394,6 +403,9 @@ public:
 		FDelegateTest1 Delegate1;
 	UPROPERTY()
 		FDelegateTest2 Delegate2;
+
+// 	UPROPERTY()
+// 		FDelegateTestSparse1 Delegate3;
 
 	UFUNCTION()
 		TMap<FString, FVector> FuncReturnMap();

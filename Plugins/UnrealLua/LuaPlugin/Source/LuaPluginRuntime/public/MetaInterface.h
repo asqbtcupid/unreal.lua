@@ -7,6 +7,8 @@
 #include "TableUtil.h"
 #include "LuaDelegateSingle.h"
 #include "LuaArrayHelper.h"
+#include "Runtime/Launch/Resources/Version.h"
+
 struct LuaBaseBpInterface
 {
 	virtual ~LuaBaseBpInterface() {};
@@ -149,6 +151,67 @@ struct LuaUIntProperty :public LuaBasePropertyInterface
 	void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
 	{
 		int32 value = popiml<int>::pop(inL, LuaStackIndex);
+		Property->SetPropertyValue_InContainer((void*)ContainerPtr, value);
+	}
+};
+struct LuaUInt8Property :public LuaBasePropertyInterface
+{
+	UInt8Property* Property;
+	//Some hook
+	virtual UProperty* GetProperty() { return Property; }
+	virtual ~LuaUInt8Property() {}
+	LuaUInt8Property(lua_State*inL, UInt8Property* InProperty) :Property(InProperty)
+	{
+
+	}
+	virtual void push(lua_State* inL, const void* ValuePtr) override
+	{
+		push_novirtual(inL, ValuePtr);
+	}
+	void push_novirtual(lua_State* inL, const void* ValuePtr)
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue(ValuePtr));
+	}
+	virtual void push_ret(lua_State* inL, const void* ValuePtr) override
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue(ValuePtr));
+	}
+	virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue(ValuePtr));
+	}
+	virtual void pop(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) override
+	{
+		pop_novirtual(inL, LuaStackIndex, ValuePtr);
+	}
+	void pop_novirtual(lua_State* inL, int32 LuaStackIndex, void* ValuePtr)
+	{
+		int8 value = popiml<int8>::pop(inL, LuaStackIndex);
+		Property->SetPropertyValue(ValuePtr, value);
+	}
+	void push_container_novirtual(lua_State* inL, const void* ContainerPtr)
+	{
+		push_novirtual(inL, (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
+	}
+	virtual void push_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue_InContainer(ContainerPtr));
+	}
+	virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue_InContainer(ContainerPtr));
+	}
+	virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
+	{
+		ue_lua_pushinteger(inL, (int8)Property->GetPropertyValue_InContainer(ContainerPtr));
+	}
+	virtual void pop_container(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr) override
+	{
+		pop_container_novirtual(inL, LuaStackIndex, ContainerPtr);
+	}
+	void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
+	{
+		int8 value = popiml<int8>::pop(inL, LuaStackIndex);
 		Property->SetPropertyValue_InContainer((void*)ContainerPtr, value);
 	}
 };
@@ -1219,87 +1282,7 @@ struct LuaUStructProperty :public LuaBasePropertyInterface
 			ensureAlwaysMsgf(0, TEXT("Bug"));
 	}
 };
-struct LuaUMulticastDelegateProperty :public LuaBasePropertyInterface
-{
-	UMulticastDelegateProperty* Property;
-	//Some hook
-	virtual UProperty* GetProperty(){return Property;}
-	virtual ~LuaUMulticastDelegateProperty(){}
-	LuaUMulticastDelegateProperty(lua_State*inL, UMulticastDelegateProperty* InProperty):Property(InProperty)
-	{
-		
-	}
-	virtual void push(lua_State* inL, const void* ValuePtr) override
-	{
-		push_novirtual(inL, ValuePtr);
-	}
-	void push_novirtual(lua_State* inL, const void* ValuePtr) 
-	{
-		UFunction* FunSig = Property->SignatureFunction;
-		auto delegateproxy = NewObject<ULuaDelegateMulti>();
-		delegateproxy->Init((void*)ValuePtr, FunSig);
-		pushuobject(inL, (void*)delegateproxy);
-	}
-	virtual void push_ret(lua_State* inL, const void* ValuePtr) override
-	{
-		check(0);
-	}
-	virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
-	{
-		check(0);
-	}
-	virtual void pop(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) override
-	{
-		pop_novirtual(inL, LuaStackIndex, ValuePtr);
-	}
-	void pop_novirtual(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) 
-	{
-		check(0);
-	}
-	void push_container_novirtual(lua_State* inL, const void* ContainerPtr) 
-	{
-		lua_pushvalue(inL, lua_upvalueindex(2));
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_rawget(inL, -2);
-			if (!lua_isnil(inL, -1))
-			{
-				return;
-			}
-		}
-		push_novirtual(inL, (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
-		lua_pushvalue(inL, lua_upvalueindex(2));
-		if (!lua_isnil(inL, -1))
-		{
-			lua_pushvalue(inL, 1);
-			lua_pushvalue(inL, -3);
-			lua_rawset(inL, -3);
-			lua_pop(inL, 1);
-		}
-	}
-	virtual void push_container(lua_State* inL, const void* ContainerPtr) override
-	{
-		void* ValuePtr = (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr);
-		push_novirtual(inL, ValuePtr);
-	}
-	virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
-	{
-		check(0);
-	}
-	virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
-	{
-		check(0);
-	}
-	virtual void pop_container(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr) override
-	{
-		pop_container_novirtual(inL, LuaStackIndex, ContainerPtr);
-	}
-	void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
-	{
-		check(0);
-	}
-};
+
 struct LuaUDelegateProperty :public LuaBasePropertyInterface
 {
 	UDelegateProperty* Property;
@@ -1955,6 +1938,252 @@ struct LuaUInterfaceProperty :public LuaBasePropertyInterface
 	}
 };
 
+#if ENGINE_MINOR_VERSION >= 23
+struct LuaUMulticastInlineDelegateProperty :public LuaBasePropertyInterface
+{
+	UMulticastInlineDelegateProperty* Property;
+	//Some hook
+	virtual UProperty* GetProperty() { return Property; }
+	virtual ~LuaUMulticastInlineDelegateProperty() {}
+	LuaUMulticastInlineDelegateProperty(lua_State*inL, UMulticastInlineDelegateProperty* InProperty) :Property(InProperty)
+	{
+	}
+	virtual void push(lua_State* inL, const void* ValuePtr) override
+	{
+		push_novirtual(inL, ValuePtr);
+	}
+	void push_novirtual(lua_State* inL, const void* ValuePtr)
+	{
+		UFunction* FunSig = Property->SignatureFunction;
+		auto delegateproxy = NewObject<ULuaDelegateMulti>();
+		delegateproxy->Init((void*)ValuePtr, FunSig);
+		pushuobject(inL, (void*)delegateproxy);
+	}
+	virtual void push_ret(lua_State* inL, const void* ValuePtr) override
+	{
+		check(0);
+	}
+	virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
+	{
+		check(0);
+	}
+	virtual void pop(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) override
+	{
+		pop_novirtual(inL, LuaStackIndex, ValuePtr);
+	}
+	void pop_novirtual(lua_State* inL, int32 LuaStackIndex, void* ValuePtr)
+	{
+		check(0);
+	}
+	void push_container_novirtual(lua_State* inL, const void* ContainerPtr)
+	{
+		lua_pushvalue(inL, lua_upvalueindex(2));
+		if (!lua_isnil(inL, -1))
+		{
+			lua_pushvalue(inL, 1);
+			lua_rawget(inL, -2);
+			if (!lua_isnil(inL, -1))
+			{
+				return;
+			}
+		}
+		push_novirtual(inL, (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
+		lua_pushvalue(inL, lua_upvalueindex(2));
+		if (!lua_isnil(inL, -1))
+		{
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, -3);
+			lua_rawset(inL, -3);
+			lua_pop(inL, 1);
+		}
+	}
+	virtual void push_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		void* ValuePtr = (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr);
+		push_novirtual(inL, ValuePtr);
+	}
+	virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		check(0);
+	}
+	virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
+	{
+		check(0);
+	}
+	virtual void pop_container(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr) override
+	{
+		pop_container_novirtual(inL, LuaStackIndex, ContainerPtr);
+	}
+	void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
+	{
+		check(0);
+	}
+};
+
+struct LuaUMulticastSparseDelegateProperty :public LuaBasePropertyInterface
+{
+	UMulticastSparseDelegateProperty* Property;
+	//Some hook
+	virtual UProperty* GetProperty() { return Property; }
+	virtual ~LuaUMulticastSparseDelegateProperty() {}
+	LuaUMulticastSparseDelegateProperty(lua_State*inL, UMulticastSparseDelegateProperty* InProperty) :Property(InProperty)
+	{
+	}
+	virtual void push(lua_State* inL, const void* ValuePtr) override
+	{
+		push_novirtual(inL, ValuePtr);
+	}
+	void push_novirtual(lua_State* inL, const void* ValuePtr)
+	{
+		check(0);
+	}
+	virtual void push_ret(lua_State* inL, const void* ValuePtr) override
+	{
+		check(0);
+	}
+	virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
+	{
+		check(0);
+	}
+	virtual void pop(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) override
+	{
+		pop_novirtual(inL, LuaStackIndex, ValuePtr);
+	}
+	void pop_novirtual(lua_State* inL, int32 LuaStackIndex, void* ValuePtr)
+	{
+		check(0);
+	}
+	void push_container_novirtual(lua_State* inL, const void* ContainerPtr)
+	{
+		lua_pushvalue(inL, lua_upvalueindex(2));
+		if (!lua_isnil(inL, -1))
+		{
+			lua_pushvalue(inL, 1);
+			lua_rawget(inL, -2);
+			if (!lua_isnil(inL, -1))
+			{
+				return;
+			}
+		}
+
+		auto delegateproxy = NewObject<ULuaDelegateMulti>();
+		delegateproxy->Init(Property, (UObject*)ContainerPtr);
+		pushuobject(inL, (void*)delegateproxy);
+
+		lua_pushvalue(inL, lua_upvalueindex(2));
+		if (!lua_isnil(inL, -1))
+		{
+			lua_pushvalue(inL, 1);
+			lua_pushvalue(inL, -3);
+			lua_rawset(inL, -3);
+			lua_pop(inL, 1);
+		}
+	}
+	virtual void push_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		push_container_novirtual(inL, ContainerPtr);
+	}
+	virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
+	{
+		check(0);
+	}
+	virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
+	{
+		check(0);
+	}
+	virtual void pop_container(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr) override
+	{
+		pop_container_novirtual(inL, LuaStackIndex, ContainerPtr);
+	}
+	void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
+	{
+		check(0);
+	}
+};
+#else
+struct LuaUMulticastDelegateProperty : public LuaBasePropertyInterface
+{
+	UMulticastDelegateProperty* Property;
+//Some hook
+virtual UProperty* GetProperty() { return Property; }
+virtual ~LuaUMulticastDelegateProperty() {}
+LuaUMulticastDelegateProperty(lua_State*inL, UMulticastDelegateProperty* InProperty) :Property(InProperty)
+{
+
+}
+virtual void push(lua_State* inL, const void* ValuePtr) override
+{
+	push_novirtual(inL, ValuePtr);
+}
+void push_novirtual(lua_State* inL, const void* ValuePtr)
+{
+	UFunction* FunSig = Property->SignatureFunction;
+	auto delegateproxy = NewObject<ULuaDelegateMulti>();
+	delegateproxy->Init((void*)ValuePtr, FunSig);
+	pushuobject(inL, (void*)delegateproxy);
+}
+virtual void push_ret(lua_State* inL, const void* ValuePtr) override
+{
+	check(0);
+}
+virtual void push_ref(lua_State* inL, int32 LuaStackIndex, const void* ValuePtr) override
+{
+	check(0);
+}
+virtual void pop(lua_State* inL, int32 LuaStackIndex, void* ValuePtr) override
+{
+	pop_novirtual(inL, LuaStackIndex, ValuePtr);
+}
+void pop_novirtual(lua_State* inL, int32 LuaStackIndex, void* ValuePtr)
+{
+	check(0);
+}
+void push_container_novirtual(lua_State* inL, const void* ContainerPtr)
+{
+	lua_pushvalue(inL, lua_upvalueindex(2));
+	if (!lua_isnil(inL, -1))
+	{
+		lua_pushvalue(inL, 1);
+		lua_rawget(inL, -2);
+		if (!lua_isnil(inL, -1))
+		{
+			return;
+		}
+	}
+	push_novirtual(inL, (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr));
+	lua_pushvalue(inL, lua_upvalueindex(2));
+	if (!lua_isnil(inL, -1))
+	{
+		lua_pushvalue(inL, 1);
+		lua_pushvalue(inL, -3);
+		lua_rawset(inL, -3);
+		lua_pop(inL, 1);
+	}
+}
+virtual void push_container(lua_State* inL, const void* ContainerPtr) override
+{
+	void* ValuePtr = (void*)Property->ContainerPtrToValuePtr<uint8>(ContainerPtr);
+	push_novirtual(inL, ValuePtr);
+}
+virtual void push_ret_container(lua_State* inL, const void* ContainerPtr) override
+{
+	check(0);
+}
+virtual void push_ref_container(lua_State* inL, int32 LuaStackIndex, const void* ContainerPtr) override
+{
+	check(0);
+}
+virtual void pop_container(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr) override
+{
+	pop_container_novirtual(inL, LuaStackIndex, ContainerPtr);
+}
+void pop_container_novirtual(lua_State* inL, int32 LuaStackIndex, const void * ContainerPtr)
+{
+	check(0);
+}
+};
+#endif
+
 #define NEWPROPERTY_INTERFACE(Type)\
 	static LuaBasePropertyInterface* NewPropertyInterfaceBy##Type(lua_State*inL, UProperty* Property)\
 	{\
@@ -1964,6 +2193,7 @@ struct LuaUInterfaceProperty :public LuaBasePropertyInterface
 
 NEWPROPERTY_INTERFACE(UBoolProperty)
 NEWPROPERTY_INTERFACE(UIntProperty)
+NEWPROPERTY_INTERFACE(UInt8Property)
 NEWPROPERTY_INTERFACE(UUInt16Property)
 NEWPROPERTY_INTERFACE(UInt16Property)
 NEWPROPERTY_INTERFACE(UUInt32Property)
@@ -1980,7 +2210,12 @@ NEWPROPERTY_INTERFACE(UTextProperty)
 NEWPROPERTY_INTERFACE(UByteProperty)
 NEWPROPERTY_INTERFACE(UEnumProperty)
 NEWPROPERTY_INTERFACE(UStructProperty)
+#if ENGINE_MINOR_VERSION >= 23
+NEWPROPERTY_INTERFACE(UMulticastInlineDelegateProperty)
+NEWPROPERTY_INTERFACE(UMulticastSparseDelegateProperty)
+#else
 NEWPROPERTY_INTERFACE(UMulticastDelegateProperty)
+#endif
 NEWPROPERTY_INTERFACE(UDelegateProperty)
 NEWPROPERTY_INTERFACE(UWeakObjectProperty)
 NEWPROPERTY_INTERFACE(UArrayProperty)
@@ -1996,6 +2231,7 @@ static TMap<UClass*, TFunction< LuaBasePropertyInterface*(lua_State*, UProperty*
 
 	MAP_CREATEFUNC_TOTYPE(UBoolProperty)
 		MAP_CREATEFUNC_TOTYPE(UIntProperty)
+		MAP_CREATEFUNC_TOTYPE(UInt8Property)
 		MAP_CREATEFUNC_TOTYPE(UUInt16Property)
 		MAP_CREATEFUNC_TOTYPE(UInt16Property)
 		MAP_CREATEFUNC_TOTYPE(UUInt32Property)
@@ -2012,7 +2248,12 @@ static TMap<UClass*, TFunction< LuaBasePropertyInterface*(lua_State*, UProperty*
 		MAP_CREATEFUNC_TOTYPE(UByteProperty)
 		MAP_CREATEFUNC_TOTYPE(UEnumProperty)
 		MAP_CREATEFUNC_TOTYPE(UStructProperty)
+#if ENGINE_MINOR_VERSION >= 23
+ 		MAP_CREATEFUNC_TOTYPE(UMulticastInlineDelegateProperty)
+		MAP_CREATEFUNC_TOTYPE(UMulticastSparseDelegateProperty)
+#else
 		MAP_CREATEFUNC_TOTYPE(UMulticastDelegateProperty)
+#endif
 		MAP_CREATEFUNC_TOTYPE(UDelegateProperty)
 		MAP_CREATEFUNC_TOTYPE(UWeakObjectProperty)
 		MAP_CREATEFUNC_TOTYPE(UArrayProperty)

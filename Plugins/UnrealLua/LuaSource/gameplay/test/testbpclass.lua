@@ -1036,6 +1036,7 @@ end
 
 function TestBpClass:TestDelegate( )
 	self.m_Delegate1 = self.Delegate1
+	local hasfire = false
 	local function f(test_bool,test_int,test_int64,test_byte,test_float,test_double,test_string,test_text,test_name)
 		assert(test_bool == true)
 		assert(test_int == 1234)
@@ -1046,11 +1047,19 @@ function TestBpClass:TestDelegate( )
 		assert(test_string == "str")
 		assert(tostring(test_text) == "text")
 		assert(test_name == "wtestname")
+		hasfire = true
 	end
 	self.m_Delegate1:Add(f)
 	self.m_Delegate1:Fire(true, 1234, 2234, 12, 12.12, 128371123.12, "str", "text", "wtestname")
+	assert(hasfire)
+	hasfire = false
 	self.Delegate1_private:Add(f)
 	self.Delegate1_private:Fire(true, 1234, 2234, 12, 12.12, 128371123.12, "str", "text", "wtestname")
+	assert(hasfire)
+	-- self.Delegate3:Add(f)
+	-- hasfire = false
+	-- self.Delegate3:Fire(true, 1234, 2234, 12, 12.12, 128371123.12, "str", "text", "wtestname")
+	-- assert(hasfire)
 
 	local function f1(seflObj, test_struct,test_obj,test_class,test_arr,test_arrstruct, test_set)
 		assert(test_struct.X == 1)
@@ -1070,6 +1079,7 @@ function TestBpClass:TestDelegate( )
 
 		assert(test_set[10] == true)
 		assert(test_set[11] == true)
+		hasfire = true
 	end
 	local set = {}
 	set[10] = true
@@ -1077,9 +1087,13 @@ function TestBpClass:TestDelegate( )
 	self.m_Delegate2 = self.Delegate2
 	self.m_Delegate2_private = self.Delegate2_private
 	self.m_Delegate2:Add(MakeCallBack(f1, self))
+	hasfire = false
 	self.m_Delegate2:Fire(FVector.New(1,2,3), self, ATestCaseActor:Class(), {1,2,3}, {FVector.New(2,2,2), FVector.New(3,3,3)}, set)
+	assert(hasfire)
 	self.m_Delegate2_private:Add(MakeCallBack(f1, self))
+	hasfire = false
 	self.m_Delegate2_private:Fire(FVector.New(1,2,3), self, ATestCaseActor:Class(), {1,2,3}, {FVector.New(2,2,2), FVector.New(3,3,3)}, set)
+	assert(hasfire)
 end
 
 function TestBpClass:TestCallLua( test_bool_public, test_int_public, test_int64_public, test_byte_public, test_float_public, test_double_public, test_string_public,test_text_public, test_name_public, test_vector_public, test_object_public,test_class_public, test_weakptr_public, test_arr_public, test_arr_struct_public, test_set_public, test_map_public)

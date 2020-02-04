@@ -1,6 +1,7 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 #include "ILuaManuallyGlue.h"
 #include "JustForLinkGlue.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 void UJustForLinkGlue::LinkFixFunctino()
 {
@@ -120,7 +121,11 @@ static ISocketSubsystem* ISocketSubsystem_Get()
 LUA_GLUE_BEGIN( ISocketSubsystem)
 LUA_GLUE_FUNCTION_OUT(Get, ISocketSubsystem_Get)
 LUA_GLUE_OVERLOAD(CreateSocket, FSocket* (ISocketSubsystem::*)(const FName&, const FString&, bool bForceUDP), false)
+#if ENGINE_MINOR_VERSION < 23
 LUA_GLUE_FUNCTION(CreateInternetAddr)
+#else
+LUA_GLUE_OVERLOAD(CreateInternetAddr, TSharedRef<FInternetAddr>(TheClassType::*)())
+#endif
 LUA_GLUE_FUNCTION(BindNextPort)
 LUA_GLUE_END()
 

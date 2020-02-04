@@ -15,6 +15,7 @@
 #include "unreallua_template.h"
 #include "functionoverload.h"
 #include <string>
+#include "Runtime/Launch/Resources/Version.h"
 #include "TableUtil.generated.h"
 
 static uint8* GetBpStructTempIns(const FString& StructTypeName, int32 PropertySize)
@@ -547,6 +548,7 @@ public:
 
 	REFLECTION_FUNC(UBoolProperty)
 		REFLECTION_FUNC(UIntProperty)
+		REFLECTION_FUNC(UInt8Property)
 		REFLECTION_FUNC(UUInt16Property)
 		REFLECTION_FUNC(UInt16Property)
 		REFLECTION_FUNC(UUInt32Property)
@@ -564,6 +566,10 @@ public:
 		REFLECTION_FUNC(UEnumProperty)
 		REFLECTION_FUNC(UStructProperty)
 		REFLECTION_FUNC(UMulticastDelegateProperty)
+#if ENGINE_MINOR_VERSION >= 23
+		REFLECTION_FUNC(UMulticastInlineDelegateProperty)
+		REFLECTION_FUNC(UMulticastSparseDelegateProperty)
+#endif
 		REFLECTION_FUNC(UDelegateProperty)
 		REFLECTION_FUNC(UWeakObjectProperty)
 		REFLECTION_FUNC(UArrayProperty)

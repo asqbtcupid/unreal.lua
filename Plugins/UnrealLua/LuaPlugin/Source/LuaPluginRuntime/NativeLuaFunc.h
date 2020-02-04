@@ -964,6 +964,7 @@ int ErrHandleFunc(lua_State*L)
 
 BpSetterAndGetter(UBoolProperty)
 BpSetterAndGetter(UIntProperty)
+BpSetterAndGetter(UInt8Property)
 BpSetterAndGetter(UUInt16Property)
 BpSetterAndGetter(UInt16Property)
 BpSetterAndGetter(UUInt32Property)
@@ -980,7 +981,12 @@ BpSetterAndGetter(UTextProperty)
 BpSetterAndGetter(UByteProperty)
 BpSetterAndGetter(UEnumProperty)
 BpSetterAndGetter(UStructProperty)
+#if ENGINE_MINOR_VERSION >= 23
+BpSetterAndGetter(UMulticastInlineDelegateProperty)
+BpSetterAndGetter(UMulticastSparseDelegateProperty)
+#else
 BpSetterAndGetter(UMulticastDelegateProperty)
+#endif
 BpSetterAndGetter(UDelegateProperty)
 BpSetterAndGetter(UWeakObjectProperty)
 BpSetterAndGetter(UArrayProperty)

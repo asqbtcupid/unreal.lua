@@ -8,6 +8,8 @@
 #include "SDockTab.h"
 #include "SBox.h"
 #include "SCheckBox.h"
+#include "Runtime/Launch/Resources/Version.h"
+
 LUA_GLUE_ENUM_BEGIN(ESizeRule, FSizeParam::ESizeRule)
 LUA_GLUE_ENUMKEY(SizeRule_Auto)
 LUA_GLUE_ENUMKEY(SizeRule_Stretch)
@@ -33,6 +35,9 @@ LUA_GLUE_ALIAS(FIsActionChecked, FIsActionChecked)
 LUA_GLUE_DELEGATE(FGetActionCheckState, FGetActionCheckState)
 LUA_GLUE_DELEGATE(FIsActionButtonVisible, FIsActionButtonVisible)
 
+#if ENGINE_MINOR_VERSION >= 23 
+LUA_GLUE_DELEGATE(FPointerEventHandler, FPointerEventHandler)
+#endif
 
 LUA_GLUE_ENUM_BEGIN(EUIActionRepeatMode, EUIActionRepeatMode)
 LUA_GLUE_ENUMKEY(RepeatDisabled)
@@ -181,7 +186,11 @@ LUA_SLATE_BEGIN(STextBlock)
 	LUA_SLATE_ATTRIBUTE(float, MinDesiredWidth)
 	LUA_SLATE_ARGUMENT(TOptional<ETextShapingMethod>, TextShapingMethod)
 	LUA_SLATE_ARGUMENT(TOptional<ETextFlowDirection>, TextFlowDirection)
+#if ENGINE_MINOR_VERSION < 23 
 	LUA_SLATE_EVENT_RAW(FOnClicked, OnDoubleClicked)
+#else
+	LUA_SLATE_EVENT_RAW(FPointerEventHandler, OnDoubleClicked)
+#endif
 LUA_SLATE_BODY(STextBlock)
 	LUA_GLUE_FUNCTION(GetText)
 	LUA_GLUE_OVERLOAD(SetText, void (STextBlock::*)(const TAttribute<FText>&))
